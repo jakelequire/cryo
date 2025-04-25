@@ -175,9 +175,10 @@ namespace Cryo
 
         llvm::Value *getInitializerValue(ASTNode *node);
         llvm::Value *generateLiteralObject(ASTNode *node);
-
-        llvm::Value *generateStructInstantiation(ASTNode *node);
+        llvm::Value *generateObjectInst(llvm::Value *varVal, ASTNode *node);
         void generateConstructorBody(ASTNode *node, llvm::Value *selfArg, llvm::Function *ctor);
+
+        llvm::Value *generateStringInitializer(ASTNode *node);
 
     protected:
         IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
@@ -203,7 +204,6 @@ namespace Cryo
 
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
-        llvm::Value *derefValuePointer(llvm::Value *value);
         llvm::Type *derefValueForType(llvm::Value *value);
 
         IRMethodSymbol *createClassMethod(const std::string &className, ASTNode *method, DataType *methodDataType);

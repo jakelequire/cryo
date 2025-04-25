@@ -247,13 +247,41 @@ namespace Cryo
             llvm::AllocaInst *structAlloca = builder.CreateAlloca(
                 llvmType, nullptr, varName);
             structAlloca->setAlignment(llvm::Align(8)); // Usually 8-byte alignment for structs
+            llvm::Value *initVal = nullptr;
+            if (node->data.varDecl->initializer->metaData->type == NODE_OBJECT_INST)
+            {
+                logMessage(LMI, "INFO", "Visitor", "Handling object instance initializer");
 
-            // Get the initializer value
-            llvm::Value *initVal = getLLVMValue(node->data.varDecl->initializer);
+                // Get the object instance
+                llvm::Value *objectInstance = context.getInstance().initializer->generateObjectInst(
+                    structAlloca, node->data.varDecl->initializer);
+                if (!objectInstance)
+                {
+                    logMessage(LMI, "ERROR", "Visitor", "Failed to generate object instance");
+                    CONDITION_FAILED;
+                }
+                // Store the object instance into the alloca
+                builder.CreateStore(objectInstance, structAlloca);
+                initVal = objectInstance;
+            }
+            else
+            {
+                logMessage(LMI, "INFO", "Visitor", "Handling struct initializer");
+                // Handle struct initialization
+                initVal = getLLVMValue(node->data.varDecl->initializer);
+                if (!initVal)
+                {
+                    logMessage(LMI, "ERROR", "Visitor", "Failed to get initializer value");
+                    CONDITION_FAILED;
+                }
+                // Store the initializer value into the alloca
+                builder.CreateStore(initVal, structAlloca);
+            }
+            logMessage(LMI, "INFO", "Visitor", "Struct variable %s initialized", varName.c_str());
             if (!initVal)
             {
                 logMessage(LMI, "ERROR", "Visitor", "Failed to get initializer value");
-                return;
+                CONDITION_FAILED;
             }
 
             // Check if the initializer is already a struct value or a pointer to a struct
@@ -324,15 +352,29 @@ namespace Cryo
             }
             else
             {
-                allocaInst->setAlignment(llvm::Align(4)); // Default alignment
+                allocaInst->setAlignment(llvm::Align(8)); // Default alignment
             }
 
             // Handle initializer if present
             llvm::Value *initVal = nullptr;
             if (node->data.varDecl->initializer)
             {
-                logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
-                initVal = getLLVMValue(node->data.varDecl->initializer);
+                if (node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR)
+                {
+                    ASTNode *init = node->data.varDecl->initializer;
+                    if (init->data.literal->literalType == LITERAL_STRING &&
+                        init->data.literal->type->container->primitive == PRIM_STR)
+                    {
+                        logMessage(LMI, "INFO", "Visitor", "String literal initializer detected");
+                        initVal = context.getInstance().initializer->generateStringInitializer(
+                            node->data.varDecl->initializer);
+                    }
+                }
+                else
+                {
+                    logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
+                    initVal = getLLVMValue(node->data.varDecl->initializer);
+                }
 
                 if (initVal)
                 {

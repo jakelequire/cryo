@@ -342,7 +342,7 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *parsingContext)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
@@ -362,8 +362,18 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
         printf("Manipulated string: %s\n", strdup(trimmedString));
     });
 
+    DataType *contextType = NULL;
+    if (parsingContext->stringContextType)
+    {
+        contextType = parsingContext->stringContextType;
+    }
+    else
+    {
+        contextType = DTM->primitives->createStr();
+    }
+
     int length = getStringLength(trimmedString);
-    node->data.literal->type = DTM->primitives->createString();
+    node->data.literal->type = contextType;
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
     node->data.literal->literalType = LITERAL_STRING;
@@ -534,12 +544,6 @@ ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state,
 {
     __STACK_FRAME__
     return createBooleanLiteralNode(value, arena, state, lexer);
-}
-
-ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)
-{
-    __STACK_FRAME__
-    return createStringLiteralNode(str, arena, state, lexer);
 }
 
 ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)

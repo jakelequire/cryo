@@ -7,10 +7,18 @@ class IO {
 
         const content: str = c_readFile_export(&filePath.val);
         if (content == null) {
-            printStr("Error: File not found or could not be read.");
-            sys_exit(1);
+            printStr("Error: @readFile File not found or could not be read.");
             return null;
         }
+        const content_str: str = malloc_export(128);
+        if (content_str == null) {
+            printStr("Error: @readFile Memory allocation failed.");
+            return null;
+        }
+        memcpy_export(content_str, content, 128);
+        printStr("File content:");
+        printStr(content_str);
+
         
         printStr(content);
         printStr("File read successfully.");

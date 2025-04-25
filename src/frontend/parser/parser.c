@@ -923,7 +923,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     {
         logMessage(LMI, "INFO", "Parser", "Parsing string literal");
         const char *str = (const char *)strndup(lexer->currentToken.start, lexer->currentToken.length);
-        node = createStringLiteralNode(str, arena, state, lexer);
+        node = createStringLiteralNode(str, arena, state, lexer, context);
         getNextToken(lexer, arena, state);
         return node;
     }
@@ -1450,10 +1450,11 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
             break;
         }
         case PRIM_STR:
-        case PRIM_STRING:
-        {
+            context->setStringContextType(context, dataType);
             break;
-        }
+        case PRIM_STRING:
+            context->setStringContextType(context, dataType);
+            break;
         default:
         {
             logMessage(LMI, "ERROR", "Parser", "Unknown primitive type.");
@@ -2329,7 +2330,9 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         currentToken.type != TOKEN_INT_LITERAL &&
         currentToken.type != TOKEN_STRING_LITERAL &&
         currentToken.type != TOKEN_BOOLEAN_LITERAL &&
-        currentToken.type != TOKEN_KW_THIS)
+        currentToken.type != TOKEN_KW_THIS &&
+        currentToken.type != TOKEN_AMPERSAND &&
+        currentToken.type != TOKEN_STAR)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected an identifier or literal, received: %s", CryoTokenToString(currentToken.type));
         parsingError("Expected an identifier or literal.", "parseArguments", arena, state, lexer, lexer->source, globalTable);
@@ -2371,6 +2374,38 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         nodeType = NODE_THIS;
         return parseThisContext(lexer, context, arena, state, globalTable);
     }
+    else if (lexer->currentToken.type == TOKEN_AMPERSAND)
+    {
+        logMessage(LMI, "INFO", "Parser", "Argument is a reference");
+        ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
+        if (arg)
+        {
+            logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
+            addArgumentToList(arg, arg, arena, state, globalTable);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse argument.");
+            return NULL;
+        }
+        argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    }
+    else if (lexer->currentToken.type == TOKEN_STAR)
+    {
+        logMessage(LMI, "INFO", "Parser", "Argument is a pointer");
+        ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
+        if (arg)
+        {
+            logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
+            addArgumentToList(arg, arg, arena, state, globalTable);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse argument.");
+            return NULL;
+        }
+        argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    }
     else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
         if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOT)
@@ -2410,11 +2445,11 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     if (!isLiteral)
     {
         const char *curScopeID = getCurrentScopeID(context);
-        Symbol *sym = GetFrontendSymbol(globalTable, argName, curScopeID, VARIABLE_SYMBOL);
+        FrontendSymbol *sym = FEST->lookup(FEST, argName);
         if (sym)
         {
             logMessage(LMI, "INFO", "Parser", "Symbol found in global table: %s", argName);
-            argType = sym->variable->type;
+            argType = sym->type;
         }
         else
         {
