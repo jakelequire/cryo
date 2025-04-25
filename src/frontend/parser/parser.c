@@ -2002,6 +2002,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                 break;
             }
 
+            case TOKEN_COMMA:
+            {
+                consume(__LINE__, lexer, TOKEN_COMMA, "Expected ',' between arguments.",
+                        "parseFunctionCall", arena, state, context);
+                break;
+            }
+
             default:
             {
                 const char *tokenStr = CryoTokenToString(token);
