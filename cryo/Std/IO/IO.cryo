@@ -1,20 +1,23 @@
 namespace Std.IO;
 
 class IO {
-    // This is a placeholder for the IO class.
-    // In a real implementation, this class would contain methods and properties
-    // for input and output operations, such as reading from and writing to files,
-    // handling streams, etc.
 
-    // Example method to demonstrate the structure
-    public static readFile(filePath: String) -> str {
+    public static readFile(filePath: String *) -> str {
+        printStr(&filePath.val);
 
-        // const __filePath__: str = filePath.val;
+        const content: str = c_readFile_export(&filePath.val);
+        if (content == null) {
+            printStr("Error: File not found or could not be read.");
+            sys_exit(1);
+            return null;
+        }
+        
+        printStr(content);
+        printStr("File read successfully.");
 
-        printStr(filePath.val);
-
-        const content: str = c_readFile_export(filePath.val);
-
+        const file: String = new String(content);
+        printString(file);
         return content;
     }
+
 }

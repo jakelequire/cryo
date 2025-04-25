@@ -1193,6 +1193,11 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
         node->data.unary_op->op = TOKEN_ADDRESS_OF;
         node->data.unary_op->expression = operand;
 
+        if (lexer->currentToken.type == TOKEN_SEMICOLON)
+        {
+            consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseUnaryExpression", arena, state, context);
+        }
+
         return node;
     }
     if (lexer->currentToken.type == TOKEN_STAR)
@@ -1482,8 +1487,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     {
         parsingError("[Parser] Expected expression after '='.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
     }
-
-    if (!initializer->metaData->type == NODE_FUNCTION_CALL)
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
     {
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
     }
@@ -2087,6 +2091,13 @@ ASTNode *parseReturnStatement(Lexer *lexer, ParsingContext *context, Arena *aren
             logMessage(LMI, "INFO", "Parser", "Return Expression: Variable Name");
             expression->print(expression);
             returnType = expression->data.varName->type;
+            logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
+        }
+        else if (expression->metaData->type == NODE_NULL_LITERAL)
+        {
+            logMessage(LMI, "INFO", "Parser", "Return Expression: Null Literal");
+            expression->print(expression);
+            returnType = DTM->primitives->createNull();
             logMessage(LMI, "INFO", "Parser", "Return expression data type: %s", returnType->debug->toString(returnType));
         }
         else
@@ -3389,7 +3400,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotationWithType", arena, state, context);
 
-    if (typeOfNode->container->typeOf == OBJECT_TYPE)
+    if (typeOfNode->container->objectType == STRUCT_OBJ && typeOfNode->container->typeOf != POINTER_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a struct.");
 
@@ -3432,8 +3443,47 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             return NULL;
         }
     }
+    else if (typeOfNode->container->typeOf == POINTER_TYPE && typeOfNode->container->type.pointerType->baseType->container->objectType == STRUCT_OBJ)
+    {
+        logMessage(LMI, "INFO", "Parser", "Type of node is a pointer to a struct.");
+
+        DataType *structDataType = typeOfNode->container->type.pointerType->baseType;
+        structDataType->debug->printType(structDataType);
+        DTStructTy *structType = structDataType->container->type.structType;
+        const char *structName = typeOfNode->typeName;
+        Token nextToken = peekNextUnconsumedToken(lexer, arena, state);
+        Token currentToken = lexer->currentToken;
+
+        if (currentToken.type == TOKEN_LPAREN)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing method call...");
+            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, globalTable);
+            return methodCallNode;
+        }
+
+        logMessage(LMI, "INFO", "Parser", "@parseDotNotationWithType Struct name: %s", structName);
+        logMessage(LMI, "INFO", "Parser", "Next token: %s", CryoTokenToString(nextToken.type));
+
+        ASTNode *property = DTM->propertyTypes->findStructPropertyNode(structType, propName);
+        if (property)
+        {
+            logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", propName);
+            ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, propName, typeOfNode, arena, state, lexer);
+            propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, propName);
+            propertyAccessNode->data.propertyAccess->objectTypeName = structName;
+            logMessage(LMI, "INFO", "Parser", "Property access node created.");
+            logMessage(LMI, "INFO", "Parser", "Property access node: %s", propertyAccessNode->data.propertyAccess->propertyName);
+
+            if (lexer->currentToken.type == TOKEN_SEMICOLON)
+            {
+                consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseDotNotationWithType", arena, state, context);
+            }
+
+            return propertyAccessNode;
+        }
+    }
     // Return the property access node for *CLASS TYPES*.
-    else if (typeOfNode->container->typeOf == OBJECT_TYPE)
+    else if (typeOfNode->container->objectType == CLASS_OBJ)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a class.");
 
@@ -3464,6 +3514,9 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             parsingError("Property not found in class.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
             return NULL;
         }
+    }
+    else if (typeOfNode->container->typeOf == POINTER_TYPE)
+    {
     }
     else
     {

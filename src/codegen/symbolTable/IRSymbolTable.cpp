@@ -307,6 +307,29 @@ namespace Cryo
         return nullptr;
     }
 
+    llvm::StructType *IRSymbolTable::getStructType(const std::string &name)
+    {
+        // Try to find the type in the symbol table or global symbol table
+        IRTypeSymbol *typeSymbol = findType(name);
+        if (typeSymbol)
+        {
+            llvm::StructType *structType = llvm::dyn_cast<llvm::StructType>(typeSymbol->getType());
+            if (structType)
+            {
+                return structType;
+            }
+        }
+        // If not found, check the global symbol table for the type
+        llvm::StructType *globalType = globalSymbolTableInstance.getStructType(name);
+        if (globalType)
+        {
+            return globalType;
+        }
+        // No match found
+        logMessage(LMI, "ERROR", "CodeGen", "Struct type %s not found in symbol table", name.c_str());
+        return nullptr;
+    }
+
     void IRSymbolTable::removeType(const std::string &name)
     {
         types.erase(name);

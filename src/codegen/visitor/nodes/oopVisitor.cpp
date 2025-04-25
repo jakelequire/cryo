@@ -108,8 +108,13 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Visitor", "Property Type: %s", propertyType->getStructName().str().c_str());
         // Create a pointer to the property
+        // Get a pointer to the specific field
         llvm::Value *propertyPtr = context.getInstance().builder.CreateStructGEP(
-            llvmType, objectInstance, propertyIndex, propertyName);
+            llvmType,                           // The struct type
+            objectInstance,                     // The pointer to the struct
+            propertyIndex,                      // Field index
+            objectTypeName + "." + propertyName // Name for the GEP instruction
+        );
         if (!propertyPtr)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property pointer is null");
@@ -118,7 +123,12 @@ namespace Cryo
         }
         logMessage(LMI, "INFO", "Visitor", "Property Pointer: %s", propertyPtr->getName().str().c_str());
         // Load the property value
-        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(propertyType, propertyPtr, propertyName + ".load");
+        // Load the value from the field
+        llvm::Value *propertyValue = context.getInstance().builder.CreateLoad(
+            propertyType,          // The type of the field
+            propertyPtr,           // The pointer to the field
+            propertyName + ".load" // Name for the load instruction
+        );
         if (!propertyValue)
         {
             logMessage(LMI, "ERROR", "Visitor", "Property value is null");

@@ -20,53 +20,57 @@ namespace Cryo
 {
     llvm::Value *Initializer::generateStringLiteral(ASTNode *node)
     {
-        logMessage(LMI, "INFO", "Initializer", "Generating string literal...");
-        ASSERT_NODE_NULLPTR_RET(node);
-
-        if (node->metaData->type != NODE_LITERAL_EXPR)
-        {
-            logMessage(LMI, "ERROR", "Initializer", "Node is not a literal expression");
-            CONDITION_FAILED;
-            return nullptr;
-        }
-
-        DataType *literalDataType = node->data.literal->type;
-        if (literalDataType->container->primitive != PRIM_STRING)
-        {
-            logMessage(LMI, "ERROR", "Initializer", "Data type is not a string");
-            CONDITION_FAILED;
-            return nullptr;
-        }
-
         std::string strValue = node->data.literal->value.stringValue;
-        logMessage(LMI, "INFO", "Initializer", "String value: %s", strValue.c_str());
+        DataType *strDataType = node->data.literal->type;
+        if (strDataType->container->typeOf != OBJECT_TYPE)
+        {
+            llvm::Value *globalStr = context.getInstance().symbolTable->getOrCreateGlobalString(strValue);
+            if (!globalStr)
+                return nullptr;
 
+            llvm::GlobalVariable *globalStrVar = llvm::dyn_cast<llvm::GlobalVariable>(globalStr);
+            if (!globalStrVar)
+                return nullptr;
+
+            // Get the array type
+            llvm::ConstantDataArray *init = llvm::dyn_cast<llvm::ConstantDataArray>(globalStrVar->getInitializer());
+            if (!init)
+                return nullptr;
+
+            int length = init->getNumElements();
+            llvm::ArrayType *arrayType = llvm::ArrayType::get(context.getInstance().symbolTable->llvmTypes.i8Ty, length);
+
+            // Create the GEP instruction to get a pointer to the first character
+            llvm::Value *stringGEP = context.getInstance().builder.CreateInBoundsGEP(
+                arrayType,
+                globalStr,
+                {llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0),
+                 llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0)},
+                "");
+
+            // Return the loaded string value
+            return stringGEP;
+        }
+
+        // Create global string constant
         llvm::Value *globalStr = context.getInstance().symbolTable->getOrCreateGlobalString(strValue);
-        if (!globalStr)
-            return nullptr;
 
-        llvm::GlobalVariable *globalStrVar = llvm::dyn_cast<llvm::GlobalVariable>(globalStr);
-        if (!globalStrVar)
-            return nullptr;
+        // Allocate String struct
+        llvm::StructType *stringType = context.getInstance().symbolTable->getStructType("struct.String");
 
-        // Get the array type
-        llvm::ConstantDataArray *init = llvm::dyn_cast<llvm::ConstantDataArray>(globalStrVar->getInitializer());
-        if (!init)
-            return nullptr;
+        llvm::Value *stringStruct = context.getInstance().builder.CreateAlloca(
+            stringType, nullptr, "string.temp");
 
-        int length = init->getNumElements();
-        llvm::ArrayType *arrayType = llvm::ArrayType::get(context.getInstance().symbolTable->llvmTypes.i8Ty, length);
+        // Get pointer to the pointer field
+        llvm::Value *ptrField = context.getInstance().builder.CreateStructGEP(
+            stringType, stringStruct, 0, "str.ptr");
 
-        // Create the GEP instruction to get a pointer to the first character
-        llvm::Value *stringGEP = context.getInstance().builder.CreateInBoundsGEP(
-            arrayType,
-            globalStr,
-            {llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0),
-             llvm::ConstantInt::get(context.getInstance().symbolTable->llvmTypes.i32Ty, 0)},
-            "");
+        // Store string pointer into the struct
+        context.getInstance().builder.CreateStore(globalStr, ptrField);
 
-        // Return the loaded string value
-        return stringGEP;
+        // Return the struct itself, not a pointer to it
+        return context.getInstance().builder.CreateLoad(
+            stringType, stringStruct, "string.load");
     }
 
 } // namespace Cryo

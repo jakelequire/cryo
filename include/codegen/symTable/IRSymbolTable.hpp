@@ -155,7 +155,7 @@ namespace Cryo
 
         IRFunctionSymbol *findFunction(const std::string &name);
         IRTypeSymbol *findType(const std::string &name);
-        llvm::StructType *findStructType(const std::string &name);
+        llvm::StructType *getStructType(const std::string &name);
 
         void debugPrint() const;
         std::string IRTypeKindToString(IRTypeKind kind) const;

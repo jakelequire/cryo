@@ -156,91 +156,132 @@ namespace Cryo
         std::vector<llvm::Value *> args;
         for (int i = 0; i < call->argCount; i++)
         {
-            llvm::Value *argValue = getLLVMValue(call->args[i]);
-            if (argValue)
+            // Get argument AST node and its type
+            ASTNode *argNode = call->args[i];
+            DataType *argType = DTM->astInterface->getTypeofASTNode(argNode);
+
+            if (!argType)
+            {
+                logMessage(LMI, "ERROR", "CodeGenVisitor",
+                           "Could not determine type of argument %d", i);
+                continue;
+            }
+
+            // Get expected parameter type if available
+            DataType *paramType = nullptr;
+            if (funcSymbol->functionDataType &&
+                funcSymbol->functionDataType->container->typeOf == FUNCTION_TYPE &&
+                i < funcSymbol->functionDataType->container->type.functionType->paramCount)
+            {
+
+                paramType = funcSymbol->functionDataType->container->type.functionType->paramTypes[i];
+            }
+
+            // Get the LLVM value for the argument
+            llvm::Value *argValue = getLLVMValue(argNode);
+            if (!argValue)
+            {
+                logMessage(LMI, "ERROR", "CodeGenVisitor", "Argument %d value is null", i);
+                continue;
+            }
+
+            // If we have type information for both argument and parameter, perform conversion
+            if (argType && paramType)
             {
                 logMessage(LMI, "INFO", "CodeGenVisitor",
-                           "Argument %d value: %s", i, argValue->getName().str().c_str());
-                // Check if the argument is a string literal
-                bool isStringLiteral = false;
-                call->args[i]->print(call->args[i]);
-                DataType *argType = DTM->astInterface->getTypeofASTNode(call->args[i]);
-                if (argType && argType->container->primitive == PRIM_STRING || argType->container->primitive == PRIM_STR)
-                {
-                    isStringLiteral = true;
-                }
+                           "Converting argument %d from %s to %s",
+                           i, argType->typeName, paramType->typeName);
 
-                logMessage(LMI, "INFO", "CodeGenVisitor",
-                           "Argument %d is a string literal: %s", i, isStringLiteral ? "true" : "false");
-                // For string literals, don't do any additional processing
-                if (isStringLiteral)
-                {
-                    logMessage(LMI, "INFO", "CodeGenVisitor",
-                               "Argument %d is a string literal: %s", i, argValue->getName().str().c_str());
-                    args.push_back(argValue);
-                    continue;
-                }
+                argValue = convertValueToTargetType(argValue, argType, paramType);
+            }
+            // Fallback to LLVM type-based conversion using parameter types from function type
+            else if (i < funcSymbol->function->getFunctionType()->getNumParams())
+            {
+                llvm::Type *llvmParamType = funcSymbol->function->getFunctionType()->getParamType(i);
 
-                logMessage(LMI, "INFO", "CodeGenVisitor",
-                           "Argument %d is not a string literal: %s", i, argValue->getName().str().c_str());
-                // Check if we need to load from a pointer
-                if (i < funcSymbol->function->getFunctionType()->getNumParams())
+                if (argValue->getType() != llvmParamType)
                 {
-                    llvm::Type *paramType = funcSymbol->function->getFunctionType()->getParamType(i);
-
-                    // Check if argument is a pointer but parameter isn't
-                    if (argValue->getType()->isPointerTy() && !paramType->isPointerTy())
+                    // Handle basic conversions based on LLVM types
+                    if (argValue->getType()->isPointerTy() && !llvmParamType->isPointerTy())
                     {
-                        // For opaque pointers, we need to determine the type to load in another way
-
-                        // Option 1: If it's an alloca instruction, we can get the allocated type
+                        // Need to load from pointer
                         if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(argValue))
                         {
-                            logMessage(LMI, "INFO", "CodeGenVisitor",
-                                       "Argument %d is a pointer: %s", i, argValue->getName().str().c_str());
                             llvm::Type *allocatedType = allocaInst->getAllocatedType();
-                            argValue = context.getInstance().builder.CreateLoad(allocatedType, argValue,
-                                                                                argValue->getName() + ".load");
+                            argValue = builder.CreateLoad(allocatedType, argValue, "arg.load");
                         }
-                        // Option 2: Use the expected parameter type
                         else
                         {
-                            logMessage(LMI, "INFO", "CodeGenVisitor",
-                                       "Argument %d is a pointer but parameter is not: %s", i,
-                                       argValue->getName().str().c_str());
-                            argValue = context.getInstance().builder.CreateLoad(paramType, argValue,
-                                                                                argValue->getName() + ".load");
+                            argValue = builder.CreateLoad(llvmParamType, argValue, "arg.load");
                         }
                     }
-
-                    // Check if both types are pointers, if so, load the value of the pointer
-                    if (argValue->getType()->isPointerTy() && paramType->isPointerTy())
-                    {
-                        logMessage(LMI, "INFO", "CodeGenVisitor",
-                                   "Argument %d is a pointer: %s", i, argValue->getName().str().c_str());
-                        argValue = context.getInstance().builder.CreateLoad(paramType, argValue,
-                                                                            argValue->getName() + ".load");
-                    }
-                }
-                logMessage(LMI, "INFO", "CodeGenVisitor",
-                           "Argument %d name: %s", i, argValue->getName().str().c_str());
-                args.push_back(argValue);
+                                }
             }
+
+            args.push_back(argValue);
         }
 
         // Create the function call
         std::string funcName = call->name;
         logMessage(LMI, "INFO", "CodeGenVisitor", "Function call: %s", funcName.c_str());
         llvm::Value *result = nullptr;
+
+        // Get the return type data
+        DataType *returnDataType = nullptr;
+        if (funcSymbol->functionDataType &&
+            funcSymbol->functionDataType->container->typeOf == FUNCTION_TYPE)
+        {
+            returnDataType = funcSymbol->functionDataType->container->type.functionType->returnType;
+        }
+
         if (funcSymbol->returnType->getTypeID() != llvm::Type::VoidTyID)
         {
-            result = builder.CreateCall(funcSymbol->function, args, funcName);
-            llvm::AllocaInst *alloca = builder.CreateAlloca(funcSymbol->returnType, nullptr, "calltmp");
-            builder.CreateStore(result, alloca);
-            lastValue = alloca;
+            // Create the call instruction
+            result = builder.CreateCall(funcSymbol->function, args, funcName + ".call");
+
+            // If we have a return data type, process it appropriately
+            if (returnDataType)
+            {
+                // Special handling for str to String if needed
+                DataType *resultType = DTM->astInterface->getTypeofASTNode(node);
+                if (resultType && resultType->container->typeOf == PRIM_STR)
+                {
+                    // Convert to string type if needed
+                    llvm::Value *strValue = builder.CreateBitCast(result, builder.getInt8Ty(), "str.cast");
+                    result = builder.CreateCall(funcSymbol->function, strValue, funcName + ".str.call");
+                }
+                else if (resultType && resultType->container->typeOf == PRIM_STRING)
+                {
+                    // Convert to String type if needed
+                    llvm::Value *stringValue = builder.CreateBitCast(result, builder.getInt8Ty()->getPointerTo(), "string.cast");
+                    result = builder.CreateCall(funcSymbol->function, stringValue, funcName + ".string.call");
+                }
+                else if (resultType && resultType->container->typeOf == PRIM_INT)
+                {
+                    // Convert to int type if needed
+                    result = performTypeCast(result, builder.getInt32Ty());
+                }
+                else if (resultType && resultType->container->typeOf == PRIM_FLOAT)
+                {
+                    // Convert to float type if needed
+                    result = performTypeCast(result, builder.getDoubleTy());
+                }
+                else if (resultType && resultType->container->typeOf == PRIM_BOOLEAN)
+                {
+                    // Convert to boolean type if needed
+                    result = performTypeCast(result, builder.getInt1Ty());
+                }
+            }
+
+            // Store the result appropriately
+            llvm::AllocaInst *returnAlloca = builder.CreateAlloca(
+                result->getType(), nullptr, funcName + ".result");
+            builder.CreateStore(result, returnAlloca);
+            lastValue = returnAlloca;
         }
         else
         {
+            // Void return type
             result = builder.CreateCall(funcSymbol->function, args);
             lastValue = nullptr;
         }
@@ -265,5 +306,52 @@ namespace Cryo
     void CodeGenVisitor::visitTypeofExpr(ASTNode *node)
     {
         DEBUG_BREAKPOINT;
+    }
+
+    llvm::Value *CodeGenVisitor::performTypeCast(llvm::Value *value, llvm::Type *targetType)
+    {
+        if (!value || !targetType || value->getType() == targetType)
+            return value;
+
+        llvm::Type *sourceType = value->getType();
+
+        // Integer -> Integer conversion
+        if (sourceType->isIntegerTy() && targetType->isIntegerTy())
+        {
+            unsigned srcBits = sourceType->getIntegerBitWidth();
+            unsigned dstBits = targetType->getIntegerBitWidth();
+
+            if (srcBits < dstBits)
+                return builder.CreateZExt(value, targetType, "zext");
+            else if (srcBits > dstBits)
+                return builder.CreateTrunc(value, targetType, "trunc");
+        }
+
+        // Float -> Float conversion
+        if (sourceType->isFloatingPointTy() && targetType->isFloatingPointTy())
+        {
+            if (sourceType->getPrimitiveSizeInBits() < targetType->getPrimitiveSizeInBits())
+                return builder.CreateFPExt(value, targetType, "fpext");
+            else if (sourceType->getPrimitiveSizeInBits() > targetType->getPrimitiveSizeInBits())
+                return builder.CreateFPTrunc(value, targetType, "fptrunc");
+        }
+
+        // Integer -> Float
+        if (sourceType->isIntegerTy() && targetType->isFloatingPointTy())
+            return builder.CreateSIToFP(value, targetType, "sitofp");
+
+        // Float -> Integer
+        if (sourceType->isFloatingPointTy() && targetType->isIntegerTy())
+            return builder.CreateFPToSI(value, targetType, "fptosi");
+
+        // Pointer conversions
+        if (sourceType->isPointerTy() && targetType->isPointerTy())
+            return builder.CreateBitCast(value, targetType, "ptrcast");
+
+        // If no conversion was performed, return the original value
+        logMessage(LMI, "WARNING", "CodeGenVisitor",
+                   "Couldn't cast from %s to %s",
+                   sourceType->getTypeID(), targetType->getTypeID());
+        return value;
     }
 } // namespace Cryo

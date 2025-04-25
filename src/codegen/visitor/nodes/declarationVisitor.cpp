@@ -179,40 +179,202 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "Variable Name: %s", varName.c_str());
 
         DataType *varType = node->data.varDecl->type;
-        llvm::Type *llvmType = symbolTable->getLLVMType(varType);
 
-        llvm::Value *initVal = nullptr;
-        if (node->data.varDecl->initializer)
+        // Check if this is a String variable with string literal initializer
+        if (std::string(varType->typeName) == "String" &&
+            node->data.varDecl->initializer &&
+            node->data.varDecl->initializer->metaData->type == NODE_LITERAL_EXPR &&
+            node->data.varDecl->initializer->data.literal->literalType == LITERAL_STRING)
         {
-            logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
-            initVal = getLLVMValue(node->data.varDecl->initializer);
+            logMessage(LMI, "INFO", "Visitor", "Handling String variable with string literal initializer");
+
+            // Get the string literal value
+            std::string strValue = node->data.varDecl->initializer->data.literal->value.stringValue;
+            logMessage(LMI, "INFO", "Visitor", "String literal value: %s", strValue.c_str());
+
+            // Get or create the global string constant
+            llvm::Value *globalStr = symbolTable->getOrCreateGlobalString(strValue);
+
+            // Get the String struct type
+            llvm::StructType *stringType = llvm::StructType::getTypeByName(
+                context.getInstance().context, "struct.String");
+            if (!stringType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "String struct type not found");
+                return;
+            }
+
+            // Create an alloca for the String struct
+            llvm::AllocaInst *stringAlloca = builder.CreateAlloca(
+                stringType, nullptr, varName);
+            stringAlloca->setAlignment(llvm::Align(8)); // Usually 8-byte alignment for pointers
+
+            // Get pointer to the char* field (assuming it's the first field at index 0)
+            llvm::Value *ptrField = builder.CreateStructGEP(
+                stringType, stringAlloca, 0, varName + ".ptr");
+
+            // Store the string pointer into the struct
+            builder.CreateStore(globalStr, ptrField);
+
+            // Create the variable symbol
+            AllocaType allocaType = AllocaType::AllocaOnly;
+            IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
+                nullptr, stringAlloca, stringType->getPointerTo(), varName, allocaType);
+            varSymbol.dataType = varType;
+            varSymbol.value = stringAlloca;
+
+            // Add variable to symbol table
+            symbolTable->addVariable(varSymbol);
+
+            logMessage(LMI, "INFO", "Visitor", "String variable %s initialized with literal", varName.c_str());
+            return;
         }
+        // Handle other struct types with initializers
+        else if (varType->container->typeOf == OBJECT_TYPE &&
+                 node->data.varDecl->initializer)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Handling object/struct variable with initializer");
+
+            // Get the LLVM type for the struct
+            llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+            if (!llvmType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for %s", varType->typeName);
+                return;
+            }
+
+            // Create the alloca for the struct
+            llvm::AllocaInst *structAlloca = builder.CreateAlloca(
+                llvmType, nullptr, varName);
+            structAlloca->setAlignment(llvm::Align(8)); // Usually 8-byte alignment for structs
+
+            // Get the initializer value
+            llvm::Value *initVal = getLLVMValue(node->data.varDecl->initializer);
+            if (!initVal)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to get initializer value");
+                return;
+            }
+
+            // Check if the initializer is already a struct value or a pointer to a struct
+            if (initVal->getType()->isPointerTy())
+            {
+                // If it's a pointer to the same struct type, we can memcpy or use GEP instructions
+                // For simplicity, we'll just do a load and store
+                llvm::Value *loadedStruct = builder.CreateLoad(
+                    llvmType, initVal, "struct.load");
+                builder.CreateStore(loadedStruct, structAlloca);
+            }
+            else
+            {
+                // If it's already a struct value, just store it
+                builder.CreateStore(initVal, structAlloca);
+            }
+
+            // Create the variable symbol
+            AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
+            IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
+                nullptr, structAlloca, llvmType->getPointerTo(), varName, allocaType);
+            varSymbol.dataType = varType;
+            varSymbol.value = structAlloca;
+
+            // Add variable to symbol table
+            symbolTable->addVariable(varSymbol);
+
+            logMessage(LMI, "INFO", "Visitor", "Struct variable %s initialized", varName.c_str());
+            return;
+        }
+        // Handle primitive types and other cases
         else
         {
-            logMessage(LMI, "INFO", "Visitor", "Variable has no initialization expression");
+            llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+            if (!llvmType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for %s", varType->typeName);
+                return;
+            }
+
+            // Create the alloca
+            llvm::AllocaInst *allocaInst = builder.CreateAlloca(
+                llvmType, nullptr, varName);
+
+            // Set appropriate alignment based on type
+            if (llvmType->isIntegerTy())
+            {
+                unsigned bitWidth = llvmType->getIntegerBitWidth();
+                if (bitWidth <= 8)
+                    allocaInst->setAlignment(llvm::Align(1));
+                else if (bitWidth <= 16)
+                    allocaInst->setAlignment(llvm::Align(2));
+                else if (bitWidth <= 32)
+                    allocaInst->setAlignment(llvm::Align(4));
+                else
+                    allocaInst->setAlignment(llvm::Align(8));
+            }
+            else if (llvmType->isFloatingPointTy())
+            {
+                if (llvmType->isFloatTy())
+                    allocaInst->setAlignment(llvm::Align(4));
+                else
+                    allocaInst->setAlignment(llvm::Align(8));
+            }
+            else if (llvmType->isPointerTy())
+            {
+                allocaInst->setAlignment(llvm::Align(8));
+            }
+            else
+            {
+                allocaInst->setAlignment(llvm::Align(4)); // Default alignment
+            }
+
+            // Handle initializer if present
+            llvm::Value *initVal = nullptr;
+            if (node->data.varDecl->initializer)
+            {
+                logMessage(LMI, "INFO", "Visitor", "Variable has an initialization expression");
+                initVal = getLLVMValue(node->data.varDecl->initializer);
+
+                if (initVal)
+                {
+                    // Check if types match or need conversion
+                    if (initVal->getType() != llvmType)
+                    {
+                        logMessage(LMI, "INFO", "Visitor", "Initializer type doesn't match variable type, attempting conversion");
+
+                        // Handle simple pointer to primitive type (loading)
+                        if (initVal->getType()->isPointerTy() && !llvmType->isPointerTy())
+                        {
+                            llvm::Type *pointeeType = nullptr;
+                            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(initVal))
+                            {
+                                pointeeType = allocaInst->getAllocatedType();
+                                if (pointeeType == llvmType)
+                                {
+                                    initVal = builder.CreateLoad(pointeeType, initVal, "init.load");
+                                }
+                            }
+                        }
+
+                        // Add more type conversion logic as needed
+                    }
+
+                    // Store the initializer value
+                    builder.CreateStore(initVal, allocaInst);
+                }
+            }
+
+            // Create the variable symbol
+            AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
+            IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
+                nullptr, allocaInst, llvmType->getPointerTo(), varName, allocaType);
+            varSymbol.dataType = varType;
+            varSymbol.value = allocaInst;
+
+            // Add variable to symbol table
+            symbolTable->addVariable(varSymbol);
+
+            logMessage(LMI, "INFO", "Visitor", "Variable %s initialized", varName.c_str());
         }
-
-        // Create the variable symbol
-        AllocaType allocaType = AllocaTypeInference::inferFromNode(node, false);
-        IRVariableSymbol varSymbol = IRSymbolManager::createVariableSymbol(
-            nullptr, initVal, llvmType, varName, allocaType);
-        varSymbol.dataType = varType;
-
-        // Create the variable in the function
-        llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
-            llvmType, nullptr, varName);
-        allocaInst->setAlignment(llvm::Align(4));
-        varSymbol.value = allocaInst;
-
-        // Add the variable to the symbol table
-        symbolTable->addVariable(varSymbol);
-        logMessage(LMI, "INFO", "Visitor", "Variable declaration complete: %s", varName.c_str());
-        if (initVal)
-        {
-            logMessage(LMI, "INFO", "Visitor", "Storing initial value to variable %s", varName.c_str());
-            context.getInstance().builder.CreateStore(initVal, allocaInst);
-        }
-        logMessage(LMI, "INFO", "Visitor", "Variable %s initialized", varName.c_str());
 
         return;
     }
@@ -562,6 +724,171 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "Type declaration complete");
 
         return;
+    }
+
+    llvm::Value *CodeGenVisitor::convertValueToTargetType(llvm::Value *value, DataType *sourceType, DataType *targetType)
+    {
+        if (!value || !sourceType || !targetType)
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Null input to type conversion");
+            return value;
+        }
+
+        logMessage(LMI, "INFO", "CodeGenVisitor", "Converting value from %s to %s",
+                   sourceType->typeName, targetType->typeName);
+
+        // Get LLVM types
+        llvm::Type *sourceLLVMType = symbolTable->getLLVMType(sourceType);
+        llvm::Type *targetLLVMType = symbolTable->getLLVMType(targetType);
+
+        if (!sourceLLVMType || !targetLLVMType)
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Failed to get LLVM types for conversion");
+            return value;
+        }
+
+        // Case 1: String to str conversion (extract pointer from struct)
+        if (strcmp(sourceType->typeName, "String") == 0 &&
+            (strcmp(targetType->typeName, "str") == 0 || targetType->container->primitive == PRIM_STR))
+        {
+
+            // Extract the char* field from the String struct
+            if (value->getType()->isPointerTy())
+            {
+                // If we have a pointer to a String struct
+                llvm::StructType *stringType = llvm::StructType::getTypeByName(
+                    context.getInstance().context, "struct.String");
+
+                llvm::Value *ptrField = builder.CreateStructGEP(
+                    stringType, value, 0, "string.ptr");
+
+                return builder.CreateLoad(builder.getInt8Ty(), ptrField, "str.extract");
+            }
+            else if (value->getType()->isStructTy())
+            {
+                // If we have a String struct by value, create a temporary and extract
+                llvm::AllocaInst *tempAlloca = builder.CreateAlloca(
+                    value->getType(), nullptr, "string.temp");
+                builder.CreateStore(value, tempAlloca);
+
+                llvm::Value *ptrField = builder.CreateStructGEP(
+                    value->getType(), tempAlloca, 0, "string.ptr");
+
+                return builder.CreateLoad(builder.getInt8Ty(), ptrField, "str.extract");
+            }
+        }
+
+        // Case 2: str to String conversion (wrap pointer in struct)
+        if ((strcmp(sourceType->typeName, "str") == 0 || sourceType->container->primitive == PRIM_STR) &&
+            strcmp(targetType->typeName, "String") == 0)
+        {
+
+            // Create a String struct to wrap the char* pointer
+            llvm::StructType *stringType = llvm::StructType::getTypeByName(
+                context.getInstance().context, "struct.String");
+
+            llvm::AllocaInst *stringAlloca = builder.CreateAlloca(
+                stringType, nullptr, "string.temp");
+
+            llvm::Value *ptrField = builder.CreateStructGEP(
+                stringType, stringAlloca, 0, "string.ptr");
+
+            // If value is already a pointer, store it directly
+            if (value->getType()->isPointerTy())
+            {
+                if (value->getType() == builder.getInt8Ty())
+                {
+                    builder.CreateStore(value, ptrField);
+                }
+                else
+                {
+                    // Load the pointer value if needed
+                    llvm::Value *ptrValue = builder.CreateLoad(
+                        builder.getInt8Ty(), value, "ptr.load");
+                    builder.CreateStore(ptrValue, ptrField);
+                }
+            }
+
+            // Return the String struct by value or pointer based on need
+            if (targetLLVMType->isPointerTy())
+            {
+                return stringAlloca; // Return pointer to the struct
+            }
+            else
+            {
+                return builder.CreateLoad(stringType, stringAlloca, "string.load"); // Return struct by value
+            }
+        }
+
+        // Case 3: Pointer to value conversion (general case)
+        if (value->getType()->isPointerTy() && !targetLLVMType->isPointerTy())
+        {
+            // Determine the type to load
+            llvm::Type *loadType = nullptr;
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(value))
+            {
+                loadType = allocaInst->getAllocatedType();
+            }
+            else if (sourceLLVMType->isPointerTy())
+            {
+                loadType = sourceLLVMType;
+            }
+            else
+            {
+                loadType = targetLLVMType;
+            }
+
+            return builder.CreateLoad(loadType, value, "value.load");
+        }
+
+        // Case 4: Value to pointer conversion (allocation)
+        if (!value->getType()->isPointerTy() && targetLLVMType->isPointerTy())
+        {
+            llvm::AllocaInst *tempAlloca = builder.CreateAlloca(
+                value->getType(), nullptr, "value.temp");
+            builder.CreateStore(value, tempAlloca);
+            return tempAlloca;
+        }
+
+        // Case 5: Standard primitive type conversions
+        if (value->getType() != targetLLVMType)
+        {
+            // Integer to integer conversion
+            if (value->getType()->isIntegerTy() && targetLLVMType->isIntegerTy())
+            {
+                unsigned srcBits = value->getType()->getIntegerBitWidth();
+                unsigned dstBits = targetLLVMType->getIntegerBitWidth();
+
+                if (srcBits < dstBits)
+                    return builder.CreateZExt(value, targetLLVMType, "int.extend");
+                else if (srcBits > dstBits)
+                    return builder.CreateTrunc(value, targetLLVMType, "int.truncate");
+            }
+
+            // Float to float conversion
+            if (value->getType()->isFloatingPointTy() && targetLLVMType->isFloatingPointTy())
+            {
+                if (value->getType()->getPrimitiveSizeInBits() < targetLLVMType->getPrimitiveSizeInBits())
+                    return builder.CreateFPExt(value, targetLLVMType, "float.extend");
+                else if (value->getType()->getPrimitiveSizeInBits() > targetLLVMType->getPrimitiveSizeInBits())
+                    return builder.CreateFPTrunc(value, targetLLVMType, "float.truncate");
+            }
+
+            // Integer to float
+            if (value->getType()->isIntegerTy() && targetLLVMType->isFloatingPointTy())
+                return builder.CreateSIToFP(value, targetLLVMType, "int.to.float");
+
+            // Float to integer
+            if (value->getType()->isFloatingPointTy() && targetLLVMType->isIntegerTy())
+                return builder.CreateFPToSI(value, targetLLVMType, "float.to.int");
+
+            // Pointer conversions
+            if (value->getType()->isPointerTy() && targetLLVMType->isPointerTy())
+                return builder.CreateBitCast(value, targetLLVMType, "ptr.cast");
+        }
+
+        // If no conversion needed or possible, return original value
+        return value;
     }
 
 } // namespace Cryo

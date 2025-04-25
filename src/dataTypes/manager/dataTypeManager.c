@@ -74,27 +74,50 @@ int DTMPropertyTypes_getStructPropertyIndex(DataType *structType, const char *pr
     if (!structType)
     {
         fprintf(stderr, "[Data Type Manager] Error: Invalid Struct Type\n");
-        return -1;
+        structType->debug->printType(structType);
+        DEBUG_BREAKPOINT;
+        return -99;
     }
     if (structType->container->objectType != STRUCT_OBJ)
     {
         fprintf(stderr, "[Data Type Manager] Error: Invalid Struct Type\n");
-        return -1;
+        structType->debug->printType(structType);
+        DEBUG_BREAKPOINT;
+        return -99;
+    }
+
+    DataType *structDataType = structType;
+
+    if (structType->container->typeOf == POINTER_TYPE)
+    {
+        DataType *baseType = structType->container->type.pointerType->baseType;
+        if (baseType->container->objectType != STRUCT_OBJ)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Invalid Struct Type\n");
+            baseType->debug->printType(baseType);
+            DEBUG_BREAKPOINT;
+            return -99;
+        }
+
+        structDataType = baseType;
     }
 
     logMessage(LMI, "INFO", "DTM", "Getting Struct Property Index: %s", propertyName);
-    logMessage(LMI, "INFO", "DTM", "Struct Type: %s", structType->typeName);
-    structType->debug->printType(structType);
+    logMessage(LMI, "INFO", "DTM", "Struct Type: %s", structDataType->typeName);
+    structDataType->debug->printType(structDataType);
 
-    DTStructTy *structNode = structType->container->type.structType;
+    DTStructTy *structNode = structDataType->container->type.structType;
     for (int i = 0; i < structNode->propertyCount; i++)
     {
         if (strcmp(structNode->properties[i]->name, propertyName) == 0)
         {
+            logMessage(LMI, "INFO", "DTM", "Found Property: %s == %s", structNode->properties[i]->name, propertyName);
             return i;
         }
     }
-    return -1;
+
+    logMessage(LMI, "INFO", "DTM", "Property not found: %s in %s", propertyName, structDataType->typeName);
+    return -99;
 }
 
 DTMPropertyTypes *createDTMPropertyTypes(void)

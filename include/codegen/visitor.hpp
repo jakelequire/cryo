@@ -161,6 +161,8 @@ namespace Cryo
 
     private:
         llvm::Value *getLLVMValue(ASTNode *node);
+        llvm::Value *performTypeCast(llvm::Value *value, llvm::Type *targetType);
+        llvm::Value *convertValueToTargetType(llvm::Value *value, DataType *sourceType, DataType *targetType);
     };
 
 } // namespace Cryo

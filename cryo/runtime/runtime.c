@@ -442,7 +442,7 @@ void printStr_export(char *str)
 
 char *c_readFile_export(char *filename)
 {
-    printf("[C::DEBUG] Reading File Executed");
+    printf("[C::DEBUG] Reading File Executed\n");
     if (filename == NULL)
     {
         printf("[C::DEBUG] Filename is NULL\n");
@@ -471,7 +471,14 @@ char *c_readFile_export(char *filename)
 
     fclose(file);
 
+    if (length == 0)
+    {
+        printf("[C::DEBUG] File is empty\n");
+        free(buffer);
+        return NULL;
+    }
+
     printf("[C::DEBUG] File read successfully: %s\n", filename);
-    printf("[C::DEBUG] File Contents: %s\n", buffer);
+    printf("[C::DEBUG] File Contents: %s\n", strdup(buffer));
     return buffer;
 }

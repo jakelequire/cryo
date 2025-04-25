@@ -49,6 +49,8 @@ namespace Cryo
             return generateVarDeclaration(node);
         case NODE_OBJECT_INST:
             return generateObjectInst(node);
+        case NODE_NULL_LITERAL:
+            return generateNullLiteral();
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -283,8 +285,6 @@ namespace Cryo
     {
         logMessage(LMI, "INFO", "Initializer", "Generating binary expression...");
         ASSERT_NODE_NULLPTR_RET(node);
-        // TODO: Generate binary expression
-        context.getInstance().module->print(llvm::errs(), nullptr);
 
         if (node->metaData->type != NODE_BINARY_EXPR)
         {
@@ -292,6 +292,9 @@ namespace Cryo
             return nullptr;
         }
 
+        CryoOperatorType opType = node->data.bin_op->op;
+
+        // First generate the left and right operands
         llvm::Value *lhs = getInitializerValue(node->data.bin_op->left);
         llvm::Value *rhs = getInitializerValue(node->data.bin_op->right);
         if (!lhs || !rhs)
@@ -300,8 +303,72 @@ namespace Cryo
             return nullptr;
         }
 
-        // Get the operator type
-        CryoOperatorType opType = node->data.bin_op->op;
+        // Special handling for pointer null comparisons
+        if ((opType == OPERATOR_EQ || opType == OPERATOR_NEQ) &&
+            (lhs->getType()->isPointerTy() || rhs->getType()->isPointerTy()))
+        {
+            DataType *leftType = DTM->astInterface->getTypeofASTNode(node->data.bin_op->left);
+            DataType *rightType = DTM->astInterface->getTypeofASTNode(node->data.bin_op->right);
+
+            bool isNullComparison = false;
+            bool isLeftNull = false;
+            bool isRightNull = false;
+
+            // Check if one side is null
+            if (rightType && (rightType->container->primitive == PRIM_NULL ||
+                              strcmp(rightType->typeName, "null") == 0))
+            {
+                isNullComparison = true;
+                isRightNull = true;
+            }
+            else if (leftType && (leftType->container->primitive == PRIM_NULL ||
+                                  strcmp(leftType->typeName, "null") == 0))
+            {
+                isNullComparison = true;
+                isLeftNull = true;
+            }
+
+            if (isNullComparison)
+            {
+                // Determine which is the pointer
+                llvm::Value *ptrValue = isLeftNull ? rhs : lhs;
+
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(ptrValue))
+                {
+                    logMessage(LMI, "INFO", "Initializer", "Loading pointer value for null comparison");
+                    ptrValue = context.getInstance().builder.CreateLoad(
+                        allocaInst->getAllocatedType(),
+                        ptrValue,
+                        "ptr_value");
+                }
+
+                // Create null pointer constant of the appropriate type
+                llvm::PointerType *ptrType = nullptr;
+                if (ptrValue->getType()->isPointerTy())
+                {
+                    ptrType = llvm::cast<llvm::PointerType>(ptrValue->getType());
+                }
+                else
+                {
+                    // Fallback to generic pointer
+                    ptrType = llvm::PointerType::get(context.getInstance().context, 0);
+                }
+
+                llvm::Value *nullPtr = llvm::ConstantPointerNull::get(ptrType);
+
+                // Create the comparison
+                if (opType == OPERATOR_EQ)
+                {
+                    return context.getInstance().builder.CreateICmpEQ(ptrValue, nullPtr, "ptr_eq_null");
+                }
+                else
+                {
+                    return context.getInstance().builder.CreateICmpNE(ptrValue, nullPtr, "ptr_ne_null");
+                }
+            }
+        }
+
+        // Handle standard operators
         logMessage(LMI, "INFO", "Initializer", "Binary operator: %s", CryoOperatorTypeToString(opType));
         switch (opType)
         {
@@ -341,38 +408,20 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
             return nullptr;
         case OPERATOR_ADD_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_SUB_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_MUL_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_DIV_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_MOD_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_AND_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_OR_ASSIGN:
-            logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_XOR_ASSIGN:
             logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");
             return nullptr;
         case OPERATOR_INCREMENT:
-            logMessage(LMI, "ERROR", "Initializer", "Increment operator is not supported in expressions");
-            return nullptr;
         case OPERATOR_DECREMENT:
-            logMessage(LMI, "ERROR", "Initializer", "Decrement operator is not supported in expressions");
+            logMessage(LMI, "ERROR", "Initializer", "Increment/decrement operator is not supported in expressions");
             return nullptr;
         case OPERATOR_NA:
-            logMessage(LMI, "ERROR", "Initializer", "Operator not applicable");
-            return nullptr;
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled operator type: %s", CryoOperatorTypeToString(opType));
             return nullptr;
@@ -438,7 +487,380 @@ namespace Cryo
     {
         logMessage(LMI, "INFO", "Initializer", "Generating unary expression...");
         ASSERT_NODE_NULLPTR_RET(node);
-        // TODO: Generate unary expression
+
+        if (node->metaData->type != NODE_UNARY_EXPR)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a unary expression");
+            return nullptr;
+        }
+
+        CryoUnaryOpNode *unaryOp = node->data.unary_op;
+        if (!unaryOp)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Unary op is null");
+            return nullptr;
+        }
+
+        // Get the operand
+        ASTNode *operandNode = unaryOp->expression;
+        llvm::Value *operand = getInitializerValue(operandNode);
+        if (!operand)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Failed to generate operand");
+            return nullptr;
+        }
+
+        // Get result type
+        DataType *resultType = unaryOp->resultType;
+        if (!resultType)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Result type is null");
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "Initializer", "Unary operation: %d", unaryOp->op);
+
+        switch (unaryOp->op)
+        {
+        case TOKEN_ADDRESS_OF: // &
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating address-of expression");
+
+            // The operand must be an lvalue (a variable or dereference)
+            // We don't need to create any special instruction -
+            // we just use the operand directly without loading it
+
+            // If operand is an alloca instruction, return it directly
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+            {
+                return allocaInst;
+            }
+
+            // If operand is a GEP instruction, return it directly
+            if (llvm::GetElementPtrInst *gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(operand))
+            {
+                return gepInst;
+            }
+
+            // For other pointer types just return them
+            if (operand->getType()->isPointerTy())
+            {
+                return operand;
+            }
+
+            // If all else fails, allocate and store the value
+            llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
+                operand->getType(), nullptr, "addr_temp");
+            context.getInstance().builder.CreateStore(operand, allocaInst);
+            return allocaInst;
+        }
+
+        case TOKEN_DEREFERENCE: // *
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating dereference expression");
+
+            // Operand must be a pointer type
+            if (!operand->getType()->isPointerTy())
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Dereference operand is not a pointer");
+                return nullptr;
+            }
+
+            // Determine the type to load
+            llvm::Type *pointeeType = nullptr;
+
+            // Check if we're dereferencing a pointer to a struct
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+            {
+                pointeeType = allocaInst->getAllocatedType();
+            }
+            else if (llvm::GetElementPtrInst *gepInst = llvm::dyn_cast<llvm::GetElementPtrInst>(operand))
+            {
+                // Get the type from the GEP instruction
+                pointeeType = gepInst->getResultElementType();
+            }
+            else if (llvm::LoadInst *loadInst = llvm::dyn_cast<llvm::LoadInst>(operand))
+            {
+                // Get the type from the load instruction
+                pointeeType = loadInst->getPointerOperandType();
+            }
+            else
+            {
+                // For other pointer types, get the element type
+                pointeeType = context.getInstance().symbolTable->getLLVMType(
+                    DTM->astInterface->getTypeofASTNode(operandNode));
+
+                if (!pointeeType)
+                {
+                    logMessage(LMI, "WARNING", "Initializer",
+                               "Could not determine pointee type, using i8");
+                    pointeeType = context.getInstance().builder.getInt8Ty();
+                }
+            }
+
+            // Load the value from the pointer
+            return context.getInstance().builder.CreateLoad(
+                pointeeType, operand, "deref");
+        }
+
+        case TOKEN_MINUS: // Unary minus
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating unary minus expression");
+
+            // Check if operand is a pointer, if so, load the value
+            if (operand->getType()->isPointerTy())
+            {
+                llvm::Type *pointeeType = nullptr;
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+                {
+                    pointeeType = allocaInst->getAllocatedType();
+                }
+                // Get the type from your AST's DataType system
+                DataType *operandType = DTM->astInterface->getTypeofASTNode(operandNode);
+                if (operandType && operandType->isPointer)
+                {
+                    // Get the base type (removing the pointer)
+                    DataType *baseType = operandType->clone(operandType);
+                    baseType->setPointer(baseType, false);
+                    pointeeType = context.getInstance().symbolTable->getLLVMType(baseType);
+                }
+                else
+                {
+                    // Fallback if we can't determine the type
+                    pointeeType = context.getInstance().builder.getInt8Ty();
+                    logMessage(LMI, "WARNING", "Initializer", "Could not determine pointee type, using i8");
+                }
+
+                operand = context.getInstance().builder.CreateLoad(
+                    pointeeType, operand, "load_for_neg");
+            }
+
+            // Handle different types
+            if (operand->getType()->isIntegerTy())
+            {
+                return context.getInstance().builder.CreateNeg(operand, "neg");
+            }
+            else if (operand->getType()->isFloatingPointTy())
+            {
+                return context.getInstance().builder.CreateFNeg(operand, "fneg");
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Unary minus not supported for this type");
+                return nullptr;
+            }
+        }
+
+        case TOKEN_BANG: // Logical not
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating logical not expression");
+
+            // Check if operand is a pointer, if so, load the value
+            if (operand->getType()->isPointerTy())
+            {
+                llvm::Type *pointeeType = nullptr;
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+                {
+                    pointeeType = allocaInst->getAllocatedType();
+                }
+                // Get the type from your AST's DataType system
+                DataType *operandType = DTM->astInterface->getTypeofASTNode(operandNode);
+                if (operandType && operandType->isPointer)
+                {
+                    // Get the base type (removing the pointer)
+                    DataType *baseType = operandType->clone(operandType);
+                    baseType->setPointer(baseType, false);
+                    pointeeType = context.getInstance().symbolTable->getLLVMType(baseType);
+                }
+                else
+                {
+                    // Fallback if we can't determine the type
+                    pointeeType = context.getInstance().builder.getInt8Ty();
+                    logMessage(LMI, "WARNING", "Initializer", "Could not determine pointee type, using i8");
+                }
+
+                operand = context.getInstance().builder.CreateLoad(
+                    pointeeType, operand, "load_for_not");
+            }
+
+            // Convert operand to boolean if needed
+            llvm::Value *boolValue = nullptr;
+
+            if (operand->getType()->isIntegerTy(1))
+            {
+                // Already a boolean
+                boolValue = operand;
+            }
+            else if (operand->getType()->isIntegerTy())
+            {
+                // Compare with zero for integers
+                boolValue = context.getInstance().builder.CreateICmpNE(
+                    operand,
+                    llvm::ConstantInt::get(operand->getType(), 0),
+                    "tobool");
+            }
+            else if (operand->getType()->isFloatingPointTy())
+            {
+                // Compare with zero for floating point
+                boolValue = context.getInstance().builder.CreateFCmpONE(
+                    operand,
+                    llvm::ConstantFP::get(operand->getType(), 0.0),
+                    "tobool");
+            }
+            else if (operand->getType()->isPointerTy())
+            {
+                // Compare with null for pointers
+                boolValue = context.getInstance().builder.CreateICmpNE(
+                    operand,
+                    llvm::ConstantPointerNull::get(
+                        llvm::cast<llvm::PointerType>(operand->getType())),
+                    "tobool");
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Logical not not supported for this type");
+                return nullptr;
+            }
+
+            // Negate the boolean value
+            return context.getInstance().builder.CreateXor(
+                boolValue,
+                llvm::ConstantInt::get(context.getInstance().builder.getInt1Ty(), 1),
+                "lnot");
+        }
+
+        case TOKEN_INCREMENT: // ++
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating increment expression");
+
+            // Ensure operand is a pointer to a value
+            if (!operand->getType()->isPointerTy())
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Increment operand must be an lvalue");
+                return nullptr;
+            }
+
+            // Determine the type
+            llvm::Type *pointeeType = nullptr;
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+            {
+                pointeeType = allocaInst->getAllocatedType();
+            }
+            else
+            {
+                DEBUG_BREAKPOINT;
+            }
+
+            // Load the current value
+            llvm::Value *currentVal = context.getInstance().builder.CreateLoad(
+                pointeeType, operand, "inc.old");
+
+            // Increment the value
+            llvm::Value *incremented = nullptr;
+            if (currentVal->getType()->isIntegerTy())
+            {
+                incremented = context.getInstance().builder.CreateAdd(
+                    currentVal,
+                    llvm::ConstantInt::get(currentVal->getType(), 1),
+                    "inc.new");
+            }
+            else if (currentVal->getType()->isFloatingPointTy())
+            {
+                incremented = context.getInstance().builder.CreateFAdd(
+                    currentVal,
+                    llvm::ConstantFP::get(currentVal->getType(), 1.0),
+                    "inc.new");
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Increment not supported for this type");
+                return nullptr;
+            }
+
+            // Store the incremented value
+            context.getInstance().builder.CreateStore(incremented, operand);
+
+            // For pre-increment, return the new value
+            return incremented;
+        }
+
+        case TOKEN_DECREMENT: // --
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating decrement expression");
+
+            // Ensure operand is a pointer to a value
+            if (!operand->getType()->isPointerTy())
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Decrement operand must be an lvalue");
+                return nullptr;
+            }
+
+            // Determine the type
+            llvm::Type *pointeeType = nullptr;
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(operand))
+            {
+                pointeeType = allocaInst->getAllocatedType();
+            }
+            // Get the type from your AST's DataType system
+            DataType *operandType = DTM->astInterface->getTypeofASTNode(operandNode);
+            if (operandType && operandType->isPointer)
+            {
+                // Get the base type (removing the pointer)
+                DataType *baseType = operandType->clone(operandType);
+                baseType->setPointer(baseType, false);
+                pointeeType = context.getInstance().symbolTable->getLLVMType(baseType);
+            }
+            else
+            {
+                // Fallback if we can't determine the type
+                pointeeType = context.getInstance().builder.getInt8Ty();
+                logMessage(LMI, "WARNING", "Initializer", "Could not determine pointee type, using i8");
+            }
+
+            // Load the current value
+            llvm::Value *currentVal = context.getInstance().builder.CreateLoad(
+                pointeeType, operand, "dec.old");
+
+            // Decrement the value
+            llvm::Value *decremented = nullptr;
+            if (currentVal->getType()->isIntegerTy())
+            {
+                decremented = context.getInstance().builder.CreateSub(
+                    currentVal,
+                    llvm::ConstantInt::get(currentVal->getType(), 1),
+                    "dec.new");
+            }
+            else if (currentVal->getType()->isFloatingPointTy())
+            {
+                decremented = context.getInstance().builder.CreateFSub(
+                    currentVal,
+                    llvm::ConstantFP::get(currentVal->getType(), 1.0),
+                    "dec.new");
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer",
+                           "Decrement not supported for this type");
+                return nullptr;
+            }
+
+            // Store the decremented value
+            context.getInstance().builder.CreateStore(decremented, operand);
+
+            // For pre-decrement, return the new value
+            return decremented;
+        }
+
+        default:
+            logMessage(LMI, "ERROR", "Initializer",
+                       "Unsupported unary operator: %d", unaryOp->op);
+            return nullptr;
+        }
     }
 
     llvm::Value *Initializer::generateParam(ASTNode *node)
@@ -1075,6 +1497,14 @@ namespace Cryo
         DEBUG_BREAKPOINT;
 
         return nullptr;
+    }
+
+    llvm::Value *Initializer::generateNullLiteral()
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating null literal...");
+        llvm::Type *nullType = context.getInstance().builder.getInt8Ty();
+        llvm::Value *nullValue = llvm::ConstantPointerNull::get(llvm::PointerType::get(nullType, 0));
+        return nullValue;
     }
 
 } // namespace Cryo

@@ -178,6 +178,7 @@ namespace Cryo
 
         llvm::Value *generateStructInstantiation(ASTNode *node);
         void generateConstructorBody(ASTNode *node, llvm::Value *selfArg, llvm::Function *ctor);
+
     protected:
         IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
 
@@ -198,6 +199,7 @@ namespace Cryo
 
         llvm::Value *generateStringLiteral(ASTNode *node);
         llvm::Value *createIntegerLiteral(unsigned int numBits, uint64_t val, bool isSigned = false);
+        llvm::Value *generateNullLiteral();
 
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);
