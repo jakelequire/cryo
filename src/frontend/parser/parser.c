@@ -2344,6 +2344,28 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     DataType *argType = NULL;
     CryoNodeType nodeType = NODE_UNKNOWN;
 
+    if (currentToken.type == TOKEN_AMPERSAND ||
+        currentToken.type == TOKEN_STAR)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing reference or pointer argument...");
+        const char *argumentName = peekNextUnconsumedToken(lexer, arena, state).lexeme;
+        logMessage(LMI, "INFO", "Parser", "Argument name: %s", argName);
+        ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
+        if (arg)
+        {
+            logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
+            argName = strdup(argumentName);
+            logMessage(LMI, "INFO", "Parser", "Argument name: %s", argName);
+            argType = DTM->astInterface->getTypeofASTNode(arg);
+            logMessage(LMI, "INFO", "Parser", "Argument type: %s", argType->debug->toString(argType));
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse argument.");
+            return NULL;
+        }
+    }
+
     // Resolve the type if it's not a literal
     // Check if `argName` is a literal number
     if (lexer->currentToken.type == TOKEN_INT_LITERAL)
@@ -2373,38 +2395,6 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         logMessage(LMI, "INFO", "Parser", "Argument is `this` keyword");
         nodeType = NODE_THIS;
         return parseThisContext(lexer, context, arena, state, globalTable);
-    }
-    else if (lexer->currentToken.type == TOKEN_AMPERSAND)
-    {
-        logMessage(LMI, "INFO", "Parser", "Argument is a reference");
-        ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
-        if (arg)
-        {
-            logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
-            addArgumentToList(arg, arg, arena, state, globalTable);
-        }
-        else
-        {
-            logMessage(LMI, "ERROR", "Parser", "Failed to parse argument.");
-            return NULL;
-        }
-        argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    }
-    else if (lexer->currentToken.type == TOKEN_STAR)
-    {
-        logMessage(LMI, "INFO", "Parser", "Argument is a pointer");
-        ASTNode *arg = parseUnaryExpression(lexer, context, arena, state, globalTable);
-        if (arg)
-        {
-            logMessage(LMI, "INFO", "Parser", "Adding argument to list...");
-            addArgumentToList(arg, arg, arena, state, globalTable);
-        }
-        else
-        {
-            logMessage(LMI, "ERROR", "Parser", "Failed to parse argument.");
-            return NULL;
-        }
-        argName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     }
     else if (lexer->currentToken.type == TOKEN_IDENTIFIER)
     {
@@ -2450,6 +2440,10 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         {
             logMessage(LMI, "INFO", "Parser", "Symbol found in global table: %s", argName);
             argType = sym->type;
+            nodeType = NODE_VAR_NAME;
+            logMessage(LMI, "INFO", "Parser", "Argument is a variable name");
+            ASTNode *varNameNode = createVarNameNode(strdup(argName), argType, arena, state, lexer);
+            return varNameNode;
         }
         else
         {

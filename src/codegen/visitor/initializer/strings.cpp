@@ -36,7 +36,11 @@ namespace Cryo
 
             // 3. Return pointer to first character using GEP
             return context.getInstance().builder.CreateInBoundsGEP(
-                arrayType, globalStrVar, llvm::ArrayRef<llvm::Value *>{llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0), llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0)},
+                arrayType,
+                globalStrVar,
+                llvm::ArrayRef<llvm::Value *>{
+                    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0),
+                    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0)},
                 "str.ptr");
         }
 

@@ -19,6 +19,7 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 #include "dataTypes/dataTypeManager.h"
+#include "frontend/frontendSymbolTable.h"
 
 /* ====================================================================== */
 // @Global_Variables
@@ -462,7 +463,7 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Le
     // Replacing the old `findSymbol` from the old symbol table seems to be working fine so far.
     // Attempt to find the symbol in the symbol table (It's okay if it can't find and can just create the node)
     const char *currentScopeID = getCurrentScopeID(context);
-    VariableSymbol *varSym = GetFrontendVariableSymbol(globalTable, varName, currentScopeID);
+    FrontendSymbol *varSym = FEST->lookup(FEST, varName);
     if (varSym)
     {
         logMessage(LMI, "INFO", "AST", "Found symbol in global symbol table: %s", varSym->name);
