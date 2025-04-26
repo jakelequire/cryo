@@ -160,6 +160,46 @@ namespace Cryo
         void visitThis(ASTNode *node) override;
 
     private:
+        // Node validation
+        bool validateNode(ASTNode *node, const char *nodeType);
+
+        // Type checking helpers
+        bool isStringWithLiteralInitializer(DataType *varType, ASTNode *initializer);
+        bool isStructWithInitializer(DataType *varType, ASTNode *initializer);
+
+        // Variable declaration handlers
+        void handleStringVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
+        void handleStructVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
+        void handlePrimitiveVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
+
+        // Initializer handlers
+        llvm::Value *generateObjectInstance(llvm::AllocaInst *structAlloca, ASTNode *initializer);
+        void storeInitializerValue(llvm::Value *initVal, llvm::AllocaInst *allocaInst, llvm::Type *llvmType);
+        void handlePrimitiveInitializer(llvm::AllocaInst *allocaInst, ASTNode *initializer, llvm::Type *llvmType);
+
+        // Type conversion and alignment
+        llvm::Value *convertInitializerType(llvm::Value *initVal, llvm::Type *targetType);
+        void setAppropriateAlignment(llvm::AllocaInst *allocaInst, llvm::Type *llvmType);
+
+        // Symbol table operations
+        void addVariableToSymbolTable(const std::string &varName, DataType *varType,
+                                      llvm::Value *value, llvm::Type *pointerType,
+                                      AllocaType allocaType);
+
+    private:
+        // Class declaration helpers
+        void processProperties(
+            void *members,
+            std::vector<llvm::Type *> &propertyTypes,
+            std::vector<IRPropertySymbol> &propertySymbols,
+            bool isPublic);
+
+        void processMethods(
+            void *members,
+            std::vector<IRMethodSymbol> &methodSymbols,
+            const std::string &className);
+
+    private:
         llvm::Value *getLLVMValue(ASTNode *node);
         llvm::Value *performTypeCast(llvm::Value *value, llvm::Type *targetType);
         llvm::Value *convertValueToTargetType(llvm::Value *value, DataType *sourceType, DataType *targetType);

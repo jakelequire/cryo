@@ -207,6 +207,39 @@ namespace Cryo
         llvm::Type *derefValueForType(llvm::Value *value);
 
         IRMethodSymbol *createClassMethod(const std::string &className, ASTNode *method, DataType *methodDataType);
+
+    private: // Unary expression handler methods
+        llvm::Value *handleAddressOf(llvm::Value *operand);
+        llvm::Value *handleDereference(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *handleUnaryMinus(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *handleLogicalNot(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *handleIncrement(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *handleDecrement(llvm::Value *operand, ASTNode *operandNode);
+
+        llvm::Type *determinePointeeType(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *loadPointerOperandIfNeeded(llvm::Value *operand, ASTNode *operandNode);
+        llvm::Value *convertToBool(llvm::Value *value);
+        llvm::Value *handleIncrementOrDecrement(llvm::Value *operand, ASTNode *operandNode, bool isIncrement);
+
+    private: // Property access helper methods
+        bool validatePropertyAccessNode(ASTNode *node);
+        llvm::StructType *getObjectStructType(const std::string &objectTypeName);
+        llvm::Value *getObjectInstance(ASTNode *objectNode);
+        llvm::Type *getPropertyType(llvm::StructType *structType, int propertyIndex);
+        llvm::Value *ensurePointerType(llvm::Value *objectInstance, llvm::Type *objectType);
+        llvm::Value *accessProperty(
+            llvm::Value *objectInstance,
+            llvm::Type *objectType,
+            int propertyIndex,
+            llvm::Type *propertyType,
+            const std::string &objectTypeName,
+            const std::string &propertyName);
+
+    private: // Literal expression helpers
+        bool validateLiteralNode(ASTNode *node);
+        llvm::Value *generatePrimitiveValue(ASTNode *node, PrimitiveDataType primitiveType);
+        llvm::Value *createIntObjectFromLiteral(ASTNode *node, DataType *literalDataType);
+        bool callConstructor(llvm::Value *objectInstance, llvm::Value *ctorArg, const std::string &typeName);
     };
 
 } // namespace Cryo
