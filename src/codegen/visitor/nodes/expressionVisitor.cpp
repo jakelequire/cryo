@@ -185,6 +185,15 @@ namespace Cryo
                 continue;
             }
 
+            if (argType->container->primitive == PRIM_STR)
+            {
+                // Load the string
+                llvm::Value *strValue = builder.CreateLoad(argValue->getType(), argValue, "str.load");
+                argValue = builder.CreateBitCast(strValue, builder.getInt8Ty()->getPointerTo(), "str.cast");
+                logMessage(LMI, "INFO", "CodeGenVisitor", "Loaded string argument %d: %s",
+                           i, argValue->getName().str().c_str());
+            }
+
             // If we have type information for both argument and parameter, perform conversion
             if (argType && paramType)
             {
@@ -215,7 +224,7 @@ namespace Cryo
                             argValue = builder.CreateLoad(llvmParamType, argValue, "arg.load");
                         }
                     }
-                                }
+                }
             }
 
             args.push_back(argValue);

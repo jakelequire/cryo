@@ -61,7 +61,7 @@ namespace Cryo
             }
             llvm::Type *argType = context.getInstance().symbolTable->getLLVMType(argDataType);
             llvm::Value *argVal = getInitializerValue(argNode);
-            if (argVal->getType()->isPointerTy())
+            if (argDataType->container->primitive == PRIM_STR)
             {
                 // Load the value if it's a pointer
                 argVal = context.getInstance().builder.CreateLoad(argType, argVal);
