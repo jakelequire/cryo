@@ -426,6 +426,20 @@ void printString_export(cryo_string_t str)
     // printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", str.val, COLOR_RESET);
 }
 
+void puts_export(char *str)
+{
+    if (str != NULL)
+    {
+        puts(str);
+    }
+    else
+    {
+        puts("NULL");
+    }
+
+    // printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", str, COLOR_RESET);
+}
+
 void printStr_export(char *str)
 {
     if (str != NULL)

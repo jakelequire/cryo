@@ -48,7 +48,32 @@ namespace Cryo
         int argCount = node->data.scopedFunctionCall->argCount;
         for (int i = 0; i < argCount; i++)
         {
-            args.push_back(getInitializerValue(node->data.scopedFunctionCall->args[i]));
+            ASTNode *argNode = node->data.scopedFunctionCall->args[i];
+            DataType *argDataType = DTM->astInterface->getTypeofASTNode(argNode);
+            if (!argDataType)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Argument %d has no data type", i);
+                return nullptr;
+            }
+            llvm::Value *argValue = getInitializerValue(argNode);
+            if (!argValue)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Failed to generate argument %d", i);
+                return nullptr;
+            }
+            if (argValue->getType()->isPointerTy())
+            {
+                logMessage(LMI, "INFO", "Initializer", "Argument %d is a pointer type", i);
+                // Load the value if it's a pointer
+                llvm::Type *argType = context.getInstance().symbolTable->getLLVMType(argDataType);
+                argValue = context.getInstance().builder.CreateLoad(argType, argValue);
+                logMessage(LMI, "INFO", "Initializer", "Loaded argument %d value: %s", i, argValue->getName().str().c_str());
+            }
+            else
+            {
+                logMessage(LMI, "INFO", "Initializer", "Argument %d is not a pointer type", i);
+            }
+            args.push_back(argValue);
         }
 
         logMessage(LMI, "INFO", "Initializer", "Function call: %s", fullFunctionName.c_str());

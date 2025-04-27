@@ -24,7 +24,10 @@ namespace Cryo
         logMessage(LMI, "INFO", "Initializer", "Generating property access...");
 
         if (!validatePropertyAccessNode(node))
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Invalid property access node");
             return nullptr;
+        }
 
         PropertyAccessNode *propertyAccess = node->data.propertyAccess;
         std::string objectTypeName = propertyAccess->objectTypeName;
@@ -37,24 +40,44 @@ namespace Cryo
         // Get the LLVM struct type for the object
         llvm::StructType *llvmStructType = getObjectStructType(objectTypeName);
         if (!llvmStructType)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "LLVM struct type is null");
             return nullptr;
+        }
 
         // Get the object instance
         llvm::Value *objectInstance = getObjectInstance(propertyAccess->object);
         if (!objectInstance)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Object instance is null");
             return nullptr;
+        }
 
         // Get the property type
         llvm::Type *propertyType = getPropertyType(llvmStructType, propertyIndex);
         if (!propertyType)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Property type not found for %s.%s",
+                       objectTypeName.c_str(), propertyName.c_str());
             return nullptr;
+        }
 
         // Ensure object instance is a pointer
         objectInstance = ensurePointerType(objectInstance, llvmStructType);
 
         // Access the property
-        return accessProperty(objectInstance, llvmStructType, propertyIndex,
-                              propertyType, objectTypeName, propertyName);
+        llvm::Value *accessedProp = accessProperty(objectInstance, llvmStructType, propertyIndex,
+                                                   propertyType, objectTypeName, propertyName);
+        if (!accessedProp)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Failed to access property %s.%s",
+                       objectTypeName.c_str(), propertyName.c_str());
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "Initializer", "Successfully accessed property %s.%s",
+                   objectTypeName.c_str(), propertyName.c_str());
+        CodeGenDebug::printLLVMValue(accessedProp);
+        return accessedProp;
     }
 
     bool Initializer::validatePropertyAccessNode(ASTNode *node)

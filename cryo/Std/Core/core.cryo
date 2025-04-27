@@ -19,6 +19,8 @@ extern "C" {
     function sys_read        (fd: i32, buf: void *, count: i32) -> i32;
     function sys_write       (fd: i32, buf: void *, count: i32) -> i32;
 
+    function puts_export     (__str__: str) -> void;
+
     function mmap_export     (addr: void *, length: i32, prot: i32, flags: i32, fd: i32, offset: i32) -> void *;
     function munmap_export   (addr: void *, length: i32) -> i32;
     function malloc_export   (size: i32) -> void *;

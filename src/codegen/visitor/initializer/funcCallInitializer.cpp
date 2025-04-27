@@ -66,6 +66,9 @@ namespace Cryo
                 // Load the value if it's a pointer
                 argVal = context.getInstance().builder.CreateLoad(argType, argVal);
             }
+
+            args.push_back(argVal);
+            logMessage(LMI, "INFO", "Initializer", "Argument %d: %s", i, argVal->getName().str().c_str());
         }
         std::string funcName = node->data.functionCall->name;
         logMessage(LMI, "INFO", "Initializer", "Function call: %s", funcName.c_str());
