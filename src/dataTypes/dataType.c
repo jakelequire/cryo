@@ -327,6 +327,39 @@ DataType *DTMTypeContainerWrappers_createPointerType(const char *typeName, DataT
     return pointerType;
 }
 
+DataType *DTMTypeContainerWrappers_createArrayType(DataType *baseType, int dimensions)
+{
+    TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
+    container->typeOf = ARRAY_TYPE;
+    container->objectType = baseType->container->objectType;
+    container->primitive = baseType->container->primitive;
+
+    container->type.arrayType = (DTArrayTy *)malloc(sizeof(DTArrayTy));
+    if (!container->type.arrayType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create array type\n");
+        CONDITION_FAILED;
+    }
+
+    container->type.arrayType->baseType = baseType;
+    container->type.arrayType->dimensions = dimensions;
+    container->type.arrayType->elementCount = 0;
+    container->type.arrayType->elementCapacity = MAX_FIELD_CAPACITY;
+    container->type.arrayType->elements = (DataType **)malloc(sizeof(DataType *) * container->type.arrayType->elementCapacity);
+    if (!container->type.arrayType->elements)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate array type elements\n");
+        CONDITION_FAILED;
+    }
+    container->type.arrayType->isConst = baseType->isConst;
+    container->type.arrayType->sizeType = NULL;
+
+    DataType *arrayType = DTMTypeContainerWrappers_wrapTypeContainer(container);
+    arrayType->setTypeName(arrayType, baseType->typeName);
+
+    return arrayType;
+}
+
 DTMDataTypes *createDTMDataTypes(void)
 {
     DTMDataTypes *dataTypes = (DTMDataTypes *)malloc(sizeof(DTMDataTypes));
@@ -354,6 +387,7 @@ DTMDataTypes *createDTMDataTypes(void)
     dataTypes->createProtoType = DTMTypeContainerWrappers_createProtoType;
     dataTypes->createTypeAlias = DTMTypeContainerWrappers_createTypeAlias;
     dataTypes->createPointerType = DTMTypeContainerWrappers_createPointerType;
+    dataTypes->createArrayType = DTMTypeContainerWrappers_createArrayType;
 
     return dataTypes;
 }

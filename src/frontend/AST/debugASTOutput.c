@@ -735,6 +735,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatOperatorNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "ScopedFunctionCall") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatFunctionCallNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatFunctionCallNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -2566,9 +2577,17 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         logMessage(LMI, "DEBUG", "ASTDBG", "ScopedFunctionCall");
+        char *scopeName = strdup(node->data.scopedFunctionCall->scopeName);
         char *funcName = strdup(node->data.scopedFunctionCall->functionName);
+        char *fullFuncName = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
+        if (fullFuncName == NULL)
+        {
+            logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for full function name");
+            return;
+        }
+        snprintf(fullFuncName, BUFFER_CHAR_SIZE, "%s::%s", scopeName, funcName);
         DataType *type = node->data.scopedFunctionCall->type;
-        ASTDebugNode *scopedFunctionCallNode = createASTDebugNode("ScopedFunctionCall", funcName, type, line, column, indentLevel, node);
+        ASTDebugNode *scopedFunctionCallNode = createASTDebugNode("ScopedFunctionCall", fullFuncName, type, line, column, indentLevel, node);
         scopedFunctionCallNode->args = node->data.scopedFunctionCall->args;
         scopedFunctionCallNode->argCount = node->data.scopedFunctionCall->argCount;
         output->nodes[output->nodeCount] = *scopedFunctionCallNode;

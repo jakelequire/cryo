@@ -306,6 +306,7 @@ typedef struct DTMDataTypes_t
     DataType *(*createProtoType)(const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
     DataType *(*createTypeAlias)(const char *name, DataType *type);
     DataType *(*createPointerType)(const char *name, DataType *baseType, bool isConst);
+    DataType *(*createArrayType)(DataType *baseType, int dimensions);
 } DTMDataTypes;
 
 typedef struct DTMTypeValidation_t

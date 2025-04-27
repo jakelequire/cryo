@@ -110,7 +110,11 @@ typedef struct DTArrayTy_t
     int elementCount;
     int elementCapacity;
     int dimensions;
+    size_t size;
+    bool isConst;
+    bool isDynamic;
     struct DataType_t *baseType;
+    struct DataType_t *sizeType;
 
     // ==================== [ Function Assignments ] ==================== //
 
@@ -441,4 +445,6 @@ DTPointerTy *createDTPointerTy(void);
 
 TypeContainer *createTypeContainer(void);
 
+// Forward declaration for the array parsing function
+DataType *DTMParseArrayType(const char *typeStr, int *pos);
 #endif // DATA_TYPE_DEFS_H

@@ -2373,7 +2373,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         logMessage(LMI, "INFO", "Parser", "Argument is an integer literal");
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
-        argType = DTM->primitives->createInt();
+        argType = DTM->primitives->createI32();
     }
     else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
     {
@@ -2456,7 +2456,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     {
         if (lexer->currentToken.type == TOKEN_INT_LITERAL)
         {
-            argType = DTM->primitives->createInt();
+            argType = DTM->primitives->createI32();
         }
         else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
         {

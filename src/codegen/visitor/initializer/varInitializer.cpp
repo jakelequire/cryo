@@ -19,6 +19,51 @@
 namespace Cryo
 {
 
+    llvm::Value *Initializer::generateVarName(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating variable name...");
+        ASSERT_NODE_NULLPTR_RET(node);
+        if (node->metaData->type != NODE_VAR_NAME)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not a variable name");
+            return nullptr;
+        }
+
+        std::string varName = node->data.varName->varName;
+        logMessage(LMI, "INFO", "Initializer", "Variable name: %s", varName.c_str());
+
+        IRVariableSymbol *varSymbol = getSymbolTable()->findVariable(varName);
+        if (!varSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Variable %s not found", varName.c_str());
+            // Print the symbol table for debugging
+            context.getInstance().symbolTable->debugPrint();
+            return nullptr;
+        }
+        DataType *varDataType = varSymbol->dataType;
+        if (!varDataType)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Variable %s has no data type", varName.c_str());
+            return nullptr;
+        }
+        if (varDataType->container->typeOf == OBJECT_TYPE)
+        {
+            logMessage(LMI, "INFO", "Initializer", "Variable %s is an object type", varName.c_str());
+            if (varSymbol->value && varSymbol->value->getType()->isPointerTy())
+            {
+                return varSymbol->value;
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Variable %s is not a pointer type", varName.c_str());
+                return nullptr;
+            }
+        }
+
+        logMessage(LMI, "INFO", "Initializer", "Variable %s found", varName.c_str());
+        return varSymbol->value;
+    }
+
     void CodeGenVisitor::visitVarDecl(ASTNode *node)
     {
         if (!validateNode(node, "variable declaration"))

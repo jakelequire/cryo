@@ -1,0 +1,10 @@
+namespace Std.Sys;
+
+class Sys {
+
+    public static exit(stat: i32) -> void {
+        sys_exit(stat);
+        return;
+    }
+
+}

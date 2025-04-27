@@ -382,44 +382,7 @@ namespace Cryo
 
     void SymbolTableDebugger::logSymbolTable(SymbolTable *table)
     {
-        DEBUG_PRINT_FILTER({
-            if (!table)
-            {
-                logger->debugNode("NULL symbol table");
-                return;
-            }
-
-            logger->debugNode("SymbolTable | " BOLD "Namespace: " BLUE "%s" COLOR_RESET " Count: %zu",
-                              table->namespaceName ? table->namespaceName : "global",
-                              table->count);
-            logger->debugNode("ID: %s Depth: %zu", table->scopeId, table->scopeDepth);
-
-            if (table->currentScope)
-            {
-                logger->debugNode("\nCurrent Scope:");
-                logScopeBlock(table->currentScope);
-            }
-
-            if (table->count > 0)
-            {
-                logger->debugNode(HEAVY_SEPARATOR);
-                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
-                logger->debugNode(SEPARATOR);
-                for (size_t i = 0; i < table->count; i++)
-                {
-                    logSymbol(table->symbols[i]);
-                }
-            }
-            if (table->count == 0)
-            {
-                logger->debugNode(HEAVY_SEPARATOR);
-                logger->debugNode(BOLD UNDERLINE YELLOW "\nSymbols:" COLOR_RESET);
-                logger->debugNode(SEPARATOR);
-                logger->debugNode("\n " BOLD RED "[!] No symbols in table" COLOR_RESET);
-            }
-            printf("\n");
-            logger->debugNode(HEAVY_SEPARATOR);
-        });
+        return;
     }
 
     void SymbolTableDebugger::logTypeTable(TypesTable *table)

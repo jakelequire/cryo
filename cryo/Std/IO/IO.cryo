@@ -3,9 +3,9 @@ namespace Std.IO;
 class IO {
 
     public static readFile(filePath: String *) -> str {
-        printStr(&filePath.val);
+        printStr(filePath.val);
 
-        const content: str = c_readFile_export(&filePath.val);
+        const content: str = c_readFile_export(filePath.val);
         if (content == null) {
             printStr("Error: @readFile File not found or could not be read.");
             return null;

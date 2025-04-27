@@ -64,6 +64,7 @@ namespace Cryo
         virtual void visitEnumDecl(ASTNode *node) = 0;
         virtual void visitGenericDecl(ASTNode *node) = 0;
         virtual void visitTypeDecl(ASTNode *node) = 0;
+        virtual void visitScopedFunctionCall(ASTNode *node) = 0;
 
         // Expressions
         virtual void visitLiteralExpr(ASTNode *node) = 0;
@@ -133,6 +134,7 @@ namespace Cryo
         void visitEnumDecl(ASTNode *node) override;
         void visitGenericDecl(ASTNode *node) override;
         void visitTypeDecl(ASTNode *node) override;
+        void visitScopedFunctionCall(ASTNode *node) override;
 
         // Expressions
         void visitLiteralExpr(ASTNode *node) override;

@@ -1,36 +1,44 @@
 COMPILER_VERSION=0.0.2
-BUILD_TIMESTAMP=2025-04-26 16:40:42
-MODULE_COUNT=4
+BUILD_TIMESTAMP=2025-04-26 18:30:36
+MODULE_COUNT=5
 
 [MODULE]
 NAME=Math
-SO_PATH=/workspaces/cryo/cryo/Std/bin/Math.so
-SOURCE_PATH=/workspaces/cryo/cryo/Std/Math/Math.cryo
+SO_PATH=/home/phock/Programming/apps/cryo/cryo/Std/bin/Math.so
+SOURCE_PATH=/home/phock/Programming/apps/cryo/cryo/Std/Math/Math.cryo
 SOURCE_CHECKSUM=ffffffff
 BINARY_CHECKSUM=ffffffff
-BUILD_TIME=2025-04-26 16:40:41
-
-[MODULE]
-NAME=IO
-SO_PATH=/workspaces/cryo/cryo/Std/bin/IO.so
-SOURCE_PATH=/workspaces/cryo/cryo/Std/IO/IO.cryo
-SOURCE_CHECKSUM=ffffffff
-BINARY_CHECKSUM=ffffffff
-BUILD_TIME=2025-04-26 16:40:42
-
-[MODULE]
-NAME=libcryo_core
-SO_PATH=/workspaces/cryo/cryo/Std/bin/libcryo_core.so
-SOURCE_PATH=/workspaces/cryo/cryo/Std/Core/core.cryo
-SOURCE_CHECKSUM=ffffffff
-BINARY_CHECKSUM=ffffffff
-BUILD_TIME=2025-04-26 16:40:41
+BUILD_TIME=2025-04-26 18:30:36
 
 [MODULE]
 NAME=Time
-SO_PATH=/workspaces/cryo/cryo/Std/bin/Time.so
-SOURCE_PATH=/workspaces/cryo/cryo/Std/IO/Time.cryo
+SO_PATH=/home/phock/Programming/apps/cryo/cryo/Std/bin/Time.so
+SOURCE_PATH=/home/phock/Programming/apps/cryo/cryo/Std/IO/Time.cryo
 SOURCE_CHECKSUM=ffffffff
 BINARY_CHECKSUM=ffffffff
-BUILD_TIME=2025-04-26 16:40:41
+BUILD_TIME=2025-04-26 18:30:36
+
+[MODULE]
+NAME=libcryo_core
+SO_PATH=/home/phock/Programming/apps/cryo/cryo/Std/bin/libcryo_core.so
+SOURCE_PATH=/home/phock/Programming/apps/cryo/cryo/Std/Core/core.cryo
+SOURCE_CHECKSUM=ffffffff
+BINARY_CHECKSUM=ffffffff
+BUILD_TIME=2025-04-26 18:30:36
+
+[MODULE]
+NAME=Sys
+SO_PATH=/home/phock/Programming/apps/cryo/cryo/Std/bin/Sys.so
+SOURCE_PATH=/home/phock/Programming/apps/cryo/cryo/Std/Sys/Sys.cryo
+SOURCE_CHECKSUM=ffffffff
+BINARY_CHECKSUM=ffffffff
+BUILD_TIME=2025-04-26 18:30:36
+
+[MODULE]
+NAME=IO
+SO_PATH=/home/phock/Programming/apps/cryo/cryo/Std/bin/IO.so
+SOURCE_PATH=/home/phock/Programming/apps/cryo/cryo/Std/IO/IO.cryo
+SOURCE_CHECKSUM=ffffffff
+BINARY_CHECKSUM=ffffffff
+BUILD_TIME=2025-04-26 18:30:36
 

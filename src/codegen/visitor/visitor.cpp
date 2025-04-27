@@ -20,7 +20,8 @@ namespace Cryo
 {
     CodeGenVisitor::CodeGenVisitor(CodegenContext &ctx)
         : context(ctx), builder(ctx.builder), symbolTable(ctx.symbolTable), lastValue(nullptr), initializer(ctx.initializer)
-    {}
+    {
+    }
 
     void Visitor::visit(ASTNode *node)
     {
@@ -137,6 +138,9 @@ namespace Cryo
             break;
         case NODE_TYPE:
             visitTypeDecl(node);
+            break;
+        case NODE_SCOPED_FUNCTION_CALL:
+            visitScopedFunctionCall(node);
             break;
         case NODE_VAR_REASSIGN:
             DEBUG_BREAKPOINT;

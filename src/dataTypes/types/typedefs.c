@@ -144,6 +144,8 @@ DTArrayTy *createDTArrayTy(void)
     arrayType->elementCapacity = MAX_FIELD_CAPACITY;
     arrayType->dimensions = 0;
     arrayType->baseType = NULL;
+    arrayType->isConst = false;
+    arrayType->isDynamic = false;
 
     // ==================== [ Function Assignments ] ==================== //
 

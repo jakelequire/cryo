@@ -736,6 +736,14 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         case PRIM_BOOLEAN:
             node->data.literal->value.booleanValue = strcmp(name, "true") == 0 ? true : false;
             break;
+        case PRIM_I8:
+        case PRIM_I16:
+        case PRIM_I32:
+        case PRIM_I64:
+        case PRIM_I128:
+            node->data.literal->value.intValue = atoi(name);
+            break;
+        case PRIM_OBJECT:
         case PRIM_NULL:
         case PRIM_VOID:
             break;

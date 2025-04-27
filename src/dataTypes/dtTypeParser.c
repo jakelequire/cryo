@@ -98,19 +98,185 @@ DataType *DTMParsePrimitive(const char *typeStr)
     }
 }
 
+// Forward declaration for the array parsing function
+DataType *DTMParseArrayType(const char *typeStr, int *pos);
+
+bool isArrayType(const char *typeStr)
+{
+    // Check if the type string contains an array declaration
+    return (strchr(typeStr, '[') != NULL);
+}
+
+// Helper function to parse array types
+DataType *DTMParseArrayType(const char *__typeStr__, int *pos)
+{
+    char *typeStr = (char *)strdup(__typeStr__);
+    char baseTypeBuf[256] = {0};
+    int i = 0;
+
+    // Extract the base type (everything before '[')
+    while (typeStr[i] && typeStr[i] != '[')
+    {
+        baseTypeBuf[i] = typeStr[i];
+        i++;
+    }
+    baseTypeBuf[i] = '\0';
+
+    // If no '[' was found, it's not an array type
+    if (!typeStr[i])
+    {
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Parsing array type '%s'", baseTypeBuf);
+
+    // Parse the base type
+    DataType *baseType = DTMParsePrimitive(baseTypeBuf);
+    if (!baseType)
+    {
+        // Try to look it up in the symbol table
+        baseType = DTM->symbolTable->lookup(DTM->symbolTable, baseTypeBuf);
+        if (!baseType)
+        {
+            logMessage(LMI, "ERROR", "DTM", "Failed to parse base type '%s'", baseTypeBuf);
+            return NULL;
+        }
+    }
+
+    logMessage(LMI, "INFO", "DTM", "Parsed base type '%s'", baseType->typeName);
+    // Now we're at '[', move past it
+    i++; // Skip '['
+
+    // Check if it's a dynamic array '[]'
+    if (typeStr[i] == ']')
+    {
+        logMessage(LMI, "INFO", "DTM", "Parsing dynamic array type '%s'", baseType->typeName);
+        // Dynamic array type
+        DataType *arrayType = DTM->dataTypes->createArrayType(baseType, 1);
+        arrayType->isArray = true;
+        arrayType->container->type.arrayType->isDynamic = true;
+
+        // Update position to after ']'
+        logMessage(LMI, "INFO", "DTM", "Parsed dynamic array type '%s'", arrayType->typeName);
+        return arrayType;
+    }
+
+    // It's a static array or an array with a type as the size specifier
+    // Check if it's a numeric size
+    if (isdigit(typeStr[i]))
+    {
+        logMessage(LMI, "INFO", "DTM", "Parsing static array type '%s'", baseType->typeName);
+        // Parse the size
+        char sizeBuf[64] = {0};
+        int j = 0;
+        while (typeStr[i] && typeStr[i] != ']')
+        {
+            sizeBuf[j++] = typeStr[i++];
+        }
+        sizeBuf[j] = '\0';
+
+        if (typeStr[i] != ']')
+        {
+            logMessage(LMI, "ERROR", "DTM", "Expected ']' after array size");
+            return NULL;
+        }
+
+        // Convert size to integer
+        int size = atoi(sizeBuf);
+        if (size <= 0)
+        {
+            logMessage(LMI, "ERROR", "DTM", "Invalid array size: %d", size);
+            return NULL;
+        }
+
+        // Create static array type
+        DataType *arrayType = DTM->dataTypes->createArrayType(baseType, size);
+        arrayType->isArray = true;
+        arrayType->container->type.arrayType->isDynamic = false;
+        arrayType->container->type.arrayType->size = size;
+
+        // Update position to after ']'
+        *pos = i + 1;
+        logMessage(LMI, "INFO", "DTM", "Parsed static array type '%s' with size %d", arrayType->typeName, size);
+        return arrayType;
+    }
+    else
+    {
+        logMessage(LMI, "INFO", "DTM", "Parsing array type with type-based size '%s'", baseType->typeName);
+        // This is a complex type specification like int[int[]]
+        // Recursively parse the type inside brackets
+        int nestedPos = 0;
+        DataType *sizeType = DTMParseType(typeStr + i);
+
+        // Skip past the nested type
+        while (typeStr[i] && typeStr[i] != ']')
+        {
+            i++;
+        }
+
+        if (typeStr[i] != ']')
+        {
+            logMessage(LMI, "ERROR", "DTM", "Expected ']' after array size specification");
+            return NULL;
+        }
+
+        // Create array type with type-based size
+        DataType *arrayType = DTM->dataTypes->createArrayType(baseType, 1); // Default size 1
+        arrayType->isArray = true;
+        arrayType->container->type.arrayType->isDynamic = false;
+        arrayType->container->type.arrayType->sizeType = sizeType; // Store the type that specifies the size
+
+        // Update position to after ']'
+        *pos = i + 1;
+        logMessage(LMI, "INFO", "DTM", "Parsed array type with type-based size '%s'", arrayType->typeName);
+        return arrayType;
+    }
+}
+
+// Updated main type parsing function
 DataType *DTMParseType(const char *typeStr)
 {
     logMessage(LMI, "INFO", "DTM", "Parsing type string '%s'", typeStr);
     if (!typeStr)
     {
         fprintf(stderr, "[Data Type Manager] Error: Attempted to parse NULL type string\n");
-        CONDITION_FAILED;
+        return NULL;
     }
 
+    // First check if it's an array type
+    int pos = 0;
+    DataType *arrayType = DTMParseArrayType(typeStr, &pos);
+    if (arrayType)
+    {
+        // If we found an array type, but there's more string after it,
+        // we might need to handle additional array dimensions
+        if (typeStr[pos] == '[')
+        {
+            // Handle multi-dimensional arrays
+            DataType *currentType = arrayType;
+            while (typeStr[pos] == '[')
+            {
+                int subPos = pos;
+                DataType *subArrayType = DTMParseArrayType(typeStr + pos - 1, &subPos);
+                if (!subArrayType)
+                {
+                    logMessage(LMI, "ERROR", "DTM", "Failed to parse multi-dimensional array");
+                    return NULL;
+                }
+                // Update the base type of subArrayType to be the previously parsed arrayType
+                subArrayType->container->type.arrayType->baseType = currentType;
+                currentType = subArrayType;
+                pos += subPos;
+            }
+            return currentType;
+        }
+        return arrayType;
+    }
+
+    // If it's not an array type, try as a primitive
     DataType *primitive = DTMParsePrimitive(typeStr);
     if (primitive != NULL)
     {
-        // If the type is a primitive, return it
         logMessage(LMI, "INFO", "DTM", "Parsed primitive type '%s'", typeStr);
         return primitive;
     }
@@ -127,7 +293,6 @@ DataType *DTMParseType(const char *typeStr)
         logMessage(LMI, "ERROR", "DTM", "Failed to parse type string '%s'", typeStr);
         fprintf(stderr, "[Data Type Manager] Error: Failed to parse type string '%s'\n", typeStr);
         DTM->symbolTable->printTable(DTM->symbolTable);
-        CONDITION_FAILED;
         return NULL;
     }
 
@@ -143,22 +308,30 @@ DataType *DTMResolveType(DataTypeManager *self, const char *typeStr)
         CONDITION_FAILED;
     }
 
+    if (isArrayType(typeStr))
+    {
+        // If it's an array type, parse it
+        DataType *arrayType = DTMParseArrayType(typeStr, NULL);
+        if (arrayType != NULL)
+        {
+            return arrayType;
+        }
+    }
+
     // We will look up the string directly in the symbol table
     DataType *type = self->symbolTable->lookup(self->symbolTable, typeStr);
-    if (type)
+    if (type != NULL)
     {
         return type;
     }
 
     DataType *primitive = DTMParseType(typeStr);
-    if (primitive)
+    if (primitive != NULL)
     {
         return primitive;
     }
 
     // If we reach here, the type is not a primitive or a symbol table entry
     logMessage(LMI, "ERROR", "DTM", "Failed to resolve type string '%s'", typeStr);
-    CONDITION_FAILED;
-
     return NULL;
 }

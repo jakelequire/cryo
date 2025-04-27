@@ -550,4 +550,50 @@ namespace Cryo
         return value;
     }
 
+    void CodeGenVisitor::visitScopedFunctionCall(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting scoped function call...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        std::string scopeName = node->data.scopedFunctionCall->scopeName;
+        std::string functionName = node->data.scopedFunctionCall->functionName;
+        std::string fullFunctionName = scopeName + "." + functionName;
+
+        logMessage(LMI, "INFO", "Initializer", "Scoped function call: %s", fullFunctionName.c_str());
+        // Find the function in the symbol table
+        IRFunctionSymbol *funcSymbol = context.getInstance().symbolTable->findFunction(fullFunctionName);
+        if (!funcSymbol)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", fullFunctionName.c_str());
+            CONDITION_FAILED;
+            return;
+        }
+
+        // Process arguments
+        std::vector<llvm::Value *> args;
+        int argCount = node->data.scopedFunctionCall->argCount;
+        for (int i = 0; i < argCount; i++)
+        {
+            args.push_back(context.getInstance().initializer->getInitializerValue(node->data.scopedFunctionCall->args[i]));
+        }
+
+        logMessage(LMI, "INFO", "Initializer", "Function call: %s", fullFunctionName.c_str());
+        llvm::Function *function = funcSymbol->function;
+        if (!function)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", fullFunctionName.c_str());
+            CONDITION_FAILED;
+            return;
+        }
+
+        // Create the function call
+        context.getInstance().builder.CreateCall(function, args);
+
+        return;
+    }
+
 } // namespace Cryo
