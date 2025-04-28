@@ -100,13 +100,18 @@ namespace Cryo
                 if (argDataType->container->primitive == PRIM_STR && argVal->getType()->isPointerTy())
                 {
                     // Load the string
-                    llvm::Value *strValue = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, "str.load");
+                    std::string argValName = argVal->getName().str();
+                    llvm::Value *strValue = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
                     argVal = context.getInstance().builder.CreateBitCast(strValue, context.getInstance().builder.getInt8Ty()->getPointerTo(), "str.cast");
                     logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argVal->getName().str().c_str());
                 }
                 else if (argVal->getType()->isPointerTy() && argDataType->container->primitive != PRIM_STR)
                 {
                     // Load the value if it's a pointer
+                    argVal = context.getInstance().builder.CreateLoad(argType, argVal);
+                }
+                else if (argVal->getType()->isPointerTy())
+                {
                     argVal = context.getInstance().builder.CreateLoad(argType, argVal);
                 }
 

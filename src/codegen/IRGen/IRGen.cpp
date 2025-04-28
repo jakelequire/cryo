@@ -106,6 +106,19 @@ namespace Cryo
         logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");
         std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(*context.getInstance().module);
 
+        // optimize the module
+        logMessage(LMI, "INFO", "IRGeneration", "Optimizing module...");
+        llvm::legacy::PassManager passManager;
+        passManager.add(llvm::createInstructionCombiningPass());
+        passManager.add(llvm::createReassociatePass());
+        passManager.add(llvm::createCFGSimplificationPass());
+        passManager.add(llvm::createConstantHoistingPass());
+        passManager.add(llvm::createDeadCodeEliminationPass());
+
+        // Run the optimization passes
+        passManager.run(*clonedModule);
+        logMessage(LMI, "INFO", "IRGeneration", "Module optimized successfully.");
+
         logMessage(LMI, "INFO", "IRGeneration", "Cloned module successfully.");
         // Add the module to the global symbol table instance
         std::string moduleName = clonedModule->getName().str();

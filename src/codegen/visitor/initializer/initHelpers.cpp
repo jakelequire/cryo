@@ -79,7 +79,8 @@ namespace Cryo
             if (argType->container->primitive == PRIM_STR)
             {
                 // Load the string pointer
-                arg = context.getInstance().builder.CreateLoad(arg->getType(), arg, "str.load");
+                std::string argValName = arg->getName().str();
+                arg = context.getInstance().builder.CreateLoad(arg->getType(), arg, argValName + ".load");
             }
 
             // Create GEP to get pointer to struct field
@@ -173,7 +174,29 @@ namespace Cryo
             int argCount = node->data.objectNode->argCount;
             for (int i = 0; i < argCount; i++)
             {
-                ctorArgs.push_back(getInitializerValue(node->data.objectNode->args[i]));
+                ASTNode *argNode = node->data.objectNode->args[i];
+                llvm::Value *argVal = getInitializerValue(argNode);
+                std::string argValName = argVal->getName().str();
+                if (argValName.find("g_str") != std::string::npos)
+                {
+                    // Allocate the string
+                    llvm::AllocaInst *strAlloc = context.getInstance().builder.CreateAlloca(
+                        argVal->getType(), nullptr, argValName + ".alloc");
+                    context.getInstance().builder.CreateStore(argVal, strAlloc);
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), strAlloc, argValName + ".load");
+                    logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argVal->getName().str().c_str());
+                }
+                else if (argVal->getType()->isPointerTy())
+                {
+                    // Load the value if it's a pointer
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
+                }
+                else if (argVal->getType()->isPointerTy())
+                {
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
+                }
+
+                ctorArgs.push_back(argVal);
             }
 
             // Create the object instance

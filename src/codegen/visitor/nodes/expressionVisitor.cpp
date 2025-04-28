@@ -185,52 +185,31 @@ namespace Cryo
                 continue;
             }
 
-            if (argType->container->primitive == PRIM_STR)
+            std::string argValName = argValue->getName().str();
+
+            if (argValName.find("g_str") != std::string::npos)
+            {
+                // Allocate the string
+                llvm::AllocaInst *strAlloc = context.getInstance().builder.CreateAlloca(
+                    argValue->getType(), nullptr, argValName + ".alloc");
+                context.getInstance().builder.CreateStore(argValue, strAlloc);
+                argValue = context.getInstance().builder.CreateLoad(argValue->getType(), strAlloc, argValName + ".load");
+                logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argValue->getName().str().c_str());
+            }
+            // Check if the argument is a global string
+            else if (argType->container->primitive == PRIM_STR)
             {
                 // Load the string
-                llvm::Value *strValue = builder.CreateLoad(argValue->getType(), argValue, "str.load");
-                argValue = builder.CreateBitCast(strValue, builder.getInt8Ty()->getPointerTo(), "str.cast");
-                logMessage(LMI, "INFO", "CodeGenVisitor", "Loaded string argument %d: %s",
-                           i, argValue->getName().str().c_str());
+                std::string argValName = argValue->getName().str();
+                argValue = builder.CreateLoad(argValue->getType(), argValue, argValName + ".load");
+                logMessage(LMI, "INFO", "CodeGenVisitor",
+                           "Loaded string argument %d: %s", i, argValue->getName().str().c_str());
             }
-            if (argValue->getType()->isPointerTy() &&
-                argType->container->primitive != PRIM_STR)
+            else if (argValue->getType()->isPointerTy() &&
+                     argType->container->primitive != PRIM_STR)
             {
                 // Load the value if it's a pointer
                 argValue = builder.CreateLoad(argValue->getType(), argValue, "arg.load");
-            }
-
-            // If we have type information for both argument and parameter, perform conversion
-            if (argType && paramType)
-            {
-                logMessage(LMI, "INFO", "CodeGenVisitor",
-                           "Converting argument %d from %s to %s",
-                           i, argType->typeName, paramType->typeName);
-
-                argValue = convertValueToTargetType(argValue, argType, paramType);
-            }
-            // Fallback to LLVM type-based conversion using parameter types from function type
-            else if (i < funcSymbol->function->getFunctionType()->getNumParams())
-            {
-                llvm::Type *llvmParamType = funcSymbol->function->getFunctionType()->getParamType(i);
-
-                if (argValue->getType() != llvmParamType)
-                {
-                    // Handle basic conversions based on LLVM types
-                    if (argValue->getType()->isPointerTy() && !llvmParamType->isPointerTy())
-                    {
-                        // Need to load from pointer
-                        if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(argValue))
-                        {
-                            llvm::Type *allocatedType = allocaInst->getAllocatedType();
-                            argValue = builder.CreateLoad(allocatedType, argValue, "arg.load");
-                        }
-                        else
-                        {
-                            argValue = builder.CreateLoad(llvmParamType, argValue, "arg.load");
-                        }
-                    }
-                }
             }
 
             args.push_back(argValue);
