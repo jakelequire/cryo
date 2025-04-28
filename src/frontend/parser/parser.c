@@ -1569,6 +1569,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         DataType *paramType = params[i]->data.varDecl->type;
         logMessage(LMI, "INFO", "Parser", "Parameter type: %s", paramType->debug->toString(paramType));
         paramTypes[i] = params[i]->data.param->type;
+        FEST->addSymbol(FEST, params[i]);
         paramCount++;
     }
 
@@ -3390,23 +3391,28 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
         logMessage(LMI, "INFO", "Parser", "Identifier name: %s", identifierName);
         consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseIdentifierDotNotation", arena, state, context);
 
-        Symbol *sym = FindSymbol(globalTable, identifierName, getCurrentScopeID(context));
-        if (!sym)
+        FrontendSymbol *accessor = FEST->lookup(FEST, identifierName);
+        if (!accessor)
         {
-            logMessage(LMI, "ERROR", "Parser", "Failed to find symbol.");
-            parsingError("Failed to find symbol.", "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
+            logMessage(LMI, "ERROR", "Parser", "Failed to find accessor.");
+            parsingError("Failed to find accessor.", "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
             return NULL;
         }
 
-        ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
-        ASTNode *identifierNode = symbolNode;
-        DataType *typeOfNode = DTM->astInterface->getTypeofASTNode(identifierNode);
-        DataType *typeFromSymbol = GetDataTypeFromSymbol(globalTable, sym);
+        logMessage(LMI, "INFO", "Parser", "Accessor found: %s", accessor->name);
+
+        ASTNode *symbolNode = accessor->node;
+        symbolNode->print(symbolNode);
+        DataType *symbolDataType = DTM->astInterface->getTypeofASTNode(symbolNode);
+
+        if (symbolNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+        }
 
         if (lexer->currentToken.type == TOKEN_DOT)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing dot notation with identifier...");
-            return parseDotNotationWithType(identifierNode, typeFromSymbol, lexer, context, arena, state, globalTable);
+            return parseDotNotationWithType(symbolNode, symbolDataType, lexer, context, arena, state, globalTable);
         }
 
         DEBUG_BREAKPOINT;
@@ -3419,7 +3425,7 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
     return NULL;
 }
 
-ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing dot notation with type...");
@@ -3436,6 +3442,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.", "parseDotNotationWithType", arena, state, context);
 
+    // If the type of node is a struct, we need to check if the property exists in the struct.
     if (typeOfNode->container->objectType == STRUCT_OBJ && typeOfNode->container->typeOf != POINTER_TYPE)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a struct.");
@@ -3448,7 +3455,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, globalTable);
+            ASTNode *methodCallNode = parseMethodCall(accessor, propName, typeOfNode, lexer, context, arena, state, globalTable);
             return methodCallNode;
         }
 
@@ -3459,7 +3466,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (property)
         {
             logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", propName);
-            ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, propName, typeOfNode, arena, state, lexer);
+            ASTNode *propertyAccessNode = createStructPropertyAccessNode(accessor, property, propName, typeOfNode, arena, state, lexer);
             propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, propName);
             propertyAccessNode->data.propertyAccess->objectTypeName = structName;
             logMessage(LMI, "INFO", "Parser", "Property access node created.");
@@ -3479,6 +3486,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
             return NULL;
         }
     }
+    // If the type of node is a pointer to a struct, we need to dereference it first.
     else if (typeOfNode->container->typeOf == POINTER_TYPE && typeOfNode->container->type.pointerType->baseType->container->objectType == STRUCT_OBJ)
     {
         logMessage(LMI, "INFO", "Parser", "Type of node is a pointer to a struct.");
@@ -3493,7 +3501,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, globalTable);
+            ASTNode *methodCallNode = parseMethodCall(accessor, propName, typeOfNode, lexer, context, arena, state, globalTable);
             return methodCallNode;
         }
 
@@ -3504,7 +3512,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (property)
         {
             logMessage(LMI, "INFO", "Parser", "Property found in struct, name: %s", propName);
-            ASTNode *propertyAccessNode = createStructPropertyAccessNode(object, property, propName, typeOfNode, arena, state, lexer);
+            ASTNode *propertyAccessNode = createStructPropertyAccessNode(accessor, property, propName, typeOfNode, arena, state, lexer);
             propertyAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(typeOfNode, propName);
             propertyAccessNode->data.propertyAccess->objectTypeName = structName;
             logMessage(LMI, "INFO", "Parser", "Property access node created.");
@@ -3531,7 +3539,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (currentToken.type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing method call...");
-            ASTNode *methodCallNode = parseMethodCall(object, propName, typeOfNode, lexer, context, arena, state, globalTable);
+            ASTNode *methodCallNode = parseMethodCall(accessor, propName, typeOfNode, lexer, context, arena, state, globalTable);
             return methodCallNode;
         }
 
@@ -3542,7 +3550,7 @@ ASTNode *parseDotNotationWithType(ASTNode *object, DataType *typeOfNode, Lexer *
         if (property)
         {
             logMessage(LMI, "INFO", "Parser", "Property found in class, name: %s", propName);
-            return createClassPropertyAccessNode(object, property, (const char *)propName, typeOfNode, arena, state, lexer);
+            return createClassPropertyAccessNode(accessor, property, (const char *)propName, typeOfNode, arena, state, lexer);
         }
         else
         {

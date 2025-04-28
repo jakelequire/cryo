@@ -307,6 +307,40 @@ FrontendSymbol *p_createExternDeclarationSymbol(ASTNode *node)
     }
 }
 
+FrontendSymbol *p_createParamDeclarationSymbol(ASTNode *node)
+{
+    if (node == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
+        return NULL;
+    }
+
+    if (node->metaData->type != NODE_PARAM)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is not a parameter declaration");
+        return NULL;
+    }
+
+    const char *paramName = node->data.param->name;
+    const char *paramID = "undef";
+    ASTNode *paramNode = node;
+    DataType *paramType = node->data.param->type;
+    ScopeType scopeType = FEST->currentScope->type;
+    size_t lineNumber = node->metaData->line;
+    size_t columnNumber = node->metaData->column;
+    bool isDefined = true; // TODO: Determine if the parameter is defined
+
+    FrontendSymbol *symbol = p_createSymbol(paramName, paramID, paramNode, paramType, scopeType, lineNumber, columnNumber, isDefined);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create parameter symbol");
+        return NULL;
+    }
+
+    logMessage(LMI, "INFO", "SymbolTable", "Created parameter symbol: %s", paramName);
+    return symbol;
+}
+
 // =========================================================================================================== //
 //                                                                                                             //
 //                                          ASTNode to Symbol Conversion                                       //
@@ -339,6 +373,9 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
         return p_createStructDeclarationSymbol(node);
     case NODE_METHOD:
         return p_createMethodDeclarationSymbol(node);
+    case NODE_PARAM:
+        return p_createParamDeclarationSymbol(node);
+
     case NODE_PROGRAM:
     case NODE_STATEMENT:
     case NODE_EXPRESSION:
@@ -356,7 +393,6 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
     case NODE_EXPRESSION_STATEMENT:
     case NODE_ASSIGN:
     case NODE_PARAM_LIST:
-    case NODE_PARAM:
     case NODE_STRING_LITERAL:
     case NODE_STRING_EXPRESSION:
     case NODE_BOOLEAN_LITERAL:
@@ -392,14 +428,20 @@ FrontendSymbol *astNodeToSymbol(ASTNode *node)
     case NODE_IMPLEMENTATION:
     case NODE_UNKNOWN:
     {
+        const char *nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
+        logMessage(LMI, "WARN", "SymbolTable", "Unhandled ASTNode type: %s", nodeTypeStr);
+        CONDITION_FAILED;
         break;
     }
     default:
     {
         // Handle other node types
+        const char *nodeTypeStr = CryoNodeTypeToString(node->metaData->type);
+        logMessage(LMI, "ERROR", "SymbolTable", "Unhandled ASTNode type: %s", nodeTypeStr);
+        CONDITION_FAILED;
         break;
     }
     }
 
-    DEBUG_BREAKPOINT;
+    return NULL;
 }

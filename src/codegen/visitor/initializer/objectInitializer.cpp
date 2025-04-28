@@ -27,6 +27,7 @@ namespace Cryo
         if (node->metaData->type != NODE_OBJECT_INST)
         {
             logMessage(LMI, "ERROR", "Initializer", "Node is not an object instance");
+            CONDITION_FAILED;
             return nullptr;
         }
 
@@ -51,6 +52,7 @@ namespace Cryo
             DEBUG_BREAKPOINT;
             return nullptr;
         }
+
         if (isNewObject)
         {
             logMessage(LMI, "INFO", "Visitor", "Creating new object instance: %s", objectTypeName.c_str());
@@ -71,29 +73,61 @@ namespace Cryo
                 return nullptr;
             }
 
+            // Create the object instance allocation
+            llvm::AllocaInst *objectAlloca = context.getInstance().builder.CreateAlloca(
+                llvmStructType, nullptr, objectTypeName + ".instance");
+
             // Prepare the arguments for the constructor
             std::vector<llvm::Value *> ctorArgs;
             int argCount = node->data.objectNode->argCount;
+
+            // First argument is still the pointer where constructor will initialize the object
+            ctorArgs.push_back(objectAlloca);
+
+            // Add remaining constructor arguments
             for (int i = 0; i < argCount; i++)
             {
-                ctorArgs.push_back(getInitializerValue(node->data.objectNode->args[i]));
+                ASTNode *argNode = node->data.functionCall->args[i];
+                DataType *argDataType = DTM->astInterface->getTypeofASTNode(argNode);
+                if (!argDataType)
+                {
+                    logMessage(LMI, "ERROR", "Initializer", "Argument %d has no data type", i);
+                    CONDITION_FAILED;
+                    return nullptr;
+                }
+                llvm::Type *argType = context.getInstance().symbolTable->getLLVMType(argDataType);
+                llvm::Value *argVal = getInitializerValue(argNode);
+                if (argDataType->container->primitive == PRIM_STR && argVal->getType()->isPointerTy())
+                {
+                    // Load the string
+                    llvm::Value *strValue = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, "str.load");
+                    argVal = context.getInstance().builder.CreateBitCast(strValue, context.getInstance().builder.getInt8Ty()->getPointerTo(), "str.cast");
+                    logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argVal->getName().str().c_str());
+                }
+                else if (argVal->getType()->isPointerTy() && argDataType->container->primitive != PRIM_STR)
+                {
+                    // Load the value if it's a pointer
+                    argVal = context.getInstance().builder.CreateLoad(argType, argVal);
+                }
+
+                ctorArgs.push_back(argVal);
+                logMessage(LMI, "INFO", "Visitor", "Constructor argument %d: %s", i, argVal->getName().str().c_str());
             }
 
-            // Create the object instance
-            llvm::Value *objectInstance = context.getInstance().builder.CreateCall(
-                ctorFuncSymbol->function, ctorArgs, objectTypeName + ".ctor");
-            if (!objectInstance)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
-                DEBUG_BREAKPOINT;
-                return nullptr;
-            }
+            // Call constructor and get struct by value
+            llvm::Value *structValue = context.getInstance().builder.CreateCall(
+                ctorFuncSymbol->function, ctorArgs, objectTypeName + ".value");
 
-            return objectInstance;
+            // If the constructor returns by value, we need to store it in our allocation
+            // NOTE: Only do this if the constructor was modified to return a struct by value
+            // If we've updated the constructor to return structs by value:
+            context.getInstance().builder.CreateStore(structValue, objectAlloca);
+
+            // Return the pointer to the allocated struct
+            return objectAlloca;
         }
 
         DEBUG_BREAKPOINT;
-
         return nullptr;
     }
 

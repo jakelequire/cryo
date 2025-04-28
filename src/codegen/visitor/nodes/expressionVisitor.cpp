@@ -193,6 +193,12 @@ namespace Cryo
                 logMessage(LMI, "INFO", "CodeGenVisitor", "Loaded string argument %d: %s",
                            i, argValue->getName().str().c_str());
             }
+            if (argValue->getType()->isPointerTy() &&
+                argType->container->primitive != PRIM_STR)
+            {
+                // Load the value if it's a pointer
+                argValue = builder.CreateLoad(argValue->getType(), argValue, "arg.load");
+            }
 
             // If we have type information for both argument and parameter, perform conversion
             if (argType && paramType)

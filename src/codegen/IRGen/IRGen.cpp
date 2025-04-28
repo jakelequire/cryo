@@ -100,7 +100,8 @@ namespace Cryo
     int Cryo::IRGeneration::finalize(void)
     {
         logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
-        context.getInstance().module->print(llvm::errs(), nullptr);
+        // context.getInstance().module->print(llvm::errs(), nullptr);
+
         // Clone the module to avoid modifying the original
         logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");
         std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(*context.getInstance().module);

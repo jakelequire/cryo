@@ -23,12 +23,12 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "Generating struct constructor...");
         std::string structName = structType->getName().str();
 
-        // Get constructor arguments
+        // Get constructor arguments - same as before
         int cTorArgs = node->data.structConstructor->argCount;
         ASTNode **ctorArgs = node->data.structConstructor->args;
         std::vector<llvm::Type *> ctorArgTypes;
 
-        // Get argument types
+        // Get argument types - same as before
         for (int i = 0; i < cTorArgs; i++)
         {
             DataType *argType = ctorArgs[i]->data.param->type;
@@ -36,12 +36,12 @@ namespace Cryo
             ctorArgTypes.push_back(llvmArgType);
         }
 
-        // Add self pointer as first argument
+        // Add self pointer as first argument - still needed for initialization
         ctorArgTypes.insert(ctorArgTypes.begin(), structType->getPointerTo());
 
-        // Create function type
+        // Create function type - CHANGE: Return the struct by value, not a pointer
         llvm::FunctionType *ctorFuncType = llvm::FunctionType::get(
-            structType->getPointerTo(), // Return type is pointer to struct
+            structType, // Return type is the struct itself
             ctorArgTypes,
             false);
 
@@ -52,18 +52,19 @@ namespace Cryo
             structName + ".ctor",
             context.getInstance().module.get());
 
+        // Setup function attributes - same as before
         ctorFunction->setCallingConv(llvm::CallingConv::C);
         ctorFunction->setDoesNotThrow();
         ctorFunction->addFnAttr(llvm::Attribute::NoUnwind);
 
-        // Create entry block
+        // Create entry block - same as before
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(
             context.getInstance().context,
             "entry",
             ctorFunction);
         context.getInstance().builder.SetInsertPoint(entryBlock);
 
-        // Get function arguments
+        // Get function arguments - same as before
         llvm::Function::arg_iterator args = ctorFunction->arg_begin();
         llvm::Value *selfArg = args++;
         selfArg->setName("self");
@@ -73,6 +74,13 @@ namespace Cryo
         {
             llvm::Value *arg = args++;
             arg->setName(ctorArgs[i]->data.param->name);
+
+            DataType *argType = ctorArgs[i]->data.param->type;
+            if (argType->container->primitive == PRIM_STR)
+            {
+                // Load the string pointer
+                arg = context.getInstance().builder.CreateLoad(arg->getType(), arg, "str.load");
+            }
 
             // Create GEP to get pointer to struct field
             llvm::Value *fieldPtr = context.getInstance().builder.CreateStructGEP(
@@ -85,17 +93,20 @@ namespace Cryo
             context.getInstance().builder.CreateStore(arg, fieldPtr);
         }
 
-        // Return the self pointer
-        context.getInstance().builder.CreateRet(selfArg);
+        // CHANGE: Load the entire struct to return it by value
+        llvm::Value *resultStruct = context.getInstance().builder.CreateLoad(structType, selfArg, "complete_struct");
+
+        // Return the struct by value, not the pointer
+        context.getInstance().builder.CreateRet(resultStruct);
 
         // Verify function
         llvm::verifyFunction(*ctorFunction);
 
-        // Add to symbol table
+        // Add to symbol table - update return type
         IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(
             ctorFunction,
             structName + ".ctor",
-            structType->getPointerTo(),
+            structType, // Changed from structType->getPointerTo()
             ctorFuncType,
             nullptr,
             false,

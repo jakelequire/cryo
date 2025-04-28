@@ -137,5 +137,4 @@ namespace Cryo
         IRTypeSymbol *typeSymbol = new IRTypeSymbol(type, typeName);
         return typeSymbol;
     }
-
 } // namespace Cryo

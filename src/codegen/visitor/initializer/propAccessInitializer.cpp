@@ -138,6 +138,19 @@ namespace Cryo
 
     llvm::Value *Initializer::getObjectInstance(ASTNode *objectNode)
     {
+        if (objectNode->metaData->type == NODE_VAR_DECLARATION)
+        {
+            // If the object is a variable declaration, get its value
+            std::string varName = objectNode->data.varDecl->name;
+            IRVariableSymbol *varSymbol = context.getInstance().symbolTable->findVariable(varName);
+            if (!varSymbol)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Variable %s not found", varName.c_str());
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+            return varSymbol->allocation.getValue();
+        }
         llvm::Value *objectInstance = context.getInstance().visitor->getLLVMValue(objectNode);
         if (!objectInstance)
         {

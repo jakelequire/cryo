@@ -569,10 +569,26 @@ namespace Cryo
         llvm::Constant *strConstant = llvm::ConstantDataArray::getString(
             context.getInstance().context, str, true); // true adds null terminator
         logMessage(LMI, "INFO", "IRSymbolTable", "Creating global string: %s", str.c_str());
-        // Use a more consistent naming convention for string literals
-        std::string globalName = ".str."; // You might want to use a more generic naming scheme
-        void *address = static_cast<void *>(strConstant);
-        globalName += std::to_string(reinterpret_cast<std::uintptr_t>(address));
+
+        // Create the global variable with a unique name
+        std::string globalName = "g_str.";
+        std::string curModuleName = context.getInstance().module->getName().str();
+
+        // Generate an 8-character hexadecimal hash
+        std::stringstream ss;
+        ss << std::uppercase << std::hex << (std::hash<std::string>{}(str) & 0xFFFFFFFF);
+        std::string ranHash8bit = ss.str();
+        // Ensure it's exactly 8 characters
+        if (ranHash8bit.length() < 8)
+        {
+            ranHash8bit = std::string(8 - ranHash8bit.length(), '0') + ranHash8bit;
+        }
+        else if (ranHash8bit.length() > 8)
+        {
+            ranHash8bit = ranHash8bit.substr(ranHash8bit.length() - 8);
+        }
+
+        globalName += ranHash8bit + "." + curModuleName;
 
         logMessage(LMI, "INFO", "IRSymbolTable", "Global string name: %s", globalName.c_str());
         llvm::GlobalVariable *globalStr = new llvm::GlobalVariable(

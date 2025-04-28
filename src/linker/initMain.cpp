@@ -60,7 +60,7 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "Linker", "Core library loaded successfully");
 
-        coreModule->print(llvm::errs(), nullptr);
+        // coreModule->print(llvm::errs(), nullptr);
 
         // Return the module (it will be cloned in mergeModule)
         return coreModule.release();
