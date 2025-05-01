@@ -596,4 +596,29 @@ namespace Cryo
         return;
     }
 
+    void CodeGenVisitor::visitBreakStatement(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting break statement...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+
+        // Break statement logic
+        llvm::BasicBlock *breakBlock = context.getInstance().symbolTable->getBreakBlock();
+        if (breakBlock)
+        {
+            context.getInstance().builder.CreateBr(breakBlock);
+            context.getInstance().builder.SetInsertPoint(breakBlock);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Visitor", "No break block found");
+            CONDITION_FAILED;
+        }
+
+        return;
+    }
+
 } // namespace Cryo

@@ -142,6 +142,12 @@ namespace Cryo
         case NODE_SCOPED_FUNCTION_CALL:
             visitScopedFunctionCall(node);
             break;
+        case NODE_BREAK:
+            visitBreakStatement(node);
+            break;
+        case NODE_CONTINUE:
+            visitContinueStatement(node);
+            break;
         case NODE_VAR_REASSIGN:
             DEBUG_BREAKPOINT;
             break;

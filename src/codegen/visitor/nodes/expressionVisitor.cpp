@@ -332,7 +332,18 @@ namespace Cryo
     }
     void CodeGenVisitor::visitUnaryExpr(ASTNode *node)
     {
-        DEBUG_BREAKPOINT;
+        if (!node || !node->data.unary_op)
+            return;
+
+        llvm::Value *unaryExpr = context.getInstance().initializer->getInitializerValue(node);
+        if (!unaryExpr)
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Unary expression value is null");
+            CONDITION_FAILED;
+            return;
+        }
+
+        return;
     }
     void CodeGenVisitor::visitArrayLiteral(ASTNode *node)
     {

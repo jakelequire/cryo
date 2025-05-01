@@ -84,6 +84,8 @@ namespace Cryo
         std::unordered_map<std::string, IRFunctionSymbol> functions;
         std::unordered_map<std::string, IRTypeSymbol> types;
         IRFunctionSymbol *currentFunction = nullptr; // Track current function scope
+        llvm::BasicBlock *breakBlock = nullptr;      // Track break block
+        llvm::BasicBlock *continueBlock = nullptr;   // Track continue block
 
     public:
         std::unordered_map<std::string, IRFunctionSymbol> getFunctions() const
@@ -93,6 +95,23 @@ namespace Cryo
         std::unordered_map<std::string, IRTypeSymbol> getTypes() const
         {
             return types;
+        }
+
+        llvm::BasicBlock *getBreakBlock() const
+        {
+            return breakBlock;
+        }
+        llvm::BasicBlock *getContinueBlock() const
+        {
+            return continueBlock;
+        }
+        void setBreakBlock(llvm::BasicBlock *block)
+        {
+            breakBlock = block;
+        }
+        void setContinueBlock(llvm::BasicBlock *block)
+        {
+            continueBlock = block;
         }
 
     public:

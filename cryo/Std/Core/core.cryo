@@ -146,6 +146,10 @@ function printI32 (value: i32) -> void {
 }
 
 function printStr (value: str) -> void {
+    if (value == null) {
+        printf_export("null\n");
+        return;
+    }
     printStr_export(value);
     return;
 }

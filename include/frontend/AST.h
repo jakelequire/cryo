@@ -321,6 +321,9 @@ typedef struct CryoUnaryOpNode
     DataType *resultType;
     struct ASTNode *operand;
     struct ASTNode *expression;
+    bool isPostfix;
+    bool isPrefix;
+    bool isArrayIndex;
 } CryoUnaryOpNode;
 
 typedef struct CryoArrayNode
@@ -636,6 +639,16 @@ typedef struct ImplementNode
     int constructorCapacity;
 } ImplementNode;
 
+typedef struct BreakNode
+{
+    // no data
+} BreakNode;
+
+typedef struct ContinueNode
+{
+    // no data
+} ContinueNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -743,6 +756,10 @@ typedef struct ASTNode
         TypeCast *typeCast;
         // For Implementations
         ImplementNode *implementation;
+        // For Break
+        BreakNode *breakNode;
+        // For Continue
+        ContinueNode *continueNode;
         // Discard
         void *discard;
     } data;
@@ -1183,6 +1200,9 @@ extern "C"
                                       ASTNode **methods, int methodCount,
                                       Arena *arena, CompilerState *state, Lexer *lexer);
 
+    ASTNode *createBreakNode(Arena *arena, CompilerState *state, Lexer *lexer);
+    ASTNode *createContinueNode(Arena *arena, CompilerState *state, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1251,6 +1271,8 @@ TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state);
 ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *state);
 void *createDiscardNodeContainer(Arena *arena, CompilerState *state);
+BreakNode *createBreakNodeContainer(Arena *arena, CompilerState *state);
+ContinueNode *createContinueNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #

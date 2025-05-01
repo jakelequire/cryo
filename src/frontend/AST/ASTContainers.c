@@ -879,6 +879,9 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
     node->operand = NULL;
     node->expression = (ASTNode *)malloc(sizeof(ASTNode));
     node->resultType = DTM->primitives->createUndefined();
+    node->isPostfix = false;
+    node->isPrefix = false;
+    node->isArrayIndex = false;
 
     return node;
 }
@@ -1713,5 +1716,29 @@ void *createDiscardNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
+    return node;
+}
+
+BreakNode *createBreakNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    BreakNode *node = (BreakNode *)ARENA_ALLOC(arena, sizeof(BreakNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate BreakNode node.");
+        return NULL;
+    }
+    return node;
+}
+
+ContinueNode *createContinueNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    ContinueNode *node = (ContinueNode *)ARENA_ALLOC(arena, sizeof(ContinueNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ContinueNode node.");
+        return NULL;
+    }
     return node;
 }

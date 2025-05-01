@@ -101,6 +101,7 @@ extern "C"
         TOKEN_OP_AND_ASSIGN, // `&=` token
         TOKEN_OP_OR_ASSIGN,  // `|=` token
         TOKEN_OP_XOR_ASSIGN, // `^=` token
+        TOKEN_OP_INCREMENT,  // `++` token
 
         // Keywords
         TOKEN_KW_IF,           // `if`
@@ -326,6 +327,8 @@ extern "C"
         NODE_TYPE_CAST,            // 56
         NODE_DISCARD,              // 57
         NODE_IMPLEMENTATION,       // 58
+        NODE_BREAK,                // 59
+        NODE_CONTINUE,             // 60
         NODE_UNKNOWN,              // 59
     } CryoNodeType;
 

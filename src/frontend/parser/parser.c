@@ -563,6 +563,23 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
             logMessage(LMI, "INFO", "Parser", "Parsing property access...");
             return parsePropertyAccess(lexer, context, arena, state, globalTable);
         }
+        else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_INCREMENT)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing increment...");
+            return parseUnaryExpression(lexer, context, arena, state, globalTable);
+        }
+        else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DECREMENT)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing decrement...");
+            return parseUnaryExpression(lexer, context, arena, state, globalTable);
+        }
+        else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_ASSIGN)
+        {
+            logMessage(LMI, "INFO", "Parser", "Parsing variable assignment...");
+            char *varName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            return parseAssignment(lexer, context, varName, arena, state, globalTable);
+        }
+
         else
         {
             logMessage(LMI, "INFO", "Parser", "Parsing variable assignment...");
@@ -582,6 +599,11 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 
     case TOKEN_AT:
         return parseAnnotation(lexer, context, arena, state, globalTable);
+
+    case TOKEN_KW_BREAK:
+        return parseBreakStatement(lexer, context, arena, state, globalTable);
+    case TOKEN_KW_CONTINUE:
+        return parseContinueStatement(lexer, context, arena, state, globalTable);
 
     case TOKEN_EOF:
         return NULL;
@@ -1226,27 +1248,34 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
     }
     CryoTokenType opToken;
     ASTNode *right;
-
     if (lexer->currentToken.type == TOKEN_MINUS || lexer->currentToken.type == TOKEN_BANG)
     {
+        logMessage(LMI, "INFO", "Parser", "Current Token: %s", CryoTokenToString(lexer->currentToken.type));
+        logMessage(LMI, "INFO", "Parser", "Parsing NOT or unary minus expression...");
         opToken = lexer->currentToken.type;
-        getNextToken(lexer, arena, state);
-        right = parseUnaryExpression(lexer, context, arena, state, globalTable);
-        return createUnaryExpr(opToken, right, arena, state, lexer);
-    }
-    if (lexer->currentToken.type == TOKEN_INCREMENT || lexer->currentToken.type == TOKEN_DECREMENT)
-    {
-        logMessage(LMI, "INFO", "Parser", "Parsing increment or decrement expression...");
-        char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        opToken = lexer->currentToken.type;
-
         getNextToken(lexer, arena, state);
         right = parsePrimaryExpression(lexer, context, arena, state, globalTable);
-        if (!right)
+        return createUnaryExpr(opToken, right, arena, state, lexer);
+    }
+    if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_INCREMENT)
+    {
+        // This is a postfix increment (e.g., x++)
+        logMessage(LMI, "INFO", "Parser", "Parsing postfix increment expression...");
+        opToken = TOKEN_INCREMENT;
+        char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        ASTNode *lhs = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+        if (!lhs)
         {
             parsingError("Expected an operand", "parseUnaryExpression", arena, state, lexer, lexer->source, globalTable);
-            return NULL;
+            CONDITION_FAILED;
         }
+        ASTNode *postfixIncrement = createUnaryExpr(opToken, lhs, arena, state, lexer);
+        postfixIncrement->data.unary_op->op = TOKEN_INCREMENT;
+        postfixIncrement->data.unary_op->expression = lhs;
+        postfixIncrement->data.unary_op->isPostfix = true;
+        consume(__LINE__, lexer, TOKEN_INCREMENT, "Expected an increment operator", "parseUnaryExpression", arena, state, context);
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseUnaryExpression", arena, state, context);
+        return postfixIncrement;
     }
 
     return createUnaryExpr(opToken, right, arena, state, lexer);
@@ -3776,4 +3805,29 @@ ASTNode *parsePropertyAccess(Lexer *lexer, ParsingContext *context, Arena *arena
 
     ASTNode *propertyAccess = parseDotNotation(lexer, context, arena, state, globalTable);
     return propertyAccess;
+}
+
+
+ASTNode *parseBreakStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing break statement...");
+    consume(__LINE__, lexer, TOKEN_KW_BREAK, "Expected `break` keyword.", "parseBreakStatement", arena, state, context);
+
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseBreakStatement", arena, state, context);
+
+    return createBreakNode(arena, state, lexer);
+}
+
+ASTNode *parseContinueStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing continue statement...");
+    consume(__LINE__, lexer, TOKEN_KW_CONTINUE, "Expected `continue` keyword.", "parseContinueStatement", arena, state, context);
+
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseContinueStatement", arena, state, context);
+
+    return createContinueNode(arena, state, lexer);
 }

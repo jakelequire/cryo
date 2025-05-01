@@ -34,7 +34,7 @@ namespace Cryo
         if (!unaryOp)
         {
             logMessage(LMI, "ERROR", "Initializer", "Unary op is null");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         // Get the operand
@@ -43,7 +43,7 @@ namespace Cryo
         if (!operand)
         {
             logMessage(LMI, "ERROR", "Initializer", "Failed to generate operand");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         // Get result type
@@ -51,7 +51,7 @@ namespace Cryo
         if (!resultType)
         {
             logMessage(LMI, "ERROR", "Initializer", "Result type is null");
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         logMessage(LMI, "INFO", "Initializer", "Unary operation: %d", unaryOp->op);
@@ -252,7 +252,7 @@ namespace Cryo
         if (!operand->getType()->isPointerTy())
         {
             logMessage(LMI, "ERROR", "Initializer", "%s operand must be an lvalue", opName);
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         // Determine the type
@@ -291,7 +291,7 @@ namespace Cryo
         else
         {
             logMessage(LMI, "ERROR", "Initializer", "%s not supported for this type", opName);
-            return nullptr;
+            CONDITION_FAILED;
         }
 
         // Store the modified value

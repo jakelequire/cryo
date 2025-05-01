@@ -239,6 +239,10 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
 ASTNode *parseThisExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
 ASTNode *parseParenthesizedExpression(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
+ASTNode *parseBreakStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *parseContinueStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+
 // # ============================================================ #
 // # Context Management
 // # ============================================================ #

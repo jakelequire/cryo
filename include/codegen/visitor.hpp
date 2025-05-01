@@ -82,6 +82,8 @@ namespace Cryo
         virtual void visitForStatement(ASTNode *node) = 0;
         virtual void visitWhileStatement(ASTNode *node) = 0;
         virtual void visitReturnStatement(ASTNode *node) = 0;
+        virtual void visitBreakStatement(ASTNode *node) = 0;
+        virtual void visitContinueStatement(ASTNode *node) = 0;
 
         // Object-oriented features
         virtual void visitProperty(ASTNode *node) = 0;
@@ -152,6 +154,8 @@ namespace Cryo
         void visitForStatement(ASTNode *node) override;
         void visitWhileStatement(ASTNode *node) override;
         void visitReturnStatement(ASTNode *node) override;
+        void visitBreakStatement(ASTNode *node) override;
+        void visitContinueStatement(ASTNode *node) override;
 
         // Object-oriented features
         void visitProperty(ASTNode *node) override;

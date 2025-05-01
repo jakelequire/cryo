@@ -1368,3 +1368,29 @@ ASTNode *createImplementationNode(const char *interfaceName, ASTNode **propertie
 
     return node;
 }
+
+ASTNode *createBreakNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_BREAK, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create break node");
+        return NULL;
+    }
+
+    return node;
+}
+
+ASTNode *createContinueNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_CONTINUE, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create continue node");
+        return NULL;
+    }
+
+    return node;
+}

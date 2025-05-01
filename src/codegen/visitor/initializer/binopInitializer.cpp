@@ -73,11 +73,23 @@ namespace Cryo
 
                 if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(ptrValue))
                 {
-                    logMessage(LMI, "INFO", "Initializer", "Loading pointer value for null comparison");
-                    ptrValue = context.getInstance().builder.CreateLoad(
-                        allocaInst->getAllocatedType(),
-                        ptrValue,
-                        "ptr_value");
+                    llvm::Type *allocaType = allocaInst->getAllocatedType();
+                    if (!allocaType->isPointerTy())
+                    {
+                        // If it's not a pointer, get the pointer
+                        ptrValue = context.getInstance().builder.CreateLoad(
+                            allocaType->getPointerTo(),
+                            ptrValue,
+                            "ptr_value");
+                    }
+                    else
+                    {
+                        logMessage(LMI, "INFO", "Initializer", "Loading pointer value for null comparison");
+                        ptrValue = context.getInstance().builder.CreateLoad(
+                            allocaInst->getAllocatedType(),
+                            ptrValue,
+                            "ptr_value");
+                    }
                 }
 
                 // Create null pointer constant of the appropriate type

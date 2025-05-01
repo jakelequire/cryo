@@ -214,6 +214,10 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_DISCARD:
         node->data.discard = createDiscardNodeContainer(arena, state);
         break;
+    case NODE_BREAK:
+        node->data.breakNode = createBreakNodeContainer(arena, state);
+        break;
+    case NODE_CONTINUE:
     default:
         logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
         return NULL;
