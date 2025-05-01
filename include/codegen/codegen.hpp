@@ -239,7 +239,7 @@ namespace Cryo
         bool validateLiteralNode(ASTNode *node);
         llvm::Value *generatePrimitiveValue(ASTNode *node, PrimitiveDataType primitiveType);
         llvm::Value *createIntObjectFromLiteral(ASTNode *node, DataType *literalDataType);
-        bool callConstructor(llvm::Value *objectInstance, llvm::Value *ctorArg, const std::string &typeName);
+        bool callConstructor(std::vector<llvm::Value *> ctorArg, const std::string &typeName);
     };
 
 } // namespace Cryo

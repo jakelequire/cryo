@@ -19,6 +19,107 @@
 namespace Cryo
 {
 
+    llvm::Value *Initializer::generateObjectInst(llvm::Value *varVal, ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating object instance...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_OBJECT_INST)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not an object instance");
+            return nullptr;
+        }
+
+        // Get the object type name
+        std::string objectTypeName = node->data.objectNode->name;
+        logMessage(LMI, "INFO", "Initializer", "Object type name: %s", objectTypeName.c_str());
+        bool isNewObject = node->data.objectNode->isNewInstance;
+        // Get the object type
+        DataType *objectType = node->data.objectNode->objType;
+        if (!objectType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+
+        // Get the LLVM type
+        IRTypeSymbol *irTypeSymbol = context.getInstance().symbolTable->findType("struct." + objectTypeName);
+        if (!irTypeSymbol)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "IR type symbol is null");
+            DEBUG_BREAKPOINT;
+            return nullptr;
+        }
+        if (isNewObject)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Creating new object instance: %s", objectTypeName.c_str());
+            llvm::StructType *llvmStructType = llvm::dyn_cast<llvm::StructType>(irTypeSymbol->getType());
+            if (!llvmStructType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "LLVM struct type is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+            logMessage(LMI, "INFO", "Visitor", "LLVM Struct Type: %s", llvmStructType->getName().str().c_str());
+
+            IRFunctionSymbol *ctorFuncSymbol = context.getInstance().symbolTable->findFunction("struct." + objectTypeName + ".ctor");
+            if (!ctorFuncSymbol)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Constructor function symbol is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+
+            // Prepare the arguments for the constructor
+            std::vector<llvm::Value *> ctorArgs;
+            // First argument is always 'this' pointer
+            int argCount = node->data.objectNode->argCount;
+            for (int i = 0; i < argCount; i++)
+            {
+                ASTNode *argNode = node->data.objectNode->args[i];
+                llvm::Value *argVal = getInitializerValue(argNode);
+                std::string argValName = argVal->getName().str();
+                if (argValName.find("g_str") != std::string::npos)
+                {
+                    // Allocate the string
+                    llvm::AllocaInst *strAlloc = context.getInstance().builder.CreateAlloca(
+                        argVal->getType(), nullptr, argValName + ".alloc");
+                    context.getInstance().builder.CreateStore(argVal, strAlloc);
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), strAlloc, argValName + ".load");
+                    logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argVal->getName().str().c_str());
+                }
+                else if (argVal->getType()->isPointerTy())
+                {
+                    // Load the value if it's a pointer
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
+                }
+                else if (argVal->getType()->isPointerTy())
+                {
+                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
+                }
+
+                ctorArgs.push_back(argVal);
+            }
+
+            // Create the object instance
+            llvm::Value *objectInstance = context.getInstance().builder.CreateCall(
+                ctorFuncSymbol->function, ctorArgs, objectTypeName + ".ctor");
+            if (!objectInstance)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
+                DEBUG_BREAKPOINT;
+                return nullptr;
+            }
+
+            return objectInstance;
+        }
+
+        DEBUG_BREAKPOINT;
+
+        return nullptr;
+    }
+
     llvm::Value *Initializer::generateObjectInst(ASTNode *node)
     {
         logMessage(LMI, "INFO", "Initializer", "Generating object instance...");

@@ -187,9 +187,11 @@ namespace Cryo
         llvm::Value *ctorArg = llvm::ConstantInt::get(
             context.getInstance().context,
             llvm::APInt(32, node->data.literal->value.intValue, true));
+        std::vector<llvm::Value *> ctorArgs;
+        ctorArgs.push_back(ctorArg);
 
         // Call constructor if available
-        if (!callConstructor(objectInstance, ctorArg, typeName))
+        if (!callConstructor(ctorArgs, typeName))
             logMessage(LMI, "WARNING", "Initializer", "Constructor for %s not found", typeName.c_str());
 
         // Load the object instance
@@ -202,7 +204,7 @@ namespace Cryo
         return objectValue;
     }
 
-    bool Initializer::callConstructor(llvm::Value *objectInstance, llvm::Value *ctorArg, const std::string &typeName)
+    bool Initializer::callConstructor(std::vector<llvm::Value *> ctorArgs, const std::string &typeName)
     {
         std::string ctorName = "struct." + typeName + ".ctor";
 
@@ -213,8 +215,7 @@ namespace Cryo
 
         // Prepare constructor arguments
         std::vector<llvm::Value *> args;
-        args.push_back(objectInstance); // 'this' pointer
-        args.push_back(ctorArg);        // literal value
+        args.insert(args.end(), ctorArgs.begin(), ctorArgs.end());
 
         // Call the constructor
         context.getInstance().builder.CreateCall(ctorFunc->function, args, "call_ctor." + typeName);

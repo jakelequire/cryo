@@ -150,7 +150,7 @@ function printStr (value: str) -> void {
     return;
 }
 
-function printString (value: String *) -> void {
+function printString (value: String) -> void {
     printf_export("%d\n", value.val);
     return;
 }

@@ -23,12 +23,12 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "Generating struct constructor...");
         std::string structName = structType->getName().str();
 
-        // Get constructor arguments - same as before
+        // Get constructor arguments
         int cTorArgs = node->data.structConstructor->argCount;
         ASTNode **ctorArgs = node->data.structConstructor->args;
         std::vector<llvm::Type *> ctorArgTypes;
 
-        // Get argument types - same as before
+        // Get argument types - CHANGE: no longer adding self pointer
         for (int i = 0; i < cTorArgs; i++)
         {
             DataType *argType = ctorArgs[i]->data.param->type;
@@ -36,10 +36,7 @@ namespace Cryo
             ctorArgTypes.push_back(llvmArgType);
         }
 
-        // Add self pointer as first argument - still needed for initialization
-        ctorArgTypes.insert(ctorArgTypes.begin(), structType->getPointerTo());
-
-        // Create function type - CHANGE: Return the struct by value, not a pointer
+        // Create function type - return struct by value, no self pointer argument
         llvm::FunctionType *ctorFuncType = llvm::FunctionType::get(
             structType, // Return type is the struct itself
             ctorArgTypes,
@@ -52,27 +49,29 @@ namespace Cryo
             structName + ".ctor",
             context.getInstance().module.get());
 
-        // Setup function attributes - same as before
+        // Setup function attributes
         ctorFunction->setCallingConv(llvm::CallingConv::C);
         ctorFunction->setDoesNotThrow();
         ctorFunction->addFnAttr(llvm::Attribute::NoUnwind);
 
-        // Create entry block - same as before
+        // Create entry block
         llvm::BasicBlock *entryBlock = llvm::BasicBlock::Create(
             context.getInstance().context,
             "entry",
             ctorFunction);
         context.getInstance().builder.SetInsertPoint(entryBlock);
 
-        // Get function arguments - same as before
+        // NEW: Allocate the struct locally in the function
+        llvm::AllocaInst *structAlloca = context.getInstance().builder.CreateAlloca(
+            structType, nullptr, "instance");
+
+        // Process arguments
         llvm::Function::arg_iterator args = ctorFunction->arg_begin();
-        llvm::Value *selfArg = args++;
-        selfArg->setName("self");
 
         // Store each constructor argument into the corresponding struct field
         for (int i = 0; i < cTorArgs; i++)
         {
-            llvm::Value *arg = args++;
+            llvm::Value *arg = &(*args++);
             arg->setName(ctorArgs[i]->data.param->name);
 
             DataType *argType = ctorArgs[i]->data.param->type;
@@ -86,7 +85,7 @@ namespace Cryo
             // Create GEP to get pointer to struct field
             llvm::Value *fieldPtr = context.getInstance().builder.CreateStructGEP(
                 structType,
-                selfArg,
+                structAlloca, // Use our local allocation now instead of selfArg
                 i,
                 "field_ptr");
 
@@ -94,127 +93,26 @@ namespace Cryo
             context.getInstance().builder.CreateStore(arg, fieldPtr);
         }
 
-        // CHANGE: Load the entire struct to return it by value
-        llvm::Value *resultStruct = context.getInstance().builder.CreateLoad(structType, selfArg, "complete_struct");
+        // Load the entire struct to return it by value
+        llvm::Value *resultStruct = context.getInstance().builder.CreateLoad(
+            structType, structAlloca, "complete_struct");
 
-        // Return the struct by value, not the pointer
+        // Return the struct by value
         context.getInstance().builder.CreateRet(resultStruct);
 
         // Verify function
         llvm::verifyFunction(*ctorFunction);
 
-        // Add to symbol table - update return type
+        // Add to symbol table
         IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(
             ctorFunction,
             structName + ".ctor",
-            structType, // Changed from structType->getPointerTo()
+            structType,
             ctorFuncType,
             nullptr,
             false,
             false);
         context.getInstance().symbolTable->addFunction(ctorFuncSymbol);
-    }
-
-    llvm::Value *Initializer::generateObjectInst(llvm::Value *varVal, ASTNode *node)
-    {
-        logMessage(LMI, "INFO", "Initializer", "Generating object instance...");
-        ASSERT_NODE_NULLPTR_RET(node);
-
-        if (node->metaData->type != NODE_OBJECT_INST)
-        {
-            logMessage(LMI, "ERROR", "Initializer", "Node is not an object instance");
-            return nullptr;
-        }
-
-        // Get the object type name
-        std::string objectTypeName = node->data.objectNode->name;
-        logMessage(LMI, "INFO", "Initializer", "Object type name: %s", objectTypeName.c_str());
-        bool isNewObject = node->data.objectNode->isNewInstance;
-        // Get the object type
-        DataType *objectType = node->data.objectNode->objType;
-        if (!objectType)
-        {
-            logMessage(LMI, "ERROR", "Visitor", "Object type is null");
-            DEBUG_BREAKPOINT;
-            return nullptr;
-        }
-
-        // Get the LLVM type
-        IRTypeSymbol *irTypeSymbol = context.getInstance().symbolTable->findType("struct." + objectTypeName);
-        if (!irTypeSymbol)
-        {
-            logMessage(LMI, "ERROR", "Visitor", "IR type symbol is null");
-            DEBUG_BREAKPOINT;
-            return nullptr;
-        }
-        if (isNewObject)
-        {
-            logMessage(LMI, "INFO", "Visitor", "Creating new object instance: %s", objectTypeName.c_str());
-            llvm::StructType *llvmStructType = llvm::dyn_cast<llvm::StructType>(irTypeSymbol->getType());
-            if (!llvmStructType)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "LLVM struct type is null");
-                DEBUG_BREAKPOINT;
-                return nullptr;
-            }
-            logMessage(LMI, "INFO", "Visitor", "LLVM Struct Type: %s", llvmStructType->getName().str().c_str());
-
-            IRFunctionSymbol *ctorFuncSymbol = context.getInstance().symbolTable->findFunction("struct." + objectTypeName + ".ctor");
-            if (!ctorFuncSymbol)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "Constructor function symbol is null");
-                DEBUG_BREAKPOINT;
-                return nullptr;
-            }
-
-            // Prepare the arguments for the constructor
-            std::vector<llvm::Value *> ctorArgs;
-            // First argument is always 'this' pointer
-            ctorArgs.push_back(varVal);
-            int argCount = node->data.objectNode->argCount;
-            for (int i = 0; i < argCount; i++)
-            {
-                ASTNode *argNode = node->data.objectNode->args[i];
-                llvm::Value *argVal = getInitializerValue(argNode);
-                std::string argValName = argVal->getName().str();
-                if (argValName.find("g_str") != std::string::npos)
-                {
-                    // Allocate the string
-                    llvm::AllocaInst *strAlloc = context.getInstance().builder.CreateAlloca(
-                        argVal->getType(), nullptr, argValName + ".alloc");
-                    context.getInstance().builder.CreateStore(argVal, strAlloc);
-                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), strAlloc, argValName + ".load");
-                    logMessage(LMI, "INFO", "Visitor", "Loaded string argument %d: %s", i, argVal->getName().str().c_str());
-                }
-                else if (argVal->getType()->isPointerTy())
-                {
-                    // Load the value if it's a pointer
-                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
-                }
-                else if (argVal->getType()->isPointerTy())
-                {
-                    argVal = context.getInstance().builder.CreateLoad(argVal->getType(), argVal, argValName + ".load");
-                }
-
-                ctorArgs.push_back(argVal);
-            }
-
-            // Create the object instance
-            llvm::Value *objectInstance = context.getInstance().builder.CreateCall(
-                ctorFuncSymbol->function, ctorArgs, objectTypeName + ".ctor");
-            if (!objectInstance)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "Object instance is null");
-                DEBUG_BREAKPOINT;
-                return nullptr;
-            }
-
-            return objectInstance;
-        }
-
-        DEBUG_BREAKPOINT;
-
-        return nullptr;
     }
 
     llvm::Type *Initializer::derefValueForType(llvm::Value *value)

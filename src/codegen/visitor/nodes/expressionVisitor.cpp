@@ -160,13 +160,6 @@ namespace Cryo
             ASTNode *argNode = call->args[i];
             DataType *argType = DTM->astInterface->getTypeofASTNode(argNode);
 
-            if (!argType)
-            {
-                logMessage(LMI, "ERROR", "CodeGenVisitor",
-                           "Could not determine type of argument %d", i);
-                continue;
-            }
-
             // Get expected parameter type if available
             DataType *paramType = nullptr;
             if (funcSymbol->functionDataType &&
@@ -175,6 +168,55 @@ namespace Cryo
             {
 
                 paramType = funcSymbol->functionDataType->container->type.functionType->paramTypes[i];
+            }
+
+            std::cout << "--------------------------------------------------------\n";
+            argType->debug->printVerbosType(argType);
+            std::cout << "--------------------------------------------------------\n";
+            if (paramType)
+            {
+                paramType->debug->printVerbosType(paramType);
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "CodeGenVisitor", "Parameter type is null");
+            }
+            std::cout << "--------------------------------------------------------\n";
+
+            // Check if the argument type is a struct or object type
+            bool isStructOrObjectType = false;
+            if (argType && argType->container)
+            {
+                // Check if it's an object type (struct, class, etc.)
+                if (argType->container->typeOf == OBJECT_TYPE)
+                {
+                    isStructOrObjectType = true;
+                }
+                // Check if it's the special String primitive
+                else if (argType->container->primitive == PRIM_STRING)
+                {
+                    isStructOrObjectType = true;
+                }
+            }
+
+            // Check if the parameter type expects a struct or object pointer
+            bool paramExpectsStructPtr = true;
+            if (paramType && paramType->container)
+            {
+                // Check if parameter expects an object type
+                if (paramType->container->typeOf == OBJECT_TYPE)
+                {
+                    paramExpectsStructPtr = true;
+                }
+                // Check if parameter expects the special String primitive
+                else if (paramType->container->primitive == PRIM_STRING)
+                {
+                    paramExpectsStructPtr = true;
+                }
+                else
+                {
+                    paramExpectsStructPtr = false;
+                }
             }
 
             // Get the LLVM value for the argument
@@ -205,11 +247,14 @@ namespace Cryo
                 logMessage(LMI, "INFO", "CodeGenVisitor",
                            "Loaded string argument %d: %s", i, argValue->getName().str().c_str());
             }
-            else if (argValue->getType()->isPointerTy() &&
-                     argType->container->primitive != PRIM_STR)
+
+            if (argValue->getType()->isPointerTy() &&
+                !(isStructOrObjectType && paramExpectsStructPtr) &&
+                argType->container->primitive != PRIM_STR)
             {
-                // Load the value if it's a pointer
-                argValue = builder.CreateLoad(argValue->getType(), argValue, "arg.load");
+                // Load the value if it's a pointers
+                std::string argValName = argValue->getName().str();
+                argValue = builder.CreateLoad(argValue->getType(), argValue, argValName + ".load");
             }
 
             args.push_back(argValue);
