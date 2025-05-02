@@ -66,6 +66,10 @@ output.o
 *.bc
 *.o
 *.a
+*.log
+
+manifest.txt
+*.manifest
 
 # Test Files
 
