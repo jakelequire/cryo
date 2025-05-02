@@ -76,6 +76,7 @@ namespace Cryo
         virtual void visitArrayLiteral(ASTNode *node) = 0;
         virtual void visitIndexExpr(ASTNode *node) = 0;
         virtual void visitTypeofExpr(ASTNode *node) = 0;
+        virtual void visitVarReassignment(ASTNode *node) = 0;
 
         // Statements
         virtual void visitIfStatement(ASTNode *node) = 0;
@@ -148,6 +149,7 @@ namespace Cryo
         void visitArrayLiteral(ASTNode *node) override;
         void visitIndexExpr(ASTNode *node) override;
         void visitTypeofExpr(ASTNode *node) override;
+        void visitVarReassignment(ASTNode *node) override;
 
         // Statements
         void visitIfStatement(ASTNode *node) override;

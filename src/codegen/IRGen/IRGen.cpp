@@ -99,12 +99,25 @@ namespace Cryo
 
     int Cryo::IRGeneration::finalize(void)
     {
+        std::string moduleName = context.module->getName().str();
         logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
-        // context.getInstance().module->print(llvm::errs(), nullptr);
+
+        std::cout << "\n\n";
+        std::cout << "--------------------------------------------------------------------------------------------\n";
+        std::cout << "Module: " << moduleName << "\n";
+        std::cout << "--------------------------------------------------------------------------------------------\n";
+        context.getInstance().module->print(llvm::errs(), nullptr);
+        std::cout << "--------------------------------------------------------------------------------------------\n";
+        std::cout << "\n\n";
 
         // Clone the module to avoid modifying the original
         logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");
         std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(*context.getInstance().module);
+        if (!clonedModule)
+        {
+            logMessage(LMI, "ERROR", "IRGeneration", "Failed to clone module");
+            return -1;
+        }
 
         // optimize the module
         logMessage(LMI, "INFO", "IRGeneration", "Optimizing module...");
@@ -115,13 +128,14 @@ namespace Cryo
         passManager.add(llvm::createConstantHoistingPass());
         passManager.add(llvm::createDeadCodeEliminationPass());
 
+        logMessage(LMI, "INFO", "IRGeneration", "Running optimization passes...");
         // Run the optimization passes
         passManager.run(*clonedModule);
         logMessage(LMI, "INFO", "IRGeneration", "Module optimized successfully.");
 
         logMessage(LMI, "INFO", "IRGeneration", "Cloned module successfully.");
         // Add the module to the global symbol table instance
-        std::string moduleName = clonedModule->getName().str();
+        logMessage(LMI, "INFO", "IRGeneration", "Setting module in global symbol table instance...");
         if (globalSymbolTableInstance.setModule(moduleName, clonedModule.release()) != 0)
         {
             logMessage(LMI, "ERROR", "IRGeneration", "Failed to set module in global symbol table instance");

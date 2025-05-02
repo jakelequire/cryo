@@ -118,6 +118,30 @@ namespace Cryo
             }
         }
 
+        // Function to load a value if it's a pointer to a non-pointer type
+        auto loadIfPointerToValue = [&](llvm::Value *val, const char *name) -> llvm::Value *
+        {
+            if (val->getType()->isPointerTy())
+            {
+                // Check if it's a pointer to a non-pointer type
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(val))
+                {
+                    llvm::Type *allocaType = allocaInst->getAllocatedType();
+                    if (!allocaType->isPointerTy())
+                    {
+                        // Load the value from the pointer
+                        val = context.getInstance().builder.CreateLoad(allocaType, val, name);
+                    }
+                }
+                else
+                {
+                    // If it's not an AllocaInst, just load it
+                    val = context.getInstance().builder.CreateLoad(val->getType(), val, name);
+                }
+            }
+            return val;
+        };
+
         // Handle standard operators
         logMessage(LMI, "INFO", "Initializer", "Binary operator: %s", CryoOperatorTypeToString(opType));
         switch (opType)
@@ -142,17 +166,31 @@ namespace Cryo
             return context.getInstance().builder.CreateShl(lhs, rhs, "lshift");
         case OPERATOR_RSHIFT:
             return context.getInstance().builder.CreateLShr(lhs, rhs, "rshift");
+            // Inside your generateBinaryExpr, modify the handling of comparison operators:
+        // For comparison operators, load values from pointers first
         case OPERATOR_LT:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpSLT(lhs, rhs, "lt");
         case OPERATOR_GT:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpSGT(lhs, rhs, "gt");
         case OPERATOR_LTE:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpSLE(lhs, rhs, "lte");
         case OPERATOR_GTE:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpSGE(lhs, rhs, "gte");
         case OPERATOR_EQ:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpEQ(lhs, rhs, "eq");
         case OPERATOR_NEQ:
+            lhs = loadIfPointerToValue(lhs, "lhs_load");
+            rhs = loadIfPointerToValue(rhs, "rhs_load");
             return context.getInstance().builder.CreateICmpNE(lhs, rhs, "neq");
         case OPERATOR_ASSIGN:
             logMessage(LMI, "ERROR", "Initializer", "Assignment operator is not supported in expressions");

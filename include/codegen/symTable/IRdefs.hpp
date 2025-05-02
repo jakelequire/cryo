@@ -205,6 +205,11 @@ namespace Cryo
             }
         }
 
+        void setValue(llvm::Value *value)
+        {
+            this->value = value;
+        }
+
         llvm::Value *getPointer() const
         {
             switch (type)

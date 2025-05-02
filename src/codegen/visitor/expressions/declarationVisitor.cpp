@@ -621,4 +621,27 @@ namespace Cryo
         return;
     }
 
+    void CodeGenVisitor::visitContinueStatement(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Visiting continue statement...");
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Node is null");
+            return;
+        }
+        // Continue statement logic
+        llvm::BasicBlock *continueBlock = context.getInstance().symbolTable->getContinueBlock();
+        if (continueBlock)
+        {
+            context.getInstance().builder.CreateBr(continueBlock);
+            context.getInstance().builder.SetInsertPoint(continueBlock);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Visitor", "No continue block found");
+            CONDITION_FAILED;
+        }
+        return;
+    }
+
 } // namespace Cryo

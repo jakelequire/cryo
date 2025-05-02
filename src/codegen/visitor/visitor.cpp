@@ -149,7 +149,7 @@ namespace Cryo
             visitContinueStatement(node);
             break;
         case NODE_VAR_REASSIGN:
-            DEBUG_BREAKPOINT;
+            visitVarReassignment(node);
             break;
         default:
             logMessage(LMI, "ERROR", "Visitor", "Unhandled node type: %s", nodeTypeStr.c_str());

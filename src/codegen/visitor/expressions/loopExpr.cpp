@@ -175,10 +175,6 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "If statement processed successfully");
     }
 
-    void CodeGenVisitor::visitForStatement(ASTNode *node)
-    {
-        DEBUG_BREAKPOINT;
-    }
     void CodeGenVisitor::visitWhileStatement(ASTNode *node)
     {
         if (!node || !node->data.whileStatement)
@@ -282,49 +278,8 @@ namespace Cryo
         return;
     }
 
-    void CodeGenVisitor::visitReturnStatement(ASTNode *node)
+    void CodeGenVisitor::visitForStatement(ASTNode *node)
     {
-        if (!node || !node->data.returnStatement)
-            return;
-        logMessage(LMI, "INFO", "CodeGenVisitor", "Visiting return statement node");
-
-        // Get the generated value
-        llvm::Value *retVal = getLLVMValue(node->data.returnStatement->expression);
-        if (retVal)
-        {
-            logMessage(LMI, "INFO", "CodeGenVisitor", "Return value: %s", retVal->getName().str().c_str());
-            llvm::Type *retType = context.getInstance().builder.GetInsertBlock()->getParent()->getReturnType();
-            if (retType->isVoidTy())
-            {
-                logMessage(LMI, "ERROR", "CodeGenVisitor", "Function return type is void");
-                return;
-            }
-            if (!retType->isPointerTy() && retVal->getType()->isPointerTy())
-            {
-                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(retVal))
-                {
-                    retVal = context.getInstance().builder.CreateLoad(allocaInst->getAllocatedType(), retVal, "load");
-                }
-            }
-            logMessage(LMI, "INFO", "CodeGenVisitor", "Return value name: %s", retVal->getName().str().c_str());
-        }
-        else
-        {
-            logMessage(LMI, "INFO", "CodeGenVisitor", "No return value, returning void");
-            context.getInstance().builder.CreateRetVoid();
-        }
-
-        logMessage(LMI, "INFO", "CodeGenVisitor", "Creating return statement");
-
-        // Create the return statement
-        if (retVal)
-        {
-            context.getInstance().builder.CreateRet(retVal);
-            logMessage(LMI, "INFO", "CodeGenVisitor", "Return statement created");
-        }
-        else
-        {
-            logMessage(LMI, "ERROR", "CodeGenVisitor", "Return value is null");
-        }
+        DEBUG_BREAKPOINT;
     }
 } // namespace Cryo
