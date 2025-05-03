@@ -108,6 +108,8 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
 
     DTM->symbolTable->printTable(DTM->symbolTable);
 
+    NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN, CRYO_SEVERITY_FATAL, "An unknown error occurred while parsing the program.", __LINE__, __FILE__, __func__)
+
     CompleteFrontend(globalTable);
     return program;
 }
@@ -151,6 +153,14 @@ void getNextToken(Lexer *lexer, Arena *arena, CompilerState *state)
         lexer->currentToken.column = lexer->column;
         return;
     }
+
+    if (GDM->frontendState)
+    {
+        // Set exact position (not increment)
+        GDM->frontendState->incrementLine(GDM->frontendState, lexer->line);
+        GDM->frontendState->incrementColumn(GDM->frontendState, lexer->column);
+    }
+
     Token *nextToken = (Token *)malloc(sizeof(Token));
     *nextToken = get_next_token(lexer, state);
     lexer->currentToken = *nextToken;
@@ -1647,6 +1657,8 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     functionDefNode->data.functionDecl->paramCount = paramCount;
     functionDefNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
     functionDefNode->data.functionDecl->functionScopeID = Generate64BitHashID(functionName);
+
+    NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN, CRYO_SEVERITY_FATAL, "An unknown error occurred while parsing the program. This is just a test trying to overflow the error message.", __LINE__, __FILE__, __func__)
 
     // Parse the function block
     ASTNode *functionBlock = parseFunctionBlock(returnType, lexer, context, arena, state, globalTable);
@@ -3806,7 +3818,6 @@ ASTNode *parsePropertyAccess(Lexer *lexer, ParsingContext *context, Arena *arena
     ASTNode *propertyAccess = parseDotNotation(lexer, context, arena, state, globalTable);
     return propertyAccess;
 }
-
 
 ASTNode *parseBreakStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {

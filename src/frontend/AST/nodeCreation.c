@@ -71,6 +71,12 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     node->firstChild = NULL;
     node->nextSibling = NULL;
 
+    int offset = lexer->start - lexer->currentToken.start;
+    if (GDM->frontendState)
+    {
+        GDM->frontendState->incrementOffset(GDM->frontendState, offset);
+    }
+
     switch (type)
     {
     case NODE_NAMESPACE:

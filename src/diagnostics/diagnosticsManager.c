@@ -37,6 +37,28 @@ void FrontendState_clearLexer(FrontendState *self)
     }
 }
 
+void FrontendState_incrementLine(FrontendState *self, size_t amount)
+{
+    if (self)
+    {
+        self->currentLine = amount;
+    }
+}
+void FrontendState_incrementColumn(FrontendState *self, size_t amount)
+{
+    if (self)
+    {
+        self->currentColumn = amount;
+    }
+}
+void FrontendState_incrementOffset(FrontendState *self, size_t amount)
+{
+    if (self)
+    {
+        self->currentOffset += amount;
+    }
+}
+
 void FrontendState_setSourceCode(FrontendState *self, const char *sourceCode)
 {
     if (self)
@@ -98,6 +120,12 @@ FrontendState *newFrontendState(void)
     state->setLexer = FrontendState_setLexer;
     state->clearLexer = FrontendState_clearLexer;
 
+    state->incrementLine = FrontendState_incrementLine;
+    state->incrementColumn = FrontendState_incrementColumn;
+    state->incrementOffset = FrontendState_incrementOffset;
+
+    state->printErrorScreen = FrontendState_printErrorScreen;
+
     state->takeSnapshot = FrontendState_takeSnapshot;
 
     return state;
@@ -107,9 +135,12 @@ void GlobalDiagnosticsManager_initFrontendState(GlobalDiagnosticsManager *self)
 {
     if (self->frontendState == NULL)
     {
-        self->frontendState = (FrontendState *)malloc(sizeof(FrontendState));
-        self->frontendState->lexer = NULL;
-        self->frontendState->isLexerSet = false;
+        self->frontendState = newFrontendState();
+        if (self->frontendState == NULL)
+        {
+            logMessage(LMI, "ERROR", "Diagnostics", "Failed to initialize FrontendState");
+            return;
+        }
     }
 }
 
@@ -142,12 +173,30 @@ void GlobalDiagnosticsManager_debugPrintCurrentState(GlobalDiagnosticsManager *s
     }
 }
 
-void GlobalDiagnosticsManager_reportDiagnostic(GlobalDiagnosticsManager *self,
-                                               DiagnosticSeverity severity,
-                                               const char *message,
-                                               const char *function,
-                                               const char *file,
-                                               int line)
+void GlobalDiagnosticsManager_reportInternalError(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                                  const char *message, const char *function, const char *file, int line)
+{
+    // Internal errors are always fatal
+    CompilerInternalError *internalErr = newCompilerInternalError(
+        (char *)function, (char *)file, line, (char *)message);
+}
+
+bool GlobalDiagnosticsManager_hasFatalErrors(GlobalDiagnosticsManager *self)
+{
+    for (size_t i = 0; i < self->errorCount; i++)
+    {
+        DiagnosticEntry *entry = self->errors[i];
+        if (entry->isInternalError ||
+            (entry->isCryoError && entry->severity == CRYO_SEVERITY_ERROR))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void GlobalDiagnosticsManager_reportDiagnostic(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                               const char *message, const char *function, const char *file, int line)
 {
     // Create a diagnostic entry
     DiagnosticEntry *entry = NULL;
@@ -207,45 +256,18 @@ void GlobalDiagnosticsManager_reportDiagnostic(GlobalDiagnosticsManager *self,
 
     self->errors[self->errorCount++] = entry;
 
-    // For fatal errors, print the stack trace and exit immediately
-    if (severity == DIAG_FATAL)
+    // Print the `FrontendState_printErrorScreen`
+    if (self->frontendState != NULL)
     {
-        self->printStackTrace(self);
-
-        // Print the error message
-        printf(BOLD RED "\n#========================================================================#\n" COLOR_RESET);
-        printf("\n<!> Fatal Error! Exiting...");
-        printf("\n<!> %s", message);
-        printf("\n<!> Line: %i, Function: %s", line, function);
-        printf("\n<!> File: %s\n", file);
-        printf(BOLD RED "\n#========================================================================#\n\n" COLOR_RESET);
-
-        exit(1);
+        self->frontendState->printErrorScreen(self->frontendState, errorCode, severity,
+                                              message, file, function, line);
     }
-}
-
-void GlobalDiagnosticsManager_reportInternalError(GlobalDiagnosticsManager *self,
-                                                  const char *message,
-                                                  const char *function,
-                                                  const char *file,
-                                                  int line)
-{
-    // Internal errors are always fatal
-    GlobalDiagnosticsManager_reportDiagnostic(self, DIAG_FATAL, message, function, file, line);
-}
-
-bool GlobalDiagnosticsManager_hasFatalErrors(GlobalDiagnosticsManager *self)
-{
-    for (size_t i = 0; i < self->errorCount; i++)
+    else
     {
-        DiagnosticEntry *entry = self->errors[i];
-        if (entry->isInternalError ||
-            (entry->isCryoError && entry->severity == CRYO_SEVERITY_ERROR))
-        {
-            return true;
-        }
+        printf("Error: FrontendState is NULL\n");
     }
-    return false;
+
+    exit(EXIT_FAILURE);
 }
 
 void GlobalDiagnosticsManager_printDiagnostics(GlobalDiagnosticsManager *self)
@@ -316,5 +338,10 @@ void initGlobalDiagnosticsManager(void)
 
         GDM->printStackTrace = print_stack_trace;
         GDM->createStackFrame = create_stack_frame;
+
+        GDM->reportDiagnostic = GlobalDiagnosticsManager_reportDiagnostic;
+        GDM->reportInternalError = GlobalDiagnosticsManager_reportInternalError;
+        GDM->hasFatalErrors = GlobalDiagnosticsManager_hasFatalErrors;
+        GDM->printDiagnostics = GlobalDiagnosticsManager_printDiagnostics;
     }
 }

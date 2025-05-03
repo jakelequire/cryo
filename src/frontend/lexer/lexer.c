@@ -109,7 +109,7 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
     GDM->initFrontendState(GDM);
     GDM->frontendState->setLexer(GDM->frontendState, lexer);
     GDM->frontendState->setSourceCode(GDM->frontendState, source);
-    GDM->frontendState->setCurrentFile(GDM->frontendState, fileName);
+    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(fileName));
 
     DEBUG_PRINT_FILTER({
         printf("{lexer} -------------- <Input Source Code> --------------\n\n");
@@ -186,6 +186,7 @@ char advance(Lexer *lexer, CompilerState *state)
     lexer->current++;
     lexer->column++;
     updateCompilerColumnNumber(lexer, state);
+
     return lexer->current[-1];
 }
 // </advance>

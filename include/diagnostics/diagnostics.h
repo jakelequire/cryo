@@ -94,6 +94,13 @@ typedef struct FrontendState_t
     void (*setLexer)(struct FrontendState_t *self, Lexer *lexer);
     void (*clearLexer)(struct FrontendState_t *self);
 
+    void (*incrementLine)(struct FrontendState_t *self, size_t amount);
+    void (*incrementColumn)(struct FrontendState_t *self, size_t amount);
+    void (*incrementOffset)(struct FrontendState_t *self, size_t amount);
+
+    void (*printErrorScreen)(struct FrontendState_t *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                             const char *message, const char *compiler_file, const char *compiler_function, int compiler_line);
+
     struct FrontendState_t *(*takeSnapshot)(struct FrontendState_t *self);
 } FrontendState;
 
@@ -113,10 +120,10 @@ typedef struct GlobalDiagnosticsManager
     void (*debugPrintCurrentState)(GlobalDiagnosticsManager *self);
 
     // Add to GlobalDiagnosticsManager struct
-    void (*reportDiagnostic)(GlobalDiagnosticsManager *self, DiagnosticSeverity severity,
+    void (*reportDiagnostic)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
                              const char *message, const char *function, const char *file, int line);
-    void (*reportInternalError)(GlobalDiagnosticsManager *self, const char *message,
-                                const char *function, const char *file, int line);
+    void (*reportInternalError)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                const char *message, const char *function, const char *file, int line);
     bool (*hasFatalErrors)(GlobalDiagnosticsManager *self);
     void (*printDiagnostics)(GlobalDiagnosticsManager *self);
 
@@ -187,6 +194,9 @@ FrontendState *newFrontendState(void);
 StackFrame *newStackFrame(char *functionName, char *filename, int line);
 StackTrace *newStackTrace(void);
 
+void FrontendState_printErrorScreen(struct FrontendState_t *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                    const char *message, const char *compiler_file, const char *compiler_function, int compiler_line);
+
 // =============================================================================
 // Implementation Methods
 
@@ -217,6 +227,16 @@ void dyn_stackframe_push(StackFrame *frame);
     GDM->createStackFrame(GDM, FN, F, L);
 #define __STACK_FRAME__ GDM->createStackFrame(GDM, (char *)__func__, __FILE__, __LINE__);
 #define __DUMP_STACK_TRACE__ GDM->printStackTrace(GDM);
+
+// GDM: Global Diagnostics Manager
+// ERR: Error Code
+// SEV: Error Severity
+// MSG: Error Message
+// LN: Line Number (COMPILER)
+// FL: File Name (COMPILER)
+// FN: Function Name (COMPILER)
+#define NEW_ERROR(GDM, ERR, SEV, MSG, LN, FL, FN) \
+    GDM->reportDiagnostic(GDM, ERR, SEV, MSG, FN, FL, LN);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================
