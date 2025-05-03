@@ -383,26 +383,23 @@ static void printCompilerDiagnostic(const char *compiler_file, const char *compi
 static void printErrorDiagnostic(CryoErrorCode errorCode, CryoErrorSeverity severity,
                                  const char *message, const char *currentFile, size_t errorLine, size_t errorColumn)
 {
-    const char *severityStr = "ERROR";
+    const char *errorCodeStr = CryoErrorCodeToString(errorCode);
+    const char *severityStr = CryoErrorSeverityToString(severity);
     const char *severityColor = BRIGHT_RED;
 
     // Determine severity string and color
     switch (severity)
     {
     case CRYO_SEVERITY_NOTE:
-        severityStr = "NOTE";
         severityColor = CYAN;
         break;
     case CRYO_SEVERITY_WARNING:
-        severityStr = "WARNING";
         severityColor = YELLOW;
         break;
     case CRYO_SEVERITY_ERROR:
-        severityStr = "ERROR";
         severityColor = BRIGHT_RED;
         break;
     case CRYO_SEVERITY_FATAL:
-        severityStr = "FATAL ERROR";
         severityColor = BRIGHT_RED;
         break;
     default:
@@ -418,8 +415,8 @@ static void printErrorDiagnostic(CryoErrorCode errorCode, CryoErrorSeverity seve
 
         // Print severity label
         printf("%s%s%s  ", LIGHT_RED, BOX_VERTICAL, COLOR_RESET);
-        int labelLen = printf("%s%s:%s ",
-                              severityColor, severityStr, COLOR_RESET);
+        int labelLen = printf("%s(%s) %s:%s ",
+                              severityColor, severityStr, errorCodeStr, COLOR_RESET);
 
         // Process message for word-wrapping
         const char *msg = message;

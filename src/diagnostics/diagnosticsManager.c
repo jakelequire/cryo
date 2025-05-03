@@ -19,21 +19,25 @@
 
 GlobalDiagnosticsManager *g_diagnosticsManager = NULL;
 
-void FrontendState_setLexer(FrontendState *self, Lexer *lexer)
-{
-    if (self)
-    {
-        self->lexer = lexer;
-        self->isLexerSet = true;
-    }
-}
-
 void FrontendState_clearLexer(FrontendState *self)
 {
     if (self)
     {
         self->lexer = NULL;
         self->isLexerSet = false;
+    }
+}
+
+void FrontendState_setLexer(FrontendState *self, Lexer *lexer)
+{
+    if (self)
+    {
+        if (self->lexer)
+        {
+            self->clearLexer(self);
+        }
+        self->lexer = lexer;
+        self->isLexerSet = true;
     }
 }
 
@@ -63,6 +67,10 @@ void FrontendState_setSourceCode(FrontendState *self, const char *sourceCode)
 {
     if (self)
     {
+        if (self->sourceCode)
+        {
+            self->sourceCode = NULL;
+        }
         self->sourceCode = sourceCode;
     }
 }
@@ -71,6 +79,10 @@ void FrontendState_setCurrentFile(FrontendState *self, const char *currentFile)
 {
     if (self)
     {
+        if (self->currentFile)
+        {
+            self->currentFile = NULL;
+        }
         self->currentFile = currentFile;
     }
 }

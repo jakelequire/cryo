@@ -308,6 +308,9 @@ ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGloba
     }
     const char *fileName = trimFilePath(filePath);
 
+    GDM->frontendState->setSourceCode(GDM->frontendState, source);
+    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(fileName));
+
     state->setFilePath(state, filePath);
 
     Lexer lexer;

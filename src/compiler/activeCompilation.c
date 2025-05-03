@@ -32,6 +32,9 @@ ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *output
         CONDITION_FAILED;
     }
 
+    GDM->frontendState->setSourceCode(GDM->frontendState, strdup(source));
+    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(filePath));
+
     // Initialize the Arena
     Arena *arena = createArena(ARENA_SIZE, ALIGNMENT);
 

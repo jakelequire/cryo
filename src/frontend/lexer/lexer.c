@@ -108,8 +108,6 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
 
     GDM->initFrontendState(GDM);
     GDM->frontendState->setLexer(GDM->frontendState, lexer);
-    GDM->frontendState->setSourceCode(GDM->frontendState, source);
-    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(fileName));
 
     DEBUG_PRINT_FILTER({
         printf("{lexer} -------------- <Input Source Code> --------------\n\n");

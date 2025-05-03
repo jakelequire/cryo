@@ -208,6 +208,8 @@ void print_stack_trace(GlobalDiagnosticsManager *self);
 // Helper Functions
 
 void dyn_stackframe_push(StackFrame *frame);
+const char *CryoErrorCodeToString(CryoErrorCode errorCode);
+const char *CryoErrorSeverityToString(CryoErrorSeverity severity);
 
 // =============================================================================
 // Macros

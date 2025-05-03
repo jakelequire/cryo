@@ -46,6 +46,11 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
         logMessage(LMI, "INFO", "Parser", "%s%sModule File Parsing%s", BOLD, CYAN, COLOR_RESET);
     }
 
+    const char *source = lexer->source;
+    const char *fileName = lexer->fileName;
+    GDM->frontendState->setSourceCode(GDM->frontendState, strdup(source));
+    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(fileName));
+
     // Initialize the parsing context
     ParsingContext *context = createParsingContext();
     context->isParsingModuleFile = isModuleFile;
@@ -98,7 +103,7 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to parse statement");
-            parsingError("Failed to parse statement.", "parseProgram", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse statement", lexer->currentToken.line, __FILE__, __func__)
             return NULL;
         }
         logMessage(LMI, "INFO", "Parser", "Next token after statement: %s", CryoTokenToString(lexer->currentToken.type));
@@ -107,8 +112,6 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
     buildASTTreeLinks(program);
 
     DTM->symbolTable->printTable(DTM->symbolTable);
-
-    NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN, CRYO_SEVERITY_FATAL, "An unknown error occurred while parsing the program.", __LINE__, __FILE__, __func__)
 
     CompleteFrontend(globalTable);
     return program;
@@ -133,7 +136,7 @@ void consume(int line, Lexer *lexer, CryoTokenType type, const char *message, co
     }
     else
     {
-        parsingError((char *)message, (char *)functionName, arena, state, lexer, lexer->source, NULL);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, message, line, __FILE__, functionName)
     }
 
     debugCurrentToken(lexer, arena, state);
@@ -192,7 +195,7 @@ char *getNamespaceName(Lexer *lexer, Arena *arena, CompilerState *state)
     }
     else
     {
-        parsingError("Expected a namespace name", "getNamespaceName", arena, state, lexer, lexer->source, NULL);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected identifier for namespace name", __LINE__, __FILE__, __func__)
     }
     return namespaceName;
 }
@@ -237,7 +240,11 @@ DataType *getCryoDataType(const char *typeStr, Arena *arena, CompilerState *stat
     DataType *type = DTM->parseType(typeStr);
     if (!type)
     {
-        parsingError("Unknown data type", "getCryoDataType", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_UNKNOWN_DATA_TYPE,
+                  CRYO_SEVERITY_FATAL,
+                  "Failed to parse data type",
+                  __LINE__, __FILE__, __func__)
     }
 
     logMessage(LMI, "INFO", "Parser", "Data Type Found");
@@ -254,7 +261,11 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
     DataType *genericType = ResolveDataType(globalTable, type->typeName);
     if (!genericType)
     {
-        parsingError("Type is not generic", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_NULL_DATA_TYPE,
+                  CRYO_SEVERITY_FATAL,
+                  "Failed to resolve generic type, DataType is NULL",
+                  __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -271,7 +282,11 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
     {
         if (paramCount >= expectedParamCount)
         {
-            parsingError("Too many type arguments", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM,
+                      CRYO_ERROR_TOO_MANY_TYPE_ARGUMENTS,
+                      CRYO_SEVERITY_FATAL,
+                      "Too many type arguments",
+                      __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -287,14 +302,22 @@ DataType *parseGenericDataTypeInstantiation(DataType *type, Lexer *lexer, Arena 
 
         if (lexer->currentToken.type != TOKEN_GREATER)
         {
-            parsingError("Expected ',' or '>' in type argument list", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM,
+                      CRYO_ERROR_SYNTAX,
+                      CRYO_SEVERITY_FATAL,
+                      "Expected `>` in generic type instantiation",
+                      __LINE__, __FILE__, __func__)
             return NULL;
         }
     }
 
     if (paramCount != expectedParamCount)
     {
-        parsingError("Too few type arguments", "parseGenericDataTypeInstantiation", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_INCORRECT_TYPE_ARGUMENT_COUNT,
+                  CRYO_SEVERITY_FATAL,
+                  "Incorrect number of type arguments",
+                  __LINE__, __FILE__, __func__)
         return NULL;
     }
     logMessage(LMI, "INFO", "Parser", "Generic type instantiation parsed successfully");
@@ -343,13 +366,21 @@ DataType *parseType(Lexer *lexer, ParsingContext *context, Arena *arena, Compile
         break;
 
     default:
-        parsingError("Expected a type identifier", "getNextToken", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_SYNTAX,
+                  CRYO_SEVERITY_FATAL,
+                  "Invalid type token",
+                  __LINE__, __FILE__, __func__)
         break;
     }
 
     if (dataType == NULL)
     {
-        parsingError("Failed to parse type", "parseType", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_NULL_DATA_TYPE,
+                  CRYO_SEVERITY_FATAL,
+                  "Failed to parse data type",
+                  __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -624,7 +655,7 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         logMessage(LMI, "ERROR", "Parser", "Unexpected token: %s", tokenStr);
         char *errorMessage = (char *)malloc(256);
         snprintf(errorMessage, 256, "Unexpected token: %s", tokenStr);
-        parsingError(errorMessage, "parseStatement", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, errorMessage, __LINE__, __FILE__, __func__)
         return NULL;
     }
     }
@@ -655,7 +686,7 @@ ASTNode *parseAnnotation(Lexer *lexer, ParsingContext *context, Arena *arena, Co
     }
     default:
     {
-        parsingError("Expected '@' symbol", "parseAnnotation", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected '@' symbol", __LINE__, __FILE__, __func__)
         return NULL;
     }
     }
@@ -685,10 +716,11 @@ ASTNode *parseStaticKeyword(Lexer *lexer, ParsingContext *context, Arena *arena,
     }
     default:
     {
-        parsingError("Expected 'class', 'struct', or 'function' keyword", "parseStaticKeyword", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected 'class', 'struct', or 'fn' after 'static'", __LINE__, __FILE__, __func__)
+        return NULL;
     }
     }
-    DEBUG_BREAKPOINT;
+    return NULL;
 }
 
 // <parseScopeCall>
@@ -710,7 +742,7 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     FrontendSymbol *resolvedSymbol = FEST->lookupInScope(FEST, scopeName, functionName);
     if (!resolvedSymbol)
     {
-        parsingError("Function symbol not found", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL, "Failed to resolve symbol", __LINE__, __FILE__, __func__)
         return NULL;
     }
     logMessage(LMI, "INFO", "Parser", "Resolved symbol: %s", resolvedSymbol->name);
@@ -719,7 +751,7 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     ASTNode *resolvedASTNode = resolvedSymbol->node;
     if (!resolvedASTNode)
     {
-        parsingError("Resolved symbol does not have an AST node", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL, "Resolved symbol has no AST node", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -735,12 +767,12 @@ ASTNode *parseScopeCall(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     }
     else
     {
-        parsingError("Resolved symbol is not a function or method", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        logMessage(LMI, "INFO", "Parser", "Resolved node is not a method");
         return NULL;
     }
     if (!node)
     {
-        parsingError("Failed to create scope call node", "parseScopeCall", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL, "Failed to create AST node", __LINE__, __FILE__, __func__)
         return NULL;
     }
     node->print(node);
@@ -762,7 +794,7 @@ ASTNode *parseScopedMethodCall(const char *methodName, const char *scopeName, AS
     ASTNode *argList = parseArgumentList(lexer, context, arena, state, globalTable);
     if (!argList)
     {
-        parsingError("Failed to parse argument list", "parseScopedFunctionCall", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse argument list", __LINE__, __FILE__, __func__)
         return NULL;
     }
     if (argList->metaData->type == NODE_ARG_LIST)
@@ -801,7 +833,7 @@ ASTNode *parseScopedFunctionCall(Lexer *lexer, ParsingContext *context, Arena *a
     ASTNode *argList = parseArgumentList(lexer, context, arena, state, globalTable);
     if (!argList)
     {
-        parsingError("Failed to parse argument list", "parseScopedFunctionCall", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse argument list", __LINE__, __FILE__, __func__)
         return NULL;
     }
     if (argList->metaData->type == NODE_ARG_LIST)
@@ -886,7 +918,7 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
             }
             else
             {
-                parsingError("Expected an identifier after '.'", "parseNamespace", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected an identifier after dot", __LINE__, __FILE__, __func__)
                 break;
             }
         }
@@ -896,7 +928,8 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     }
     else
     {
-        parsingError("Expected a namespace name", "parseNamespace", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected an identifier for namespace name", __LINE__, __FILE__, __func__)
+        return NULL;
     }
 
     // Use your arena allocator to create a copy of the namespace string
@@ -935,12 +968,20 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         int intVal = charToInt(intStr);
         if (intVal == 0 && strcmp(intStr, "0") != 0)
         {
-            parsingError("Invalid integer literal", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM,
+                      CRYO_ERROR_SYNTAX,
+                      CRYO_SEVERITY_FATAL,
+                      "Invalid integer literal",
+                      __LINE__, __FILE__, __func__)
         }
         // Check for overflow
         if (intVal < INT_MIN || intVal > INT_MAX)
         {
-            parsingError("Integer literal out of range", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM,
+                      CRYO_ERROR_INTEGER_OVERFLOW,
+                      CRYO_SEVERITY_FATAL,
+                      "Integer overflow",
+                      __LINE__, __FILE__, __func__)
         }
         printf("Int Value: %d\n", intVal);
         node = createIntLiteralNode(intVal, arena, state, lexer);
@@ -965,7 +1006,11 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         char *booleanValueStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
         if (strcmp(booleanValueStr, "true") != 0 && strcmp(booleanValueStr, "false") != 0)
         {
-            parsingError("Invalid boolean value", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM,
+                      CRYO_ERROR_SYNTAX,
+                      CRYO_SEVERITY_FATAL,
+                      "Invalid boolean literal",
+                      __LINE__, __FILE__, __func__)
         }
         int booleanValue = strcmp(booleanValueStr, "true") == 0 ? 1 : 0;
         node = createBooleanLiteralNode(booleanValue, arena, state, lexer);
@@ -1019,8 +1064,11 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     }
     default:
     {
-        NEW_COMPILER_ERROR(state, "ERROR", "Expected an expression or statement.", "parsePrimaryExpression");
-        parsingError("Expected an expression", "parsePrimaryExpression", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM,
+                  CRYO_ERROR_SYNTAX,
+                  CRYO_SEVERITY_FATAL,
+                  "Invalid primary expression",
+                  __LINE__, __FILE__, __func__)
         return NULL;
     }
     }
@@ -1147,7 +1195,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
     ASTNode *left = parsePrimaryExpression(lexer, context, arena, state, globalTable);
     if (!left)
     {
-        parsingError("Expected an expression.", "parseBinaryExpression", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse primary expression", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -1178,7 +1226,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
         ASTNode *right = parseBinaryExpression(lexer, context, precedence + 1, arena, state, globalTable);
         if (!right)
         {
-            parsingError("Expected an expression on the right side of the operator.", "parseBinaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse right side of binary expression", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -1186,7 +1234,7 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
         CryoOperatorType op = CryoTokenToOperator(opToken);
         if (op == OPERATOR_NA)
         {
-            parsingError("Invalid operator.", "parseBinaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_OPERATOR, CRYO_SEVERITY_FATAL, "Invalid operator", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -1276,7 +1324,7 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
         ASTNode *lhs = parsePrimaryExpression(lexer, context, arena, state, globalTable);
         if (!lhs)
         {
-            parsingError("Expected an operand", "parseUnaryExpression", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse primary expression", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
         ASTNode *postfixIncrement = createUnaryExpr(opToken, lhs, arena, state, lexer);
@@ -1309,7 +1357,7 @@ ASTNode *parsePublicDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     case TOKEN_KW_MODULE:
         return parseModuleDeclaration(VISIBILITY_PUBLIC, lexer, context, arena, state, globalTable);
     default:
-        parsingError("Expected a declaration.", "parsePublicDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected a declaration.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 }
@@ -1332,7 +1380,7 @@ ASTNode *parsePrivateDeclaration(Lexer *lexer, ParsingContext *context, Arena *a
     case TOKEN_KW_MODULE:
         return parseModuleDeclaration(VISIBILITY_PRIVATE, lexer, context, arena, state, globalTable);
     default:
-        parsingError("Expected a declaration.", "parsePrivateDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected a declaration.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 }
@@ -1448,7 +1496,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected variable name.");
-        parsingError("[Parser] Expected variable name.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected variable name.", __LINE__, __FILE__, __func__)
     }
     char *var_name = strndup(lexer->currentToken.start, lexer->currentToken.length);
     getNextToken(lexer, arena, state);
@@ -1463,13 +1511,15 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         dataType = getCryoDataType(varType, arena, state, lexer, globalTable);
         if (!dataType)
         {
-            parsingError("[Parser] Unknown data type.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+            logMessage(LMI, "ERROR", "Parser", "Unknown data type.");
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL, "Unknown data type.", __LINE__, __FILE__, __func__)
         }
         getNextToken(lexer, arena, state);
     }
     else
     {
-        parsingError("[Parser] Expected ':' after variable name.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+        logMessage(LMI, "ERROR", "Parser", "Expected ':' after variable name.");
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected ':' for variable type.", __LINE__, __FILE__, __func__)
     }
 
     // Check if the data type is a primitive type
@@ -1497,7 +1547,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         default:
         {
             logMessage(LMI, "ERROR", "Parser", "Unknown primitive type.");
-            parsingError("[Parser] Unknown primitive type.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN_DATA_TYPE, CRYO_SEVERITY_FATAL, "Unknown primitive type.", __LINE__, __FILE__, __func__)
             break;
         }
         }
@@ -1510,7 +1560,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     // Parse the variable initializer
     if (lexer->currentToken.type != TOKEN_EQUAL)
     {
-        parsingError("[Parser] Expected '=' after type.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+        logMessage(LMI, "ERROR", "Parser", "Expected '=' after variable name.");
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected '=' after variable name.", __LINE__, __FILE__, __func__)
     }
     getNextToken(lexer, arena, state);
 
@@ -1525,7 +1576,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     ASTNode *initializer = parseExpression(lexer, context, arena, state, globalTable);
     if (initializer == NULL)
     {
-        parsingError("[Parser] Expected expression after '='.", "parseVarDeclaration", arena, state, lexer, lexer->source, globalTable);
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse initializer expression.");
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse initializer expression.", __LINE__, __FILE__, __func__)
     }
     if (lexer->currentToken.type == TOKEN_SEMICOLON)
     {
@@ -1568,7 +1620,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected function name.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -1622,7 +1674,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     }
     else
     {
-        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected `->` for return type.", __LINE__, __FILE__, __func__)
     }
 
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
@@ -1641,7 +1693,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     if (lexer->currentToken.type != TOKEN_LBRACE)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected `{` to start function block.");
-        parsingError("Expected `{` to start function block.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected `{` to start function block.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -1650,7 +1702,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     if (!functionDefNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create function node.");
-        parsingError("Failed to create function node.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to create function node.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     functionDefNode->data.functionDecl->paramTypes = paramTypes;
@@ -1658,13 +1710,11 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     functionDefNode->data.functionDecl->parentScopeID = getNamespaceScopeID(context);
     functionDefNode->data.functionDecl->functionScopeID = Generate64BitHashID(functionName);
 
-    NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN, CRYO_SEVERITY_FATAL, "An unknown error occurred while parsing the program. This is just a test trying to overflow the error message.", __LINE__, __FILE__, __func__)
-
     // Parse the function block
     ASTNode *functionBlock = parseFunctionBlock(returnType, lexer, context, arena, state, globalTable);
     if (!functionBlock)
     {
-        parsingError("Failed to parse function block.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse function block.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -1717,7 +1767,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseExternFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected function name.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     const char *namespaceScopeID = getNamespaceScopeID(context);
@@ -1748,7 +1798,8 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     }
     else
     {
-        parsingError("Expected `->` for return type.", "parseFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected `->` for return type.", __LINE__, __FILE__, __func__)
+        return NULL;
     }
 
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
@@ -1757,7 +1808,7 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
     DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
     if (!functionType)
     {
-        parsingError("Failed to create function type.", "parseExternFunctionDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL, "Failed to create function type.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     printf("Printing Extern Function Type...\n");
@@ -1793,7 +1844,7 @@ ASTNode *parseExternModuleDeclaration(Lexer *lexer, ParsingContext *context, Are
 
     if (lexer->currentToken.type != TOKEN_LBRACE)
     {
-        parsingError("Expected '{' after extern module declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected '{' after extern module declaration.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected '{' after extern module declaration.", "parseExternModuleDeclaration", arena, state, context);
@@ -1806,7 +1857,7 @@ ASTNode *parseExternModuleDeclaration(Lexer *lexer, ParsingContext *context, Are
             ASTNode *externFunc = parseExternFunctionDeclaration(lexer, context, arena, state, globalTable);
             if (!externFunc)
             {
-                parsingError("Failed to parse extern function declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse extern function declaration.", __LINE__, __FILE__, __func__)
                 return NULL;
             }
             AddExternFunctionToTable(globalTable, externFunc, moduleName);
@@ -1820,8 +1871,8 @@ ASTNode *parseExternModuleDeclaration(Lexer *lexer, ParsingContext *context, Are
         }
         else
         {
-            logMessage(LMI, "ERROR", "Parser", "Expected 'fn' keyword for extern function declaration.");
-            parsingError("Expected 'fn' keyword for extern function declaration.", "parseExternModuleDeclaration", arena, state, lexer, lexer->source, globalTable);
+            logMessage(LMI, "ERROR", "Parser", "Expected 'function' keyword for extern function declaration.");
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected 'function' keyword for extern function declaration.", __LINE__, __FILE__, __func__)
         }
     }
 
@@ -1893,8 +1944,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
         logMessage(LMI, "ERROR", "Parser",
                    "Expected '(' after function name, got: %s", CryoTokenToString(lexer->currentToken.type));
 
-        parsingError("Expected '(' after function name.", "parseFunctionCall",
-                     arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected '(' after function name, got: %s", __LINE__, __FILE__, __func__)
 
         CONDITION_FAILED;
     }
@@ -1977,8 +2028,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
             {
                 if (!context->thisContext)
                 {
-                    parsingError("Invalid use of `this` keyword.", "parseFunctionCall",
-                                 arena, state, lexer, lexer->source, globalTable);
+                    NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                              "Cannot use `this` keyword outside of a class context.", __LINE__, __FILE__, __func__)
                     return NULL;
                 }
 
@@ -1994,8 +2045,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                 }
                 else
                 {
-                    parsingError("Expected `.` after `this` keyword.", "parseFunctionCall",
-                                 arena, state, lexer, lexer->source, globalTable);
+                    NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                              "Expected `.` after `this` keyword.", __LINE__, __FILE__, __func__)
                     return NULL;
                 }
 
@@ -2018,8 +2069,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
 
                     if (i == thisContextPropCount - 1)
                     {
-                        parsingError("Property not found in `this` context.", "parseFunctionCall",
-                                     arena, state, lexer, lexer->source, globalTable);
+                        NEW_ERROR(GDM, CRYO_ERROR_INVALID_ACCESS, CRYO_SEVERITY_FATAL,
+                                  "Invalid `this` context. Property not found.", __LINE__, __FILE__, __func__)
                         return NULL;
                     }
 
@@ -2054,11 +2105,8 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
 
             default:
             {
-                const char *tokenStr = CryoTokenToString(token);
-                const char *errorStr = "Invalid argument, received: ";
-                const char *fullErrorMessage = concatStrings(errorStr, tokenStr);
-                parsingError((char *)fullErrorMessage, "parseFunctionCall",
-                             arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                          "Invalid token in function call.", __LINE__, __FILE__, __func__)
                 return NULL;
             }
             }
@@ -2218,7 +2266,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
             if (!elementType)
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to parse element type for variadic parameter");
-                parsingError("Failed to parse element type for variadic parameter", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse element type for variadic parameter", __LINE__, __FILE__, __func__)
                 return NULL;
             }
 
@@ -2238,7 +2286,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
             {
                 // Error: variadic parameter must have array type
                 logMessage(LMI, "ERROR", "Parser", "Variadic parameter must have array type");
-                parsingError("Variadic parameter must have array type.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Variadic parameter must have array type", __LINE__, __FILE__, __func__)
                 return NULL;
             }
             DataType *paramType = node->data.param->type;
@@ -2271,7 +2319,8 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     {
         logMessage(LMI, "ERROR", "Parser", "Expected an identifier, received: %s",
                    CryoTokenToString(currentToken.type));
-        parsingError("Expected an identifier.", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected an identifier, received: %s", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -2286,7 +2335,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     if (!paramType)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to parse parameter type");
-        parsingError("Failed to parse parameter type", "parseParameter", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse parameter type", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -2377,7 +2426,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         currentToken.type != TOKEN_STAR)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected an identifier or literal, received: %s", CryoTokenToString(currentToken.type));
-        parsingError("Expected an identifier or literal.", "parseArguments", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected an identifier or literal, received: %s", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -2462,7 +2511,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
             else
             {
                 logMessage(LMI, "ERROR", "Parser", "Symbol not found in symbol table.");
-                parsingError("Symbol not found in symbol table.", "parseArguments", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL, "Symbol not found in symbol table.", __LINE__, __FILE__, __func__)
                 return NULL;
             }
         }
@@ -2490,7 +2539,7 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Symbol not found in global table.");
-            parsingError("Symbol not found in global table.", "parseArguments", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL, "Symbol not found in global table.", __LINE__, __FILE__, __func__)
             return NULL;
         }
     }
@@ -2576,7 +2625,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         lexer->currentToken.type != TOKEN_BOOLEAN_LITERAL)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected an identifier, got: %s", CryoTokenToString(lexer->currentToken.type));
-        parsingError("Expected an identifier.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected an identifier, got: %s", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -2643,7 +2693,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Symbol not found in global table.");
-            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                      "Symbol not found in global table.", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -2651,7 +2702,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         if (!symbolDataType)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to get data type from symbol.");
-            parsingError("Failed to get data type from symbol.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL,
+                      "Failed to get data type from symbol.", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -2666,7 +2718,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
             if (!dotExpr)
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to parse dot expression.");
-                parsingError("Failed to parse dot expression.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+                NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                          "Failed to parse dot expression.", __LINE__, __FILE__, __func__)
                 return NULL;
             }
 
@@ -2700,7 +2753,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Symbol not found in global table.");
-            parsingError("Symbol not found in global table.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                      "Symbol not found in global table.", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
     }
@@ -2716,7 +2770,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         if (!sym)
         {
             logMessage(LMI, "ERROR", "Parser", "Symbol not found in the global table.");
-            parsingError("Symbol not found in the global table.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                      "Symbol not found in the global table.", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -2724,7 +2779,8 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         if (!symbolType)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to get data type from symbol.");
-            parsingError("Failed to get data type from symbol.", "parseArgumentsWithExpectedType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL,
+                      "Failed to get data type from symbol.", __LINE__, __FILE__, __func__)
             return NULL;
         }
         expectedType = symbolType;
@@ -2761,7 +2817,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
         if (context->thisContext == NULL)
         {
             logMessage(LMI, "ERROR", "Parser", "Expected 'this' keyword to be used inside a struct.");
-            parsingError("Expected 'this' keyword to be used inside a struct.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                      "Expected 'this' keyword to be used inside a struct.", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
 
@@ -2774,7 +2831,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
         if (lexer->currentToken.type != TOKEN_IDENTIFIER)
         {
             logMessage(LMI, "ERROR", "Parser", "Expected identifier after 'this' keyword. Received: %s", CryoTokenToString(lexer->currentToken.type));
-            parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                      "Expected identifier after 'this' keyword. Received: %s", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
 
@@ -2798,7 +2856,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
         if (!matchedProperty)
         {
             logMessage(LMI, "ERROR", "Parser", "Property not found in struct.");
-            parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_PROPERTY, CRYO_SEVERITY_FATAL,
+                      "Property not found in struct.", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
 
@@ -2806,8 +2865,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
         if (!propAccessNode)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to create property access node.");
-            parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
-            CONDITION_FAILED;
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                      "Failed to create property access node.", __LINE__, __FILE__, __func__)
         }
         propAccessNode->data.propertyAccess->objectTypeName = expectedType->debug->toString(expectedType);
         propAccessNode->data.propertyAccess->objectType = expectedType;
@@ -2818,7 +2877,8 @@ ASTNode *parseExpectedTypeArgWithThisKW(Lexer *lexer, DataType *expectedType, Pa
     // If the this keyword is not using dot notation, then it's just a reference to the struct
     // For now though, the compiler will only support dot notation for accessing struct properties
     logMessage(LMI, "ERROR", "Parser", "Expected dot notation after 'this' keyword.");
-    parsingError("Expected dot notation after 'this' keyword.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
+    NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+              "Expected dot notation after 'this' keyword.", __LINE__, __FILE__, __func__)
 }
 // </parseExpectedTypeArgWithThisKW>
 
@@ -2968,7 +3028,8 @@ ASTNode *parseExtern(Lexer *lexer, ParsingContext *context, Arena *arena, Compil
     case TOKEN_STRING_LITERAL:
         return parseExternModuleDeclaration(lexer, context, arena, state, globalTable);
     default:
-        parsingError("Expected an extern declaration.", "parseExtern", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected `fn` or string literal after `extern` keyword.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -3192,9 +3253,8 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Array not found.");
-        parsingError("Array not found.", "parseArrayIndexing", arena, state, lexer, lexer->source, globalTable);
-        exit(1);
-        return NULL;
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                  "Array not found.", __LINE__, __FILE__, __func__)
     }
     else
     {
@@ -3225,8 +3285,8 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find symbol.");
-        parsingError("Failed to find symbol.", "parseAssignment", arena, state, lexer, lexer->source, globalTable);
-        return NULL;
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                  "Failed to find symbol.", __LINE__, __FILE__, __func__)
     }
     ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
     ASTNode *oldValue = symbolNode;
@@ -3251,7 +3311,8 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     default:
     {
         logMessage(LMI, "ERROR", "Parser", "Old value is not a variable declaration.");
-        parsingError("Old value is not a variable declaration.", "parseAssignment", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_NODE_TYPE, CRYO_SEVERITY_FATAL,
+                  "Old value is not a variable declaration.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     }
@@ -3260,7 +3321,8 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     if (!isMutable)
     {
         logMessage(LMI, "ERROR", "Parser", "Variable is not mutable.");
-        parsingError("Variable is not mutable.", "parseAssignment", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_MUTABILITY, CRYO_SEVERITY_FATAL,
+                  "Variable is not mutable.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -3280,13 +3342,15 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
 
     if (context->thisContext == NULL)
     {
-        parsingError("This context not in scope.", "parseThisContext", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                  "Expected `this` keyword to be used inside a struct.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
     if (context->thisContext->isStatic)
     {
-        parsingError("Cannot use `this` keyword in static context.", "parseThisContext", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                  "Expected `this` keyword to be used inside a non-static context.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -3343,7 +3407,8 @@ ASTNode *parseLHSIdentifier(Lexer *lexer, ParsingContext *context, Arena *arena,
     logMessage(LMI, "INFO", "Parser", "Parsing LHS identifier...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseLHSIdentifier", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected identifier for LHS.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -3369,7 +3434,8 @@ ASTNode *parseDotNotation(Lexer *lexer, ParsingContext *context, Arena *arena, C
     }
     default:
     {
-        parsingError("Expected `this` keyword.", "parseDotNotation", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected identifier or `this` keyword for dot notation.", __LINE__, __FILE__, __func__)
         return NULL;
     }
     }
@@ -3416,12 +3482,14 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
                 }
             }
 
-            parsingError("Property not found in struct.", "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_PROPERTY, CRYO_SEVERITY_FATAL,
+                      "Property not found in struct.", __LINE__, __FILE__, __func__)
             return NULL;
         }
         else
         {
-            parsingError("Expected a struct declaration.", "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                      "Expected `this` keyword to be used inside a struct.", __LINE__, __FILE__, __func__)
             return NULL;
         }
     }
@@ -3436,7 +3504,8 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
         if (!accessor)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to find accessor.");
-            parsingError("Failed to find accessor.", "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                      "Failed to find accessor.", __LINE__, __FILE__, __func__)
             return NULL;
         }
 
@@ -3462,7 +3531,8 @@ ASTNode *parseIdentifierDotNotation(Lexer *lexer, ParsingContext *context, Arena
     char *unexpectedTokenStr = (char *)malloc(256);
     char *tokenStr = CryoTokenToString(lexer->currentToken.type);
     sprintf(unexpectedTokenStr, "Unexpected token in dot notation. Received: %s", tokenStr);
-    parsingError(unexpectedTokenStr, "parseIdentifierDotNotation", arena, state, lexer, lexer->source, globalTable);
+    NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+              unexpectedTokenStr, __LINE__, __FILE__, __func__)
     return NULL;
 }
 
@@ -3474,7 +3544,8 @@ ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer
     // The first identifier is the type of the node we are accessing
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier after `.`.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected identifier for property access.", __LINE__, __FILE__, __func__)
         return NULL;
     }
 
@@ -3523,7 +3594,8 @@ ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
-            parsingError("Property not found in struct.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_PROPERTY, CRYO_SEVERITY_FATAL,
+                      "Property not found in struct.", __LINE__, __FILE__, __func__)
             return NULL;
         }
     }
@@ -3596,7 +3668,8 @@ ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Property Attempted: %s", propName);
-            parsingError("Property not found in class.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
+            NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_PROPERTY, CRYO_SEVERITY_FATAL,
+                      "Property not found in class.", __LINE__, __FILE__, __func__)
             return NULL;
         }
     }
@@ -3605,8 +3678,8 @@ ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer
     }
     else
     {
-        parsingError("Expected a struct or class type.", "parseDotNotationWithType", arena, state, lexer, lexer->source, globalTable);
-        return NULL;
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_TYPE, CRYO_SEVERITY_FATAL,
+                  "Expected a struct or class type.", __LINE__, __FILE__, __func__)
     }
 }
 
@@ -3617,8 +3690,8 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
     if (context->thisContext == NULL)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected 'this' keyword to be used inside a struct.");
-        parsingError("Expected 'this' keyword to be used inside a struct.", "parseForThisValueProperty", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                  "Expected 'this' keyword to be used inside a struct.", __LINE__, __FILE__, __func__)
     }
 
     // This assumes the `this` and `.` tokens have already been consumed,
@@ -3629,8 +3702,8 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
         logMessage(LMI, "ERROR", "Parser", "Expected identifier after 'this' keyword. Received: %s", CryoTokenToString(lexer->currentToken.type));
-        parsingError("Expected identifier after 'this' keyword.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Expected identifier after 'this' keyword.", __LINE__, __FILE__, __func__)
     }
 
     ASTNode *matchedProperty = NULL;
@@ -3652,17 +3725,16 @@ ASTNode *parseForThisValueProperty(Lexer *lexer, DataType *expectedType, Parsing
     {
         logMessage(LMI, "ERROR", "Parser", "Property not found in struct.");
         logMessage(LMI, "ERROR", "Parser", "Property name: %s", propertyName);
-
-        parsingError("Property not found in struct.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_PROPERTY, CRYO_SEVERITY_FATAL,
+                  "Property not found in struct.", __LINE__, __FILE__, __func__)
     }
 
     ASTNode *propAccessNode = createStructPropertyAccessNode(matchedProperty, matchedProperty, propertyName, expectedType, arena, state, lexer);
     if (!propAccessNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create property access node.");
-        parsingError("Failed to create property access node.", "parseExpectedTypeArgWithThisKW", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                  "Failed to create property access node.", __LINE__, __FILE__, __func__)
     }
     propAccessNode->data.propertyAccess->propertyIndex = DTM->propertyTypes->getStructPropertyIndex(expectedType, propertyName);
     propAccessNode->data.propertyAccess->objectTypeName = expectedType->typeName;
@@ -3679,8 +3751,8 @@ ASTNode *parseThisExpression(Lexer *lexer, ParsingContext *context, Arena *arena
 
     if (context->thisContext == NULL)
     {
-        parsingError("This context not in scope.", "parseThisExpression", arena, state, lexer, lexer->source, globalTable);
-        return NULL;
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_THIS_CONTEXT, CRYO_SEVERITY_FATAL,
+                  "Expected `this` keyword to be used inside a struct.", __LINE__, __FILE__, __func__)
     }
 
     if (lexer->currentToken.type == TOKEN_DOT)
@@ -3709,8 +3781,8 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     if (!type)
     {
         logMessage(LMI, "ERROR", "Parser", "Type not found.");
-        parsingError("Type not found.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_TYPE, CRYO_SEVERITY_FATAL,
+                  "Type not found.", __LINE__, __FILE__, __func__)
     }
 
     logMessage(LMI, "INFO", "Parser", "Type found.");
@@ -3720,8 +3792,8 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     if (!args)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to parse argument list.");
-        parsingError("Failed to parse argument list.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                  "Failed to parse argument list.", __LINE__, __FILE__, __func__)
     }
 
     logASTNode(args);
@@ -3742,8 +3814,8 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
         if (ctorArgCount != argCount)
         {
             logMessage(LMI, "ERROR", "Parser", "Argument count mismatch.");
-            parsingError("Argument count mismatch.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
-            CONDITION_FAILED;
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_ARGUMENT_COUNT, CRYO_SEVERITY_FATAL,
+                      "Argument count mismatch.", __LINE__, __FILE__, __func__)
         }
     }
     // TODO: Implement
@@ -3754,8 +3826,8 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     else
     {
         logMessage(LMI, "ERROR", "Parser", "Type is not a struct or class.");
-        parsingError("Type is not a struct or class.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_INVALID_TYPE, CRYO_SEVERITY_FATAL,
+                  "Type is not a struct or class.", __LINE__, __FILE__, __func__)
     }
 
     ASTNode **arguments = args->data.argList->args;
@@ -3764,8 +3836,8 @@ ASTNode *parseNewExpression(Lexer *lexer, ParsingContext *context, Arena *arena,
     if (!objectNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create object node.");
-        parsingError("Failed to create object node.", "parseNewExpression", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                  "Failed to create object node.", __LINE__, __FILE__, __func__)
     }
 
     logASTNode(objectNode);
