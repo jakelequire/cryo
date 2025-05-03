@@ -282,6 +282,15 @@ void GlobalDiagnosticsManager_reportDiagnostic(GlobalDiagnosticsManager *self, C
     exit(EXIT_FAILURE);
 }
 
+void GlobalDiagnosticsManager_reportBackendDiagnostic(GlobalDiagnosticsManager *self,
+                                                      CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                                      const char *moduleName, ASTNode *failedNode,
+                                                      const char *message, const char *function, const char *file, int line)
+{
+    // TODO: Implement this function
+    DEBUG_BREAKPOINT;
+}
+
 void GlobalDiagnosticsManager_printDiagnostics(GlobalDiagnosticsManager *self)
 {
     if (self->errorCount == 0)
@@ -334,6 +343,35 @@ void GlobalDiagnosticsManager_printDiagnostics(GlobalDiagnosticsManager *self)
     printf("\n#=======================================#\n");
 }
 
+const char *CompilationStageToString(CompilationStage stage)
+{
+    switch (stage)
+    {
+    case COMPILATION_STAGE_NONE:
+        return "None";
+    case COMPILATION_STAGE_FRONTEND:
+        return "Frontend";
+    case COMPILATION_STAGE_SEMANTIC_ANALYSIS:
+        return "Semantic Analysis";
+    case COMPILATION_STAGE_CODEGEN:
+        return "Code Generation";
+    case COMPILATION_STAGE_LINKING:
+        return "Linking";
+    case COMPILATION_STAGE_EXECUTION:
+        return "Execution";
+    default:
+        return "Unknown";
+    }
+}
+
+void GlobalDiagnosticsManager_setCompilationStage(GlobalDiagnosticsManager *self, CompilationStage stage)
+{
+    if (self)
+    {
+        self->stage = stage;
+    }
+}
+
 __C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void)
 {
@@ -343,6 +381,9 @@ void initGlobalDiagnosticsManager(void)
         GDM->errorCount = 0;
         GDM->errors = NULL;
         GDM->stackTrace = newStackTrace();
+
+        GDM->stage = COMPILATION_STAGE_NONE;
+        GDM->setCompilationStage = GlobalDiagnosticsManager_setCompilationStage;
 
         GDM->frontendState = newFrontendState();
         GDM->initFrontendState = GlobalDiagnosticsManager_initFrontendState;

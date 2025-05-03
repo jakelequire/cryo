@@ -610,7 +610,6 @@ namespace Cryo
         if (breakBlock)
         {
             context.getInstance().builder.CreateBr(breakBlock);
-            context.getInstance().builder.SetInsertPoint(breakBlock);
         }
         else
         {

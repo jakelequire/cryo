@@ -183,16 +183,21 @@ namespace Cryo
 
         // Get the current function
         llvm::Function *function = context.getInstance().builder.GetInsertBlock()->getParent();
-        llvm::BasicBlock *loopBB = llvm::BasicBlock::Create(context.getInstance().context, "loop", function);
-        llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(context.getInstance().context, "afterloop", function);
-        llvm::BasicBlock *conditionBB = llvm::BasicBlock::Create(context.getInstance().context, "cond", function);
 
-        // Set the continue / break blocks
-        context.getInstance().symbolTable->setContinueBlock(loopBB);
-        context.getInstance().symbolTable->setBreakBlock(afterBB);
+        // Create blocks with proper naming and order
+        llvm::BasicBlock *condBB = llvm::BasicBlock::Create(context.getInstance().context, "while.cond", function);
+        llvm::BasicBlock *bodyBB = llvm::BasicBlock::Create(context.getInstance().context, "while.body", function);
+        llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(context.getInstance().context, "while.exit", function);
+        llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(context.getInstance().context, "while.after", function);
 
-        context.getInstance().builder.CreateBr(conditionBB);
-        context.getInstance().builder.SetInsertPoint(conditionBB);
+        // Set break/continue targets
+        context.getInstance().symbolTable->setBreakBlock(exitBB);
+        context.getInstance().symbolTable->setContinueBlock(condBB);
+
+        // Branch to condition
+        context.getInstance().builder.CreateBr(condBB);
+
+        context.getInstance().builder.SetInsertPoint(condBB);
         llvm::Value *conditionVal = getLLVMValue(node->data.whileStatement->condition);
         if (!conditionVal)
         {
@@ -253,28 +258,34 @@ namespace Cryo
                 return;
             }
         }
-        // Create the conditional branch
-        context.getInstance().builder.CreateCondBr(conditionVal, loopBB, afterBB);
-        context.getInstance().builder.SetInsertPoint(loopBB);
-        // Push a new scope for the loop body
+
+        // Branch based on condition to body or exit
+        context.getInstance().builder.CreateCondBr(conditionVal, bodyBB, exitBB);
+
+        // Generate loop body
+        context.getInstance().builder.SetInsertPoint(bodyBB);
         symbolTable->pushScope();
-        // Visit the loop body
         visit(node->data.whileStatement->body);
-        // Pop the scope
         symbolTable->popScope();
-        // Add a branch to the condition block
+
+        // Add branch back to condition if no terminator
         if (!context.getInstance().builder.GetInsertBlock()->getTerminator())
         {
-            context.getInstance().builder.CreateBr(conditionBB);
+            context.getInstance().builder.CreateBr(condBB);
         }
-        // Set the insert point to the after block
+
+        // Set up exit block that branches to after block
+        context.getInstance().builder.SetInsertPoint(exitBB);
+        context.getInstance().builder.CreateBr(afterBB);
+
+        // Set insert point for code after the loop
         context.getInstance().builder.SetInsertPoint(afterBB);
-        logMessage(LMI, "INFO", "Visitor", "While statement processed successfully");
 
-        // Clear the continue and break blocks
-        context.getInstance().symbolTable->setContinueBlock(nullptr);
+        // Clear break/continue targets
         context.getInstance().symbolTable->setBreakBlock(nullptr);
+        context.getInstance().symbolTable->setContinueBlock(nullptr);
 
+        logMessage(LMI, "INFO", "Visitor", "While statement processed successfully");
         return;
     }
 

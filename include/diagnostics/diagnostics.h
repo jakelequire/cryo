@@ -31,23 +31,6 @@
 #include "frontend/parser.h"
 #include "frontend/AST.h"
 
-/*
-Error Code Template:
-    X0-000000
-    X = Error Type
-        E = General Error
-        F = Frontend Error
-        S = Semantic Error
-        L = Linker Error
-        I = Internal Error
-    0 = Error Severity
-        0 = Note
-        1 = Warning
-        2 = Error
-        3 = Fatal
-    000000 = Error Number
-*/
-
 typedef struct ASTNode ASTNode;
 typedef struct Lexer Lexer;
 
@@ -75,6 +58,16 @@ typedef enum DiagnosticSeverity
     DIAG_ERROR,
     DIAG_FATAL
 } DiagnosticSeverity;
+
+typedef enum CompilationStage
+{
+    COMPILATION_STAGE_NONE,
+    COMPILATION_STAGE_FRONTEND,
+    COMPILATION_STAGE_SEMANTIC_ANALYSIS,
+    COMPILATION_STAGE_CODEGEN,
+    COMPILATION_STAGE_LINKING,
+    COMPILATION_STAGE_EXECUTION
+} CompilationStage;
 
 typedef struct FrontendState_t
 {
@@ -106,8 +99,9 @@ typedef struct FrontendState_t
 
 typedef struct GlobalDiagnosticsManager
 {
-    // -----------------------------------
-    // Public Properties
+    // The current compilation stage
+    CompilationStage stage;
+    void (*setCompilationStage)(GlobalDiagnosticsManager *self, CompilationStage stage);
 
     DiagnosticEntry **errors; // Array of error entries
     size_t errorCount;        // Number of errors
@@ -119,7 +113,6 @@ typedef struct GlobalDiagnosticsManager
     void (*initFrontendState)(GlobalDiagnosticsManager *self);
     void (*debugPrintCurrentState)(GlobalDiagnosticsManager *self);
 
-    // Add to GlobalDiagnosticsManager struct
     void (*reportDiagnostic)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
                              const char *message, const char *function, const char *file, int line);
     void (*reportInternalError)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
@@ -127,12 +120,8 @@ typedef struct GlobalDiagnosticsManager
     bool (*hasFatalErrors)(GlobalDiagnosticsManager *self);
     void (*printDiagnostics)(GlobalDiagnosticsManager *self);
 
-    // -----------------------------------
-    // Public Methods
-
     void (*createStackFrame)(GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
 
-    // `void printStackTrace(*self)`
     void (*printStackTrace)(GlobalDiagnosticsManager *self);
 } GlobalDiagnosticsManager;
 
