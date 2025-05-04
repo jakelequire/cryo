@@ -11,6 +11,7 @@ namespace Std.Core;
 
 extern "C" {
     function printf_export   (format: str, ...) -> i32;
+    function printf          (format: str, ...) -> i32;
     function printStr_export (value: str) -> void;
     function scanf_export    (format: str, ...) -> i32;
     function printI32_export (value: i32) -> i32;

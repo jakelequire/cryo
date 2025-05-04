@@ -148,6 +148,7 @@ namespace Cryo
 
             // Check if all elements are constants or have constant values
             bool allConstant = true;
+            bool isStringArray = false;
             std::vector<llvm::Constant *> constantValues;
 
             for (int i = 0; i < elementCount && allConstant; ++i)
@@ -157,6 +158,15 @@ namespace Cryo
                 {
                     logMessage(LMI, "ERROR", "Initializer", "Element value is null at index %s", std::to_string(i).c_str());
                     return nullptr;
+                }
+
+                // Check if the element type is a global string literal
+                if (llvm::GlobalVariable *globalVar = llvm::dyn_cast<llvm::GlobalVariable>(elementValue))
+                {
+                    if (globalVar->getName().str().find("g_str") != std::string::npos)
+                    {
+                        isStringArray = true;
+                    }
                 }
 
                 // Check if this is a constant value
@@ -172,13 +182,25 @@ namespace Cryo
 
             llvm::AllocaInst *arrayAlloca = context.getInstance().builder.CreateAlloca(elementType, nullptr, "array");
 
-            if (allConstant)
+            if (allConstant && !isStringArray)
             {
                 // Create a constant array aggregate and store it at once
                 llvm::Constant *constArray = llvm::ConstantArray::get(arrayType, constantValues);
                 context.getInstance().builder.CreateStore(constArray, arrayAlloca);
 
                 logMessage(LMI, "INFO", "Initializer", "Constant array literal generated successfully");
+            }
+            else if (isStringArray)
+            {
+                // Handle string array initialization
+
+                // Create the array type: [Nx ptr]
+                llvm::ArrayType *arrayTy = llvm::ArrayType::get(llvm::PointerType::get(context.getInstance().builder.getInt8Ty(), 0), elementCount);
+
+                llvm::Constant *stringArray = llvm::ConstantArray::get(arrayTy, constantValues);
+                context.getInstance().builder.CreateStore(stringArray, arrayAlloca);
+
+                logMessage(LMI, "INFO", "Initializer", "String array literal generated successfully");
             }
             else
             {
