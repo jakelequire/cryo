@@ -172,6 +172,13 @@ ProjectSettings *createEmptyProjectSettings(void)
     settings->project_configPath = NULL;
     settings->project_buildPath = NULL;
 
+    settings->compiler_flagCount = 0;
+    // Initialize compiler flags array
+    for (int i = 0; i < MAX_COMPILER_FLAGS; i++)
+    {
+        settings->compiler_flags[i] = NULL;
+    }
+
     settings->project_dependencyCount = 0;
     for (int i = 0; i < MAX_PROJECT_DEPENDENCIES; i++)
     {

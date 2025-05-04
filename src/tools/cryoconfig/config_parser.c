@@ -82,9 +82,17 @@ ProjectSettings *parseCryoConfig(const char *configString)
                     continue;
 
                 if (strcmp(id, "project_configPath") == 0)
+                {
                     settings->project_configPath = strdup(value->value);
+                }
                 else if (strcmp(id, "project_buildPath") == 0)
+                {
                     settings->project_buildPath = strdup(value->value);
+                }
+                else if (strcmp(id, "compiler_flags") == 0)
+                {
+                    // TODO
+                }
             }
             break;
 

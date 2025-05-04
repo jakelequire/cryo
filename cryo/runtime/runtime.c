@@ -38,6 +38,8 @@
 
 #define COLOR_LIGHT_GREEN "\033[1;32m"
 #define COLOR_LIGHT_YELLOW "\033[1;33m"
+#define COLOR_LIGHT_GRAY "\033[1;37m"
+#define COLOR_DARK_GRAY "\033[1;30m"
 
 #define BOLD "\033[1m"
 #define COLOR_RESET "\033[0m"
@@ -451,7 +453,7 @@ void printStr_export(char *str)
         printf("NULL\n");
     }
 
-    printf(BOLD COLOR_LIGHT_YELLOW "%p%s\n\n", str, COLOR_RESET);
+    printf(BOLD COLOR_DARK_GRAY "%p%s\n\n", str, COLOR_RESET);
 }
 
 char *c_readFile_export(char *filename)

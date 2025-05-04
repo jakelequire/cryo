@@ -152,9 +152,7 @@ DataType *DTMParseArrayType(const char *__typeStr__, int *pos)
     {
         logMessage(LMI, "INFO", "DTM", "Parsing dynamic array type '%s'", baseType->typeName);
         // Dynamic array type
-        DataType *arrayType = DTM->dataTypes->createArrayType(baseType, 1);
-        arrayType->isArray = true;
-        arrayType->container->type.arrayType->isDynamic = true;
+        DataType *arrayType = DTM->arrayTypes->createMonomorphicArrayDecl(baseType);
 
         // Update position to after ']'
         logMessage(LMI, "INFO", "DTM", "Parsed dynamic array type '%s'", arrayType->typeName);

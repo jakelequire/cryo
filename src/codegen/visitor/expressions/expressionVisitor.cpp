@@ -254,7 +254,14 @@ namespace Cryo
             {
                 // Load the value if it's a pointers
                 std::string argValName = argValue->getName().str();
-                argValue = builder.CreateLoad(argValue->getType(), argValue, argValName + ".load");
+                if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(argValue))
+                {
+                    argValue = context.getInstance().builder.CreateLoad(allocaInst->getAllocatedType(), argValue, argValName + ".load");
+                }
+                else
+                {
+                    logMessage(LMI, "ERROR", "CodeGenVisitor", "Argument %d is not an alloca", i);
+                }
             }
 
             args.push_back(argValue);

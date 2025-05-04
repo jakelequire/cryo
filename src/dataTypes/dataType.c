@@ -182,6 +182,7 @@ DataType *DTMTypeContainerWrappers_wrapArrayType(struct DTArrayTy_t *arrayTy)
     TypeContainer *container = DTMTypeContainerWrappers_createTypeContainer();
     container->typeOf = ARRAY_TYPE;
     container->objectType = NON_OBJECT;
+    container->primitive = PRIM_ARRAY;
     container->type.arrayType = arrayTy;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);

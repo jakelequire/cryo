@@ -25,6 +25,43 @@ void DTDebug_printType(struct DataType_t *type)
     DTM->debug->printDataType(type);
 }
 
+void DTDebug_printArrayTypeInfo(struct DataType_t *type)
+{
+    if (!type)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTDebug_printArrayTypeInfo)\n");
+    }
+
+    DTArrayTy *arrayType = type->container->type.arrayType;
+    if (!arrayType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL array type (DTDebug_printArrayTypeInfo)\n");
+    }
+
+    /*
+        struct DataType_t **elements;
+    int elementCount;
+    int elementCapacity;
+    int dimensions;
+
+    size_t size;
+    bool isConst;
+    bool isDynamic;
+    bool isMonomorphic;
+    */
+
+    bool isDynamic = arrayType->isDynamic;
+    bool isMonomorphic = arrayType->isMonomorphic;
+    int elementCount = arrayType->elementCount;
+    int dimensions = arrayType->dimensions;
+    size_t size = arrayType->size;
+    const char *baseTypeStr = DTM->debug->dataTypeToString(arrayType->baseType);
+
+    printf("isDynamic: %s | isMonomorphic: %s\n", isDynamic ? "true" : "false", isMonomorphic ? "true" : "false");
+    printf("Element Count: %d | Dimensions: %d | Size: %zu\n", elementCount, dimensions, size);
+    printf("Base Type: %s\n", baseTypeStr);
+}
+
 void DTDebug_printVerbosType(struct DataType_t *type)
 {
     if (!type)
@@ -37,10 +74,15 @@ void DTDebug_printVerbosType(struct DataType_t *type)
     printf("Const: %s\n", type->isConst ? "true" : "false");
     printf("Pointer: %s\n", type->isPointer ? "true" : "false");
     printf("Reference: %s\n", type->isReference ? "true" : "false");
+    printf("Array: %s\n", type->isArray ? "true" : "false");
     printf("TypeOf: %s | Primitive: %s | ObjectType: %s\n",
            DTM->debug->typeofDataTypeToString(type->container->typeOf),
            DTM->debug->primitiveDataTypeToString(type->container->primitive),
            DTM->debug->typeofObjectTypeToString(type->container->objectType));
+    if (type->isArray)
+    {
+        DTDebug_printArrayTypeInfo(type);
+    }
     printf(">-------------------------------------------------------------------------<\n");
 }
 

@@ -73,6 +73,8 @@ namespace Cryo
             return getLLVMObjectType(dataType);
         case PRIM_FUNCTION:
             return getLLVMFunctionType(dataType);
+        case PRIM_ARRAY:
+            return getLLVMArrayType(dataType);
         case PRIM_AUTO:
             return nullptr;
         case PRIM_UNDEFINED:
@@ -112,6 +114,43 @@ namespace Cryo
             }
         }
         return llvmTypes;
+    }
+
+    llvm::ArrayType *IRSymbolTable::getLLVMArrayType(DataType *dataType)
+    {
+        if (!dataType)
+        {
+            std::cerr << "Data type is null" << std::endl;
+            return nullptr;
+        }
+        if (dataType->container->primitive != PRIM_ARRAY)
+        {
+            std::cerr << "Data type is not an array" << std::endl;
+            return nullptr;
+        }
+
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Creating LLVM array type for data type: %s",
+                   DTM->debug->dataTypeToString(dataType));
+
+        llvm::Type *baseType = getLLVMType(dataType->container->type.arrayType->baseType);
+        if (!baseType)
+        {
+            std::cerr << "Failed to get base type for array" << std::endl;
+            return nullptr;
+        }
+
+        int elementCount = dataType->container->type.arrayType->elementCount;
+        llvm::ArrayType *llvmArrayType = llvm::ArrayType::get(baseType, elementCount);
+        if (!llvmArrayType)
+        {
+            std::cerr << "Failed to create LLVM array type" << std::endl;
+            return nullptr;
+        }
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType LLVM array type created successfully");
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Array type: %s", DTM->debug->dataTypeToString(dataType));
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Element count: %d", elementCount);
+
+        return llvmArrayType;
     }
 
     llvm::StructType *IRSymbolTable::getLLVMObjectType(DataType *dataType)

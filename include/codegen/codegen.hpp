@@ -179,12 +179,7 @@ namespace Cryo
         void generateConstructorBody(ASTNode *node, llvm::Value *selfArg, llvm::Function *ctor);
 
         llvm::Value *generateStringInitializer(ASTNode *node);
-
-    protected:
-        IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
-
-    private:
-        CodegenContext &context;
+        llvm::Value *generateArrayLiteral(ASTNode *node);
 
         llvm::Value *generateLiteralExpr(ASTNode *node);
         llvm::Value *generateVarName(ASTNode *node);
@@ -197,10 +192,17 @@ namespace Cryo
         llvm::Value *generateScopedFunctionCall(ASTNode *node);
         llvm::Value *generateVarDeclaration(ASTNode *node);
         llvm::Value *generateObjectInst(ASTNode *node);
+        llvm::Value *generateIndexExpr(ASTNode *node);
 
         llvm::Value *generateStringLiteral(ASTNode *node);
         llvm::Value *createIntegerLiteral(unsigned int numBits, uint64_t val, bool isSigned = false);
         llvm::Value *generateNullLiteral();
+
+    private:
+        CodegenContext &context;
+
+    protected:
+        IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }
 
     public:
         void generateStructConstructor(ASTNode *node, llvm::StructType *structType);

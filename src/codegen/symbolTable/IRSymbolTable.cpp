@@ -339,6 +339,36 @@ namespace Cryo
     {
     }
 
+    llvm::ArrayType *IRSymbolTable::getLLVMArrayType(ASTNode *node)
+    {
+        if (!node)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Node is null");
+            return nullptr;
+        }
+        if (node->metaData->type != NODE_ARRAY_LITERAL)
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Node is not an array literal");
+            return nullptr;
+        }
+
+        int elementCount = node->data.array->elementCount;
+        bool isMonomorphic = node->data.array->type->container->type.arrayType->isMonomorphic;
+        if (isMonomorphic)
+        {
+            llvm::Type *elementType = context.getInstance().symbolTable->getLLVMType(node->data.array->type);
+            llvm::ArrayType *arrayType = llvm::ArrayType::get(elementType, elementCount);
+            return arrayType;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "CodeGen", "Array type is not monomorphic");
+            return nullptr;
+        }
+
+        return nullptr;
+    }
+
     // ======================================================================== //
     //                         Debug Print Function                             //
     // ======================================================================== //

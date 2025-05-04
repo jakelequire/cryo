@@ -528,7 +528,11 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
         break;
     }
     case NODE_ARRAY_LITERAL:
+    {
+        DataType *arrayType = node->data.array->type;
+        return arrayType;
         break;
+    }
     case NODE_IMPORT_STATEMENT:
         fprintf(stderr, "Invalid Node Type! {Import Statement}\n");
         CONDITION_FAILED;
@@ -831,6 +835,7 @@ DataTypeManager *createDataTypeManager(void)
     manager->functionTypes = createDTMFunctionTypes();
     manager->generics = createDTMGenerics();
     manager->enums = createDTMEnums();
+    manager->arrayTypes = createDTMArrayTypes();
 
     manager->compilerDefs = createDTMCompilerDefs();
 

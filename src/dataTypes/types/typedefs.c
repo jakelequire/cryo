@@ -122,6 +122,19 @@ void DTArrayTy_printArray(struct DTArrayTy_t *arrayType)
     printf("]");
 }
 
+const char *DTArrayTy_createArrayTypeString(struct DTArrayTy_t *arrayType)
+{
+    char *typeString = (char *)malloc(256);
+    if (!typeString)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for array type string\n");
+        CONDITION_FAILED;
+    }
+
+    snprintf(typeString, 256, "Array<%s>", arrayType->baseType->debug->toString(arrayType->baseType));
+    return typeString;
+}
+
 DTArrayTy *createDTArrayTy(void)
 {
     DTArrayTy *arrayType = (DTArrayTy *)malloc(sizeof(DTArrayTy));
@@ -156,6 +169,7 @@ DTArrayTy *createDTArrayTy(void)
     arrayType->free = DTArrayTy_free;
     arrayType->freeData = DTArrayTy_freeData;
     arrayType->printArray = DTArrayTy_printArray;
+    arrayType->createArrayTypeString = DTArrayTy_createArrayTypeString;
 
     return arrayType;
 }

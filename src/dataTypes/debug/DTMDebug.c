@@ -149,7 +149,22 @@ void DTMDebug_printDataType(DataType *type)
     }
     else if (type->container->typeOf == ARRAY_TYPE)
     {
-        printf("Array\n");
+        int arraySize = type->container->type.arrayType->size;
+        int arrayCount = type->container->type.arrayType->elementCount;
+        char *arrayTypeName = (char *)malloc(sizeof(char) * 1024);
+        if (!arrayTypeName)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for array type name\n");
+            CONDITION_FAILED;
+        }
+        strcpy(arrayTypeName, "Array<");
+        strcat(arrayTypeName, type->container->type.arrayType->baseType->debug->toString(type->container->type.arrayType->baseType));
+        strcat(arrayTypeName, ">");
+        strcat(arrayTypeName, "[");
+        strcat(arrayTypeName, intToSafeString(arrayCount));
+        strcat(arrayTypeName, "]");
+        printf("%s\n", arrayTypeName);
+        free(arrayTypeName);
     }
     else if (type->container->typeOf == ENUM_TYPE)
     {
@@ -274,6 +289,10 @@ const char *DTMDebug_primitiveDataTypeToString(PrimitiveDataType type)
         return "null";
     case PRIM_ANY:
         return "any";
+    case PRIM_ENUM:
+        return "enum";
+    case PRIM_ARRAY:
+        return "array";
     case PRIM_OBJECT:
         return "object";
     case PRIM_FUNCTION:
@@ -354,14 +373,16 @@ const char *DTMDebug_dataTypeToString(DataType *type)
             return "undefined";
         case PRIM_AUTO:
             return "auto";
+        case PRIM_ENUM:
+            return "enum";
+        case PRIM_ARRAY:
+            return "array";
         case PRIM_OBJECT:
             return "object";
         case PRIM_FUNCTION:
             return "function";
         case PRIM_UNKNOWN:
             return "unknown";
-        case PRIM_ENUM:
-            return "enum";
         default:
             const char *typeOfPrim = DTM->debug->primitiveDataTypeToString(type->container->primitive);
             fprintf(stderr, "[Data Type Manager] Error: Unknown primitive type: %s\n", typeOfPrim);
@@ -370,7 +391,21 @@ const char *DTMDebug_dataTypeToString(DataType *type)
     }
     else if (type->container->typeOf == ARRAY_TYPE)
     {
-        return "Array";
+        int arraySize = type->container->type.arrayType->size;
+        int arrayCount = type->container->type.arrayType->elementCount;
+        char *arrayTypeName = (char *)malloc(sizeof(char) * 1024);
+        if (!arrayTypeName)
+        {
+            fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for array type name\n");
+            CONDITION_FAILED;
+        }
+        strcpy(arrayTypeName, "Array<");
+        strcat(arrayTypeName, type->container->type.arrayType->baseType->debug->toString(type->container->type.arrayType->baseType));
+        strcat(arrayTypeName, ">");
+        strcat(arrayTypeName, "[");
+        strcat(arrayTypeName, intToSafeString(arrayCount));
+        strcat(arrayTypeName, "]");
+        return arrayTypeName;
     }
     else if (type->container->typeOf == ENUM_TYPE)
     {

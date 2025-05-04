@@ -2101,6 +2101,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             free(literalValue);
             break;
         }
+        case PRIM_STR:
         case PRIM_STRING:
         {
             char *literalValue = strdup(node->data.literal->value.stringValue);
@@ -2121,7 +2122,6 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             free(literalValue);
             break;
         }
-
         case PRIM_OBJECT:
         {
             switch (node->data.literal->literalType)
@@ -2175,7 +2175,7 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             }
             default:
             {
-                char *literalValue = strdup("Unknown");
+                char *literalValue = strdup("UnknownObject");
                 ASTDebugNode *unknownLiteralNode = createASTDebugNode("UnknownLiteral", literalValue, dataType, line, column, indentLevel, node);
                 output->nodes[output->nodeCount] = *unknownLiteralNode;
                 output->nodeCount++;
@@ -2183,16 +2183,6 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
                 break;
             }
             }
-            break;
-        }
-
-        default:
-        {
-            char *literalValue = strdup("Unknown");
-            ASTDebugNode *unknownLiteralNode = createASTDebugNode("UnknownLiteral", literalValue, dataType, line, column, indentLevel, node);
-            output->nodes[output->nodeCount] = *unknownLiteralNode;
-            output->nodeCount++;
-            free(literalValue);
             break;
         }
         }
@@ -2667,6 +2657,11 @@ char *ASTNodeValueBuffer(ASTNode *node)
         DataType *type = node->data.literal->type;
         switch (type->container->primitive)
         {
+        case PRIM_I128:
+        case PRIM_I64:
+        case PRIM_I32:
+        case PRIM_I16:
+        case PRIM_I8:
         case PRIM_INT:
         {
             char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);
@@ -2689,6 +2684,8 @@ char *ASTNodeValueBuffer(ASTNode *node)
             sprintf(buffer, "%f", node->data.literal->value.floatValue);
             return buffer;
         }
+
+        case PRIM_STR:
         case PRIM_STRING:
         {
             char *buffer = (char *)malloc(sizeof(char) * BUFFER_CHAR_SIZE);

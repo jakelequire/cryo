@@ -74,18 +74,37 @@ namespace Cryo
         ASTNode *initializer = node->data.varDecl->initializer;
 
         logMessage(LMI, "INFO", "Visitor", "Visiting variable declaration: %s", varName.c_str());
-
+        varType->debug->printVerbosType(varType);
+        initializer->print(initializer);
         // Handle variable based on its type
+
+        // String type with literal initializer
         if (isStringWithLiteralInitializer(varType, initializer))
         {
+            logMessage(LMI, "INFO", "Visitor", "Handling String variable with literal initializer: %s", varName.c_str());
             handleStringVarDecl(varName, varType, initializer);
         }
+        // Struct or Object type with initializer
         else if (isStructWithInitializer(varType, initializer))
         {
+            logMessage(LMI, "INFO", "Visitor", "Handling struct variable with initializer: %s", varName.c_str());
             handleStructVarDecl(varName, varType, initializer);
+        }
+        // Array type with initializer
+        else if (isArrayWithInitializer(varType, initializer))
+        {
+            logMessage(LMI, "INFO", "Visitor", "Handling array variable with initializer: %s", varName.c_str());
+            handleArrayInitializer(varName, varType, initializer);
+        }
+        // Is an index expression
+        else if (isIndexExpression(initializer))
+        {
+            logMessage(LMI, "INFO", "Visitor", "Handling index expression: %s", varName.c_str());
+            handleIndexExpression(varName, varType, initializer);
         }
         else
         {
+            logMessage(LMI, "INFO", "Visitor", "Handling primitive variable declaration: %s", varName.c_str());
             handlePrimitiveVarDecl(varName, varType, initializer);
         }
     }
@@ -113,6 +132,16 @@ namespace Cryo
     bool CodeGenVisitor::isStructWithInitializer(DataType *varType, ASTNode *initializer)
     {
         return varType->container->typeOf == OBJECT_TYPE && initializer;
+    }
+
+    bool CodeGenVisitor::isArrayWithInitializer(DataType *varType, ASTNode *initializer)
+    {
+        return varType->container->primitive == PRIM_ARRAY && initializer;
+    }
+
+    bool CodeGenVisitor::isIndexExpression(ASTNode *node)
+    {
+        return node->metaData->type == NODE_INDEX_EXPR;
     }
 
     void CodeGenVisitor::handleStringVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer)
@@ -309,6 +338,81 @@ namespace Cryo
             // Store the initializer value
             builder.CreateStore(initVal, allocaInst);
         }
+    }
+
+    void CodeGenVisitor::handleArrayInitializer(const std::string &varName, DataType *varType, ASTNode *initializer)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Handling array variable with initializer");
+
+        llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+        if (!llvmType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for %s", varType->typeName);
+            return;
+        }
+
+        // Get the array type from the initializer
+        llvm::ArrayType *arrayType = context.getInstance().symbolTable->getLLVMArrayType(initializer);
+        llvm::Value *arrayValue = context.getInstance().initializer->generateArrayLiteral(initializer);
+        if (!arrayValue)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to generate array literal");
+            return;
+        }
+
+        arrayValue->setName(varName);
+        llvm::AllocaInst *arrAlloca = llvm::dyn_cast<llvm::AllocaInst>(arrayValue);
+        if (!arrAlloca)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to create array alloca");
+            return;
+        }
+
+        logMessage(LMI, "INFO", "Visitor", "Array variable %s initialized", varName.c_str());
+        // Create and add variable symbol
+        addVariableToSymbolTable(varName, varType, arrAlloca, arrayType,
+                                 AllocaTypeInference::inferFromNode(initializer, false));
+        logMessage(LMI, "INFO", "Visitor", "Array variable %s initialized", varName.c_str());
+    }
+
+    void CodeGenVisitor::handleIndexExpression(const std::string &varName, DataType *varType, ASTNode *initializer)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Handling index expression");
+
+        llvm::Value *indexValue = context.getInstance().initializer->generateIndexExpr(initializer);
+        if (!indexValue)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to generate index expression");
+            return;
+        }
+
+        llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+        if (!llvmType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for %s", varType->typeName);
+            return;
+        }
+
+        llvm::AllocaInst *varAlloca = context.getInstance().builder.CreateAlloca(
+            llvmType, nullptr, varName);
+
+        // Store the index value into the alloca
+        if (indexValue->getType()->isPointerTy())
+        {
+            llvm::Value *loadedIndex = builder.CreateLoad(indexValue->getType(), indexValue, "index.load");
+            builder.CreateStore(loadedIndex, varAlloca);
+        }
+        else
+        {
+            builder.CreateStore(indexValue, varAlloca);
+        }
+        // Set the alignment for the alloca
+        setAppropriateAlignment(varAlloca, llvmType);
+
+        // Create and add variable symbol
+        addVariableToSymbolTable(varName, varType, varAlloca, llvmType->getPointerTo(),
+                                 AllocaTypeInference::inferFromNode(initializer, false));
+        logMessage(LMI, "INFO", "Visitor", "Index expression variable %s initialized", varName.c_str());
     }
 
     llvm::Value *CodeGenVisitor::convertInitializerType(llvm::Value *initVal, llvm::Type *targetType)

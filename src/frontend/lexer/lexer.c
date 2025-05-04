@@ -34,8 +34,6 @@ KeywordToken keywords[] = {
     {"mut", TOKEN_KW_MUT},
     {"true", TOKEN_BOOLEAN_LITERAL},
     {"false", TOKEN_BOOLEAN_LITERAL},
-    // {"int", TOKEN_KW_INT},
-    // {"string", TOKEN_KW_STRING},
     {"boolean", TOKEN_KW_BOOL},
     {"expression", TOKEN_KW_EXPRESSION},
     {"void", TOKEN_KW_VOID},

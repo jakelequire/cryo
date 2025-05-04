@@ -51,6 +51,10 @@ namespace Cryo
             return generateObjectInst(node);
         case NODE_NULL_LITERAL:
             return generateNullLiteral();
+        case NODE_ARRAY_LITERAL:
+            return generateArrayLiteral(node);
+        case NODE_INDEX_EXPR:
+            return generateIndexExpr(node);
         default:
             logMessage(LMI, "ERROR", "Initializer", "Unhandled node type: %s", nodeTypeStr.c_str());
             return nullptr;
@@ -120,6 +124,135 @@ namespace Cryo
         llvm::Type *nullType = context.getInstance().builder.getInt8Ty();
         llvm::Value *nullValue = llvm::ConstantPointerNull::get(llvm::PointerType::get(nullType, 0));
         return nullValue;
+    }
+
+    llvm::Value *Initializer::generateArrayLiteral(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating array literal...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_ARRAY_LITERAL)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not an array literal");
+            return nullptr;
+        }
+
+        // Handle array literal generation
+        int elementCount = node->data.array->elementCount;
+        bool isMonomorphic = node->data.array->type->container->type.arrayType->isMonomorphic;
+        if (isMonomorphic)
+        {
+            logMessage(LMI, "INFO", "Initializer", "Generating monomorphic array literal...");
+            llvm::Type *elementType = context.getInstance().symbolTable->getLLVMType(node->data.array->type);
+            llvm::ArrayType *arrayType = llvm::ArrayType::get(elementType, elementCount);
+
+            // Check if all elements are constants or have constant values
+            bool allConstant = true;
+            std::vector<llvm::Constant *> constantValues;
+
+            for (int i = 0; i < elementCount && allConstant; ++i)
+            {
+                llvm::Value *elementValue = getInitializerValue(node->data.array->elements[i]);
+                if (!elementValue)
+                {
+                    logMessage(LMI, "ERROR", "Initializer", "Element value is null at index %s", std::to_string(i).c_str());
+                    return nullptr;
+                }
+
+                // Check if this is a constant value
+                if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(elementValue))
+                {
+                    constantValues.push_back(constVal);
+                }
+                else
+                {
+                    allConstant = false;
+                }
+            }
+
+            llvm::AllocaInst *arrayAlloca = context.getInstance().builder.CreateAlloca(elementType, nullptr, "array");
+
+            if (allConstant)
+            {
+                // Create a constant array aggregate and store it at once
+                llvm::Constant *constArray = llvm::ConstantArray::get(arrayType, constantValues);
+                context.getInstance().builder.CreateStore(constArray, arrayAlloca);
+
+                logMessage(LMI, "INFO", "Initializer", "Constant array literal generated successfully");
+            }
+            else
+            {
+                // Fall back to element-by-element initialization for non-constant values
+                for (int i = 0; i < elementCount; ++i)
+                {
+                    llvm::Value *elementValue = getInitializerValue(node->data.array->elements[i]);
+
+                    // Create a GEP to get a pointer to this element
+                    std::vector<llvm::Value *> indices = {
+                        llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0),
+                        llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), i)};
+
+                    llvm::Value *elementPtr = context.getInstance().builder.CreateGEP(arrayType, arrayAlloca, indices, "array_element_ptr");
+
+                    // Store the element value into the array
+                    context.getInstance().builder.CreateStore(elementValue, elementPtr);
+                }
+
+                logMessage(LMI, "INFO", "Initializer", "Dynamic array literal generated successfully");
+            }
+            // Return the array pointer
+            return arrayAlloca;
+        }
+        else
+        {
+            // Handle heterogeneous arrays if needed
+            logMessage(LMI, "WARNING", "Initializer", "Heterogeneous arrays not yet supported");
+        }
+
+        DEBUG_BREAKPOINT;
+        return nullptr;
+    }
+
+    llvm::Value *Initializer::generateIndexExpr(ASTNode *node)
+    {
+        logMessage(LMI, "INFO", "Initializer", "Generating index expression...");
+        ASSERT_NODE_NULLPTR_RET(node);
+
+        if (node->metaData->type != NODE_INDEX_EXPR)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Node is not an index expression");
+            return nullptr;
+        }
+
+        // Handle index expression generation
+        llvm::Value *arrayValue = getInitializerValue(node->data.indexExpr->array);
+        llvm::Value *indexValue = getInitializerValue(node->data.indexExpr->index);
+
+        if (!arrayValue || !indexValue)
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Array or index value is null");
+            CONDITION_FAILED;
+        }
+
+        // Create a GEP to get the indexed element
+        llvm::Type *arrayType;
+        if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(arrayValue))
+        {
+            arrayType = allocaInst->getAllocatedType();
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Initializer", "Array value is not an alloca");
+            CONDITION_FAILED;
+        }
+
+        std::vector<llvm::Value *> indices = {
+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0),
+            indexValue};
+
+        llvm::Value *elementPtr = context.getInstance().builder.CreateGEP(arrayType, arrayValue, indices, "index_element_ptr");
+
+        return elementPtr;
     }
 
 } // namespace Cryo

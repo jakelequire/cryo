@@ -47,6 +47,7 @@ typedef enum PrimitiveDataType
     PRIM_OBJECT,   // Object type
     PRIM_FUNCTION, // Function type
     PRIM_ENUM,     // Enum type
+    PRIM_ARRAY,    // Array type
 
     PRIM_AUTO,      // `auto`
     PRIM_UNDEFINED, // `undefined`
@@ -110,9 +111,12 @@ typedef struct DTArrayTy_t
     int elementCount;
     int elementCapacity;
     int dimensions;
+
     size_t size;
     bool isConst;
     bool isDynamic;
+    bool isMonomorphic;
+
     struct DataType_t *baseType;
     struct DataType_t *sizeType;
 
@@ -125,6 +129,7 @@ typedef struct DTArrayTy_t
     void (*free)(struct DTArrayTy_t *self);
     void (*freeData)(struct DTArrayTy_t *self);
     void (*printArray)(struct DTArrayTy_t *self);
+    const char *(*createArrayTypeString)(struct DTArrayTy_t *self);
 } DTArrayTy;
 
 // ------------------------------------------------------------------------------------------- //

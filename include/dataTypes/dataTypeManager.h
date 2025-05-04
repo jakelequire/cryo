@@ -153,10 +153,25 @@ typedef struct DTMPrimitives_t
     PrimitiveDataType (*getPrimitiveType)(const char *typeStr);
 } DTMPrimitives;
 
+// ----------------------- Array Data Type Interface ----------------------- //
+
+typedef struct DTMArrayTypes_t
+{
+    DataType *(*createDynArray)(struct DataType_t **arrayTypes, int elementCount);
+    DataType *(*createMonomorphicArray)(struct DataType_t *baseType, int elementCount);
+    DataType *(*createMonomorphicArrayDecl)(struct DataType_t *baseType);
+} DTMArrayTypes;
+
+// ----------------------- Property Data Type Interface ----------------------- //
+
 typedef struct DTMPropertyTypes_t
 {
     DTPropertyTy *(*createPropertyTemplate)(void);
-    DTPropertyTy *(*createPropertyType)(const char *propertyName, DataType *propertyType, ASTNode *node, bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected);
+    DTPropertyTy *(*createPropertyType)(
+        const char *propertyName,
+        DataType *propertyType,
+        ASTNode *node,
+        bool isStatic, bool isConst, bool isPublic, bool isPrivate, bool isProtected);
     ASTNode *(*findStructPropertyNode)(DTStructTy *structNode, const char *propertyName);
     int (*getStructPropertyIndex)(DataType *structType, const char *propertyName);
 } DTMPropertyTypes;
@@ -356,6 +371,8 @@ typedef struct DataTypeManager_t
     DTMGenerics *generics;
     // Handles Enum data types in the compiler.
     DTMEnums *enums;
+    // Handles Array data types in the compiler.
+    DTMArrayTypes *arrayTypes;
 
     // Compiler defined data types.
     DTMCompilerDefs *compilerDefs;
@@ -393,6 +410,7 @@ DTMDebug *createDTMDebug(void);
 DataTypeManager *createDataTypeManager(void);
 
 DTMPrimitives *createDTMPrimitives(void);
+DTMArrayTypes *createDTMArrayTypes(void);
 DTMPropertyTypes *createDTMPropertyTypes(void);
 DTMStructTypes *createDTMStructTypes(void);
 DTMClassTypes *createDTMClassTypes(void);

@@ -3157,28 +3157,37 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
     logMessage(LMI, "INFO", "Parser", "Parsing array literal...");
     consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array literal.", "parseArrayLiteral", arena, state, context);
 
-    ASTNode *elements = createArrayLiteralNode(arena, state, lexer);
-    if (elements == NULL)
+    ASTNode *arrayNode = createArrayLiteralNode(arena, state, lexer);
+    if (arrayNode == NULL)
     {
         fprintf(stderr, "[Parser] [ERROR] Failed to create array literal node\n");
         return NULL;
     }
-
+    arrayNode->data.array->elementCapacity = ARRAY_CAPACITY;
+    arrayNode->data.array->elementTypes = (DataType **)calloc(ARRAY_CAPACITY, sizeof(DataType *));
     int elementCount = 0;
-    DataType **elementTypes = (DataType **)calloc(ARRAY_CAPACITY, sizeof(DataType *));
+    DataType *baseType = NULL;
 
     while (lexer->currentToken.type != TOKEN_RBRACKET)
     {
         ASTNode *element = parseExpression(lexer, context, arena, state, globalTable);
         if (element)
         {
-            addElementToArrayLiteral(elements, element, arena, state, globalTable);
+            addElementToArrayLiteral(arrayNode, element, arena, state, globalTable);
             logMessage(LMI, "INFO", "Parser", "Element added to array literal.");
 
             DataType *elType = DTM->astInterface->getTypeofASTNode(element);
-            elementTypes[elementCount] = elType;
+            if (elType == NULL)
+            {
+                NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL,
+                          "Failed to get data type from AST node.", __LINE__, __FILE__, __func__)
+            }
+            arrayNode->data.array->elementTypes[elementCount] = elType;
             logMessage(LMI, "INFO", "Parser", "Element type: %s", elType->debug->toString(elType));
-
+            if (elementCount == 0)
+            {
+                baseType = elType;
+            }
             elementCount++;
         }
         else
@@ -3193,12 +3202,13 @@ ASTNode *parseArrayLiteral(Lexer *lexer, ParsingContext *context, Arena *arena, 
         }
     }
 
-    elements->data.array->elementTypes = elementTypes;
-    elements->data.array->elementCount = elementCount;
-    elements->data.array->elementCapacity = elementCount;
+    arrayNode->data.array->elementCount = elementCount;
+
+    DataType *arrayType = DTM->arrayTypes->createMonomorphicArray(baseType, elementCount);
+    arrayNode->data.array->type = arrayType;
 
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array literal.", "parseArrayLiteral", arena, state, context);
-    return elements;
+    return arrayNode;
 }
 // </parseArrayLiteral>
 
@@ -3246,10 +3256,9 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
     consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array indexing.", "parseArrayIndexing", arena, state, context);
 
     logMessage(LMI, "INFO", "Parser", "Array name: %s", arrCpyName);
-    ASTNode *arrNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    ASTNode *arrNode = NULL;
 
-    // Find the array in the symbol table
-    Symbol *sym = FindSymbol(globalTable, arrCpyName, getCurrentScopeID(context));
+    FrontendSymbol *sym = FEST->lookup(FEST, arrCpyName);
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Array not found.");
@@ -3259,7 +3268,20 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
     else
     {
         logMessage(LMI, "INFO", "Parser", "Array found.");
-        arrNode = GetASTNodeFromSymbol(globalTable, sym);
+        if (sym->node->metaData->type == NODE_VAR_DECLARATION)
+        {
+            DataType *vartype = sym->type;
+            const char *varName = sym->name;
+            ASTNode *varNameNode = createVarNameNode(strdup(varName), vartype, arena, state, lexer);
+            arrNode = varNameNode;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Array is not a variable declaration.");
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_NODE_TYPE, CRYO_SEVERITY_FATAL,
+                      "Array is not an indexable type.", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
     }
 
     ASTNode *index = parseExpression(lexer, context, arena, state, globalTable);

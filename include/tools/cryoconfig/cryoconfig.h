@@ -30,6 +30,7 @@
 #include "tools/utils/cTypes.h"
 
 #define MAX_PROJECT_DEPENDENCIES 256
+#define MAX_COMPILER_FLAGS 256
 
 typedef struct ActiveSettings
 {
@@ -67,10 +68,12 @@ typedef struct ProjectSettings
     const char *project_description;
     const char *project_license;
     const char *project_URL;
-
-    // [compiler] section
     const char *project_configPath;
     const char *project_buildPath;
+
+    // [compiler] section
+    const char *compiler_flags[MAX_COMPILER_FLAGS];
+    int compiler_flagCount;
 
     // [build] section
     const char *project_buildType;

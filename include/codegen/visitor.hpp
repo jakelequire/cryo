@@ -174,16 +174,20 @@ namespace Cryo
         // Type checking helpers
         bool isStringWithLiteralInitializer(DataType *varType, ASTNode *initializer);
         bool isStructWithInitializer(DataType *varType, ASTNode *initializer);
+        bool isArrayWithInitializer(DataType *varType, ASTNode *initializer);
+        bool isIndexExpression(ASTNode *node);
 
         // Variable declaration handlers
         void handleStringVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
         void handleStructVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
         void handlePrimitiveVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
+        void handleArrayInitializer(const std::string &varName, DataType *varType, ASTNode *initializer);
 
         // Initializer handlers
         llvm::Value *generateObjectInstance(llvm::AllocaInst *structAlloca, ASTNode *initializer);
         void storeInitializerValue(llvm::Value *initVal, llvm::AllocaInst *allocaInst, llvm::Type *llvmType);
         void handlePrimitiveInitializer(llvm::AllocaInst *allocaInst, ASTNode *initializer, llvm::Type *llvmType);
+        void handleIndexExpression(const std::string &varName, DataType *varType, ASTNode *initializer);
 
         // Type conversion and alignment
         llvm::Value *convertInitializerType(llvm::Value *initVal, llvm::Type *targetType);
