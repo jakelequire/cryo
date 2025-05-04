@@ -804,7 +804,7 @@ Token checkKeyword(Lexer *lexer, CompilerState *state)
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state)
 {
     __STACK_FRAME__
-    // printf("[Lexer] Checking data type: %s\n", dataType);
+    printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
     if (peek(lexer, state) == '[')
     {
@@ -839,6 +839,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
         }
         i++;
     }
+
     return type;
 }
 // </checkDataType>

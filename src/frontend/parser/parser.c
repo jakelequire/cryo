@@ -1557,6 +1557,21 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         logMessage(LMI, "INFO", "Parser", "Data type is not a primitive type.");
     }
 
+    if (lexer->currentToken.type == TOKEN_LBRACKET)
+    {
+        logMessage(LMI, "INFO", "Parser", "Parsing array type...");
+        DataType *arrayType = parseArrayInstantiation(dataType, lexer, context, arena, state, globalTable);
+        if (arrayType)
+        {
+            dataType = arrayType;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse array type.");
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse array type.", __LINE__, __FILE__, __func__)
+        }
+    }
+
     // Parse the variable initializer
     if (lexer->currentToken.type != TOKEN_EQUAL)
     {
@@ -3935,4 +3950,46 @@ ASTNode *parseContinueStatement(Lexer *lexer, ParsingContext *context, Arena *ar
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseContinueStatement", arena, state, context);
 
     return createContinueNode(arena, state, lexer);
+}
+
+DataType *parseArrayInstantiation(DataType *baseType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Parsing array instantiation...");
+    consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array instantiation.", "parseArrayInstantiation", arena, state, context);
+    bool isStaticallyAllocated = false;
+    int arraySize = 0;
+    DataType *arrayType = NULL;
+    if (lexer->currentToken.type == TOKEN_INT_LITERAL)
+    {
+        char *sizeStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        arraySize = atoi(sizeStr);
+        consume(__LINE__, lexer, TOKEN_INT_LITERAL, "Expected an integer literal.", "parseArrayInstantiation", arena, state, context);
+        isStaticallyAllocated = true;
+        arrayType = DTM->arrayTypes->createStaticArray(baseType, arraySize);
+    }
+
+    consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array instantiation.", "parseArrayInstantiation", arena, state, context);
+
+    if (arrayType == NULL)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create array type.");
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                  "Failed to create array type.", __LINE__, __FILE__, __func__)
+    }
+
+    arrayType->debug->printVerbosType(arrayType);
+
+    if (isStaticallyAllocated)
+    {
+        logMessage(LMI, "INFO", "Parser", "Array is statically allocated.");
+        return arrayType;
+    }
+    else
+    {
+        logMessage(LMI, "INFO", "Parser", "Array is dynamically allocated.");
+        return DTM->arrayTypes->createDynamicArray(baseType);
+    }
+
+    return NULL;
 }

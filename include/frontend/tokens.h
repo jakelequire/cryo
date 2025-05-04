@@ -213,8 +213,6 @@ extern "C"
         TOKEN_RBRACE,         // `}`
         TOKEN_LANGLE,         // `<`
         TOKEN_RANGLE,         // `>`
-        TOKEN_LSQUARE,        // `[`
-        TOKEN_RSQUARE,        // `]`
         TOKEN_LANGLE_BRACKET, // `<<`
         TOKEN_RANGLE_BRACKET, // `>>`
         TOKEN_LCURLY_BRACKET, // `{{`

@@ -588,10 +588,6 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_LANGLE";
     case TOKEN_RANGLE:
         return "TOKEN_RANGLE";
-    case TOKEN_LSQUARE:
-        return "TOKEN_LSQUARE";
-    case TOKEN_RSQUARE:
-        return "TOKEN_RSQUARE";
     case TOKEN_LANGLE_BRACKET:
         return "TOKEN_LANGLE_BRACKET";
     case TOKEN_RANGLE_BRACKET:

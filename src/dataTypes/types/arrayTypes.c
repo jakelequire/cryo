@@ -16,7 +16,7 @@
  ********************************************************************************/
 #include "dataTypes/dataTypeManager.h"
 
-DataType *DTMArrayTypes_createDynamicArrayType(DataType **arrayTypes, int elementCount)
+DataType *DTMArrayTypes_createDynArrayType(DataType **arrayTypes, int elementCount)
 {
     DTArrayTy *arrayType = createDTArrayTy();
     if (!arrayType)
@@ -45,6 +45,35 @@ DataType *DTMArrayTypes_createDynamicArrayType(DataType **arrayTypes, int elemen
     return arrayDataType;
 }
 
+DataType *DTMArrayTypes_createDynamicArrayType(DataType *baseType)
+{
+    DTArrayTy *arrayType = createDTArrayTy();
+    if (!arrayType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Dynamic Array Type\n");
+        CONDITION_FAILED;
+    }
+
+    arrayType->baseType = baseType;
+    arrayType->dimensions = 0;
+    arrayType->size = 0;
+    arrayType->isMonomorphic = false;
+    arrayType->isDynamic = true;
+    arrayType->elementCount = 0;
+    arrayType->elementCapacity = MAX_ARRAY_CAPACITY;
+
+    DataType *arrayDataType = DTM->dataTypes->wrapArrayType(arrayType);
+    const char *arrayDataTypeName = arrayType->createArrayTypeString(arrayType);
+    if (!arrayDataTypeName)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create array type string\n");
+        CONDITION_FAILED;
+    }
+    arrayDataType->setTypeName(arrayDataType, strdup(arrayDataTypeName));
+    arrayDataType->isArray = true;
+    return arrayDataType;
+}
+
 DataType *DTMArrayTypes_createMonomorphicArrayType(DataType *baseType, int elementCount)
 {
     DTArrayTy *arrayType = createDTArrayTy();
@@ -59,6 +88,9 @@ DataType *DTMArrayTypes_createMonomorphicArrayType(DataType *baseType, int eleme
     arrayType->size = elementCount;
     arrayType->isMonomorphic = true;
     arrayType->elementCount = elementCount;
+    arrayType->isDynamic = true;
+    arrayType->elementCapacity = elementCount;
+    arrayType->elementCount = elementCount <= MAX_ARRAY_CAPACITY ? elementCount : MAX_ARRAY_CAPACITY;
     arrayType->elements = (DataType **)malloc(sizeof(DataType *) * elementCount);
     if (!arrayType->elements)
     {
@@ -97,6 +129,37 @@ DataType *DTMArrayTypes_createMonomorphicArrayTypeDecl(DataType *baseType)
     arrayType->isMonomorphic = true;
     arrayType->isDynamic = true;
     arrayType->elementCount = 0;
+    arrayType->elementCapacity = MAX_ARRAY_CAPACITY;
+    arrayType->elements = NULL;
+
+    DataType *arrayDataType = DTM->dataTypes->wrapArrayType(arrayType);
+    const char *arrayDataTypeName = arrayType->createArrayTypeString(arrayType);
+    if (!arrayDataTypeName)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to create array type string\n");
+        CONDITION_FAILED;
+    }
+    arrayDataType->setTypeName(arrayDataType, strdup(arrayDataTypeName));
+    arrayDataType->isArray = true;
+    return arrayDataType;
+}
+
+DataType *DTMArrayTypes_createStaticArrayType(DataType *baseType, int size)
+{
+    DTArrayTy *arrayType = createDTArrayTy();
+    if (!arrayType)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate DTM Static Array Type\n");
+        CONDITION_FAILED;
+    }
+
+    arrayType->baseType = baseType;
+    arrayType->dimensions = 0;
+    arrayType->size = size;
+    arrayType->isMonomorphic = true;
+    arrayType->isDynamic = false;
+    arrayType->elementCount = 0;
+    arrayType->elementCapacity = size;
     arrayType->elements = NULL;
 
     DataType *arrayDataType = DTM->dataTypes->wrapArrayType(arrayType);
@@ -122,9 +185,11 @@ DTMArrayTypes *createDTMArrayTypes(void)
 
     // ==================== [ Function Assignments ] ==================== //
 
-    arrayTypes->createDynArray = DTMArrayTypes_createDynamicArrayType;
+    arrayTypes->createDynArray = DTMArrayTypes_createDynArrayType;
+    arrayTypes->createDynamicArray = DTMArrayTypes_createDynamicArrayType;
     arrayTypes->createMonomorphicArray = DTMArrayTypes_createMonomorphicArrayType;
     arrayTypes->createMonomorphicArrayDecl = DTMArrayTypes_createMonomorphicArrayTypeDecl;
+    arrayTypes->createStaticArray = DTMArrayTypes_createStaticArrayType;
 
     return arrayTypes;
 }

@@ -161,7 +161,7 @@ void DTMDebug_printDataType(DataType *type)
         strcat(arrayTypeName, type->container->type.arrayType->baseType->debug->toString(type->container->type.arrayType->baseType));
         strcat(arrayTypeName, ">");
         strcat(arrayTypeName, "[");
-        strcat(arrayTypeName, intToSafeString(arrayCount));
+        strcat(arrayTypeName, intToSafeString(arraySize));
         strcat(arrayTypeName, "]");
         printf("%s\n", arrayTypeName);
         free(arrayTypeName);
@@ -403,7 +403,7 @@ const char *DTMDebug_dataTypeToString(DataType *type)
         strcat(arrayTypeName, type->container->type.arrayType->baseType->debug->toString(type->container->type.arrayType->baseType));
         strcat(arrayTypeName, ">");
         strcat(arrayTypeName, "[");
-        strcat(arrayTypeName, intToSafeString(arrayCount));
+        strcat(arrayTypeName, intToSafeString(arraySize));
         strcat(arrayTypeName, "]");
         return arrayTypeName;
     }

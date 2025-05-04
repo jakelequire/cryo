@@ -243,6 +243,7 @@ ASTNode *parseParenthesizedExpression(Lexer *lexer, ParsingContext *context, Are
 ASTNode *parseBreakStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 ASTNode *parseContinueStatement(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 
+DataType *parseArrayInstantiation(DataType *baseType, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable);
 // # ============================================================ #
 // # Context Management
 // # ============================================================ #

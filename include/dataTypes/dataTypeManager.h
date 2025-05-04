@@ -37,6 +37,7 @@
 #define MAX_ENUM_CAPACITY 64
 #define MAX_GENERIC_CAPACITY 16
 #define MAX_TYPE_CAPACITY 16
+#define MAX_ARRAY_CAPACITY 128
 
 // Define each token mapping
 #define DECLARE_TOKEN(str, type) {str, type}
@@ -158,8 +159,10 @@ typedef struct DTMPrimitives_t
 typedef struct DTMArrayTypes_t
 {
     DataType *(*createDynArray)(struct DataType_t **arrayTypes, int elementCount);
+    DataType *(*createDynamicArray)(struct DataType_t *baseType);
     DataType *(*createMonomorphicArray)(struct DataType_t *baseType, int elementCount);
     DataType *(*createMonomorphicArrayDecl)(struct DataType_t *baseType);
+    DataType *(*createStaticArray)(struct DataType_t *baseType, int elementCount);
 } DTMArrayTypes;
 
 // ----------------------- Property Data Type Interface ----------------------- //
