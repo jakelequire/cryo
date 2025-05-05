@@ -131,24 +131,31 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Creating LLVM array type for data type: %s",
                    DTM->debug->dataTypeToString(dataType));
-
-        llvm::Type *baseType = getLLVMType(dataType->container->type.arrayType->baseType);
+        DataType *baseDataType = dataType->container->type.arrayType->baseType;
+        llvm::Type *baseType = getLLVMType(baseDataType);
         if (!baseType)
         {
             std::cerr << "Failed to get base type for array" << std::endl;
             return nullptr;
         }
 
-        int elementCount = dataType->container->type.arrayType->size;
-        llvm::ArrayType *llvmArrayType = llvm::ArrayType::get(baseType, elementCount);
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Base type: %s", DTM->debug->dataTypeToString(baseDataType));
+
+        int size = dataType->container->type.arrayType->size;
+        int elementCount = dataType->container->type.arrayType->elementCount;
+        int dimensionCount = dataType->container->type.arrayType->dimensionCount;
+        bool isDynamic = dataType->container->type.arrayType->isDynamic;
+
+        llvm::ArrayType *llvmArrayType = llvm::ArrayType::get(baseType, size);
         if (!llvmArrayType)
         {
             std::cerr << "Failed to create LLVM array type" << std::endl;
             return nullptr;
         }
+
         logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType LLVM array type created successfully");
         logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Array type: %s", DTM->debug->dataTypeToString(dataType));
-        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Element count: %d", elementCount);
+        logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Element count: %d", size);
 
         return llvmArrayType;
     }

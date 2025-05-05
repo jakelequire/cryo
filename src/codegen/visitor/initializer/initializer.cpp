@@ -247,8 +247,10 @@ namespace Cryo
         }
 
         // Handle index expression generation
-        llvm::Value *arrayValue = getInitializerValue(node->data.indexExpr->array);
+        ASTNode *arrayNode = node->data.indexExpr->array;
+        llvm::Value *arrayValue = getInitializerValue(arrayNode);
         llvm::Value *indexValue = getInitializerValue(node->data.indexExpr->index);
+        llvm::Type *arrayType;
 
         if (!arrayValue || !indexValue)
         {
@@ -256,22 +258,53 @@ namespace Cryo
             CONDITION_FAILED;
         }
 
-        // Create a GEP to get the indexed element
-        llvm::Type *arrayType;
-        if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(arrayValue))
+        if (arrayNode->metaData->type == NODE_PARAM)
         {
-            arrayType = allocaInst->getAllocatedType();
+            logMessage(LMI, "INFO", "Initializer", "Array is a parameter");
+            // Handle parameter array indexing
+            IRVariableSymbol *paramSymbol = context.getInstance().symbolTable->findVariable(arrayNode->data.param->name);
+            if (!paramSymbol)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Parameter %s not found", arrayNode->data.param->name);
+                return nullptr;
+            }
+            arrayValue = paramSymbol->value;
+            arrayType = paramSymbol->type;
+        }
+        else if (arrayNode->metaData->type == NODE_VAR_NAME)
+        {
+            logMessage(LMI, "INFO", "Initializer", "Array is a variable");
+            // Handle variable array indexing
+            IRVariableSymbol *varSymbol = context.getInstance().symbolTable->findVariable(arrayNode->data.varName->varName);
+            if (!varSymbol)
+            {
+                logMessage(LMI, "ERROR", "Initializer", "Variable %s not found", arrayNode->data.varName->varName);
+                return nullptr;
+            }
+            arrayValue = varSymbol->value;
+            arrayType = varSymbol->type;
         }
         else
         {
-            logMessage(LMI, "ERROR", "Initializer", "Array value is not an alloca");
-            CONDITION_FAILED;
+            logMessage(LMI, "ERROR", "Initializer", "Array node type not supported for indexing");
+            return nullptr;
+        }
+        // Create a GEP to get the indexed element
+        if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(arrayValue))
+        {
+            arrayType = allocaInst->getAllocatedType();
         }
 
         std::vector<llvm::Value *> indices = {
             llvm::ConstantInt::get(llvm::Type::getInt32Ty(context.getInstance().context), 0),
             indexValue};
 
+        if (!arrayValue->getType()->isPointerTy())
+        {
+            // Create a pointer to the array value
+            llvm::PointerType *ptrType = llvm::PointerType::get(arrayValue->getType(), 0);
+            arrayValue = context.getInstance().builder.CreateBitCast(arrayValue, ptrType, "array_ptr");
+        }
         llvm::Value *elementPtr = context.getInstance().builder.CreateGEP(arrayType, arrayValue, indices, "index_element_ptr");
 
         return elementPtr;

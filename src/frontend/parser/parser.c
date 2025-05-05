@@ -3305,9 +3305,16 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
             ASTNode *varNameNode = createVarNameNode(strdup(varName), vartype, arena, state, lexer);
             arrNode = varNameNode;
         }
+        else if (sym->node->metaData->type == NODE_PARAM)
+        {
+            DataType *vartype = sym->type;
+            const char *varName = sym->name;
+            ASTNode *varNameNode = createVarNameNode(strdup(varName), vartype, arena, state, lexer);
+            arrNode = varNameNode;
+        }
         else
         {
-            logMessage(LMI, "ERROR", "Parser", "Array is not a variable declaration.");
+            logMessage(LMI, "ERROR", "Parser", "Array is not a variable declaration, received: %s", CryoNodeTypeToString(sym->node->metaData->type));
             NEW_ERROR(GDM, CRYO_ERROR_INVALID_NODE_TYPE, CRYO_SEVERITY_FATAL,
                       "Array is not an indexable type.", __LINE__, __FILE__, __func__)
             return NULL;

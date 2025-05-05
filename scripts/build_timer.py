@@ -53,6 +53,19 @@ cryo_logo = """
                   #                              |_|                     
                                                   """
 
+def get_compiler_version():
+    try:
+        # Version path located from this script directory `../version.h`
+        version_file_path = os.path.join(os.path.dirname(__file__), "../version.h")
+        with open(version_file_path, "r") as version_file:
+            for line in version_file:
+                if line.startswith("#define _COMPILER_VERSION_"):
+                    # Extract the version number from the line
+                    version = line.split()[2].strip('"')
+                    return version
+    except FileNotFoundError:
+        return "Unknown version"
+
 def format_time(seconds):
     """Format seconds into a readable time string (HH:MM:SS.mmm)."""
     time_obj = timedelta(seconds=seconds)
@@ -172,7 +185,7 @@ def main():
     print()  # Add some space at the top
     print_colored("━" * 80, "1;36")
     print_logo()
-    print_centered_text("CRYO COMPILER BUILD TIMER")
+    print_centered_text("CRYO COMPILER: v" + get_compiler_version())
     
     # Starting banner
     build_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
