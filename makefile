@@ -190,14 +190,34 @@ build-dev-server:
 cls:
 	@clear
 
+
+# Build timer script
+BUILD_TIMER = ./scripts/build_timer.py
+
+# Timed build target
+.PHONY: timed-build
+timed-build:
+	@python3 $(BUILD_TIMER)
+
+# Clean and timed build
+.PHONY: rebuild
+rebuild:
+	@python3 $(BUILD_TIMER) --clean
+
+# Timed build without tests
+.PHONY: quick-build
+quick-build:
+	@python3 $(BUILD_TIMER) --no-tests
+
+# Verbose timed build with compiler info
+.PHONY: verbose-build
+verbose-build:
+	@python3 $(BUILD_TIMER) --verbose
+
 .PHONY: all
 all: 
-	@$(MAKE) cls
-	@echo "Building with $(NUM_JOBS) parallel jobs"
-	$(MAKE) -j$(NUM_JOBS) build
-	@echo "Building test suite with $(NUM_JOBS) parallel jobs"
-	$(MAKE) -j$(NUM_JOBS) tests
-	@echo "[BUILD COMPLETE]"
+	@$(MAKE) timed-build
+	
 
 .PHONY: build
 build: $(MAIN_BIN)
@@ -277,3 +297,4 @@ clean-tests:
 	@echo "Cleaning test files..."
 	@$(RMDIR) $(TEST_OBJ_DIR) 2>/dev/null || true
 	@$(RMDIR) $(TEST_BIN_DIR) 2>/dev/null || true
+	

@@ -111,6 +111,13 @@ implement struct String {
     }
 }
 
+implement type i32 {
+
+    isZero() -> boolean {
+        return false;
+    }
+}
+
 
 // ---------------------------------------------------------------------------- 
 // These are the core types of Cryo.

@@ -249,8 +249,16 @@ void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node
 
     logMessage(LMI, "INFO", "Semantic Analysis", "Analyzing variable declaration node...");
 
-    DataType *varType = node->data.varDecl->type;                            // The declared type of the variable
-    ASTNode *varInitilizer = node->data.varDecl->initializer;                // The initializer for the variable
+    DataType *varType = node->data.varDecl->type;             // The declared type of the variable
+    ASTNode *varInitilizer = node->data.varDecl->initializer; // The initializer for the variable
+    bool noInitializer = node->data.varDecl->noInitializer;   // Whether the variable has an initializer
+    if (noInitializer && !varInitilizer)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Variable declaration node is missing initializer");
+        self->reportSemanticError(self, "Variable declaration node is missing initializer");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
     DataType *initType = DTM->astInterface->getTypeofASTNode(varInitilizer); // The type of the initializer
     if (!varType || !varInitilizer || !initType)
     {

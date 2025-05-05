@@ -72,6 +72,13 @@ namespace Cryo
         std::string varName = node->data.varDecl->name;
         DataType *varType = node->data.varDecl->type;
         ASTNode *initializer = node->data.varDecl->initializer;
+        bool noInitializer = node->data.varDecl->noInitializer;
+
+        if (noInitializer && !initializer)
+        {
+            handleNoInitializer(varName, varType);
+            return;
+        }
 
         logMessage(LMI, "INFO", "Visitor", "Visiting variable declaration: %s", varName.c_str());
         varType->debug->printVerbosType(varType);
@@ -413,6 +420,28 @@ namespace Cryo
         addVariableToSymbolTable(varName, varType, varAlloca, llvmType->getPointerTo(),
                                  AllocaTypeInference::inferFromNode(initializer, false));
         logMessage(LMI, "INFO", "Visitor", "Index expression variable %s initialized", varName.c_str());
+    }
+
+    void CodeGenVisitor::handleNoInitializer(const std::string &varName, DataType *varType)
+    {
+        logMessage(LMI, "INFO", "Visitor", "Handling variable with no initializer");
+
+        llvm::Type *llvmType = symbolTable->getLLVMType(varType);
+        if (!llvmType)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to get LLVM type for %s", varType->typeName);
+            return;
+        }
+
+        // Create the alloca
+        llvm::AllocaInst *allocaInst = builder.CreateAlloca(llvmType, nullptr, varName);
+        setAppropriateAlignment(allocaInst, llvmType);
+
+        // Create and add variable symbol
+        addVariableToSymbolTable(varName, varType, allocaInst, llvmType->getPointerTo(),
+                                 AllocaTypeInference::inferFromNode(nullptr, false));
+
+        logMessage(LMI, "INFO", "Visitor", "Variable %s initialized with no initializer", varName.c_str());
     }
 
     llvm::Value *CodeGenVisitor::convertInitializerType(llvm::Value *initVal, llvm::Type *targetType)

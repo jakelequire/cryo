@@ -139,7 +139,7 @@ namespace Cryo
             return nullptr;
         }
 
-        int elementCount = dataType->container->type.arrayType->elementCount;
+        int elementCount = dataType->container->type.arrayType->size;
         llvm::ArrayType *llvmArrayType = llvm::ArrayType::get(baseType, elementCount);
         if (!llvmArrayType)
         {

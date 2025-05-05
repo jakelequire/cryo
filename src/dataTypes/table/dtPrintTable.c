@@ -292,6 +292,8 @@ void DTMSymbolTable_printTable(DTMSymbolTable *table)
             strcat(flags, "P");
         if (type->isReference)
             strcat(flags, "R");
+        if (type->isPrototype)
+            strcat(flags, "T");
         if (flags[0] == '\0')
             strcpy(flags, "-");
 

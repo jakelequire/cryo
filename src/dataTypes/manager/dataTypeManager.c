@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "frontend/frontendSymbolTable.h"
 #include "dataTypes/dataTypeManager.h"
 
 // The global Data Type Manager instance. This is a static instance that is used to manage data types in the compiler.
@@ -401,6 +402,7 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
     {
         logMessage(LMI, "ERROR", "DTM", "Node is Null or Undefined!");
         fprintf(stderr, "Node is Null or Undefined!\n");
+        FEST->printTable(FEST);
         CONDITION_FAILED;
     }
 

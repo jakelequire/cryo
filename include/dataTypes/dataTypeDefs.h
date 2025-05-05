@@ -103,6 +103,18 @@ typedef struct DTSimpleTy_t
 // ------------------------------------ Array Data Type -------------------------------------- //
 // ------------------------------------------------------------------------------------------- //
 
+typedef struct ArrayDimensions_t
+{
+    int dimensionCount;
+    DataType **baseTypes;
+    int *dimensionSizes;
+    int *dimensions;
+    int *dimensionCapacities;
+
+    void (*addDimension)(struct ArrayDimensions_t *self, int dimensionSize);
+    void (*resizeDimensions)(struct ArrayDimensions_t *self);
+} ArrayDimensions;
+
 typedef struct DTArrayTy_t
 {
     // ==================== [ Property Assignments ] ==================== //
@@ -110,7 +122,10 @@ typedef struct DTArrayTy_t
     struct DataType_t **elements;
     int elementCount;
     int elementCapacity;
-    int dimensions;
+
+    // Array dimensions
+    int dimensionCount;
+    struct ArrayDimensions_t *dimensions;
 
     size_t size;
     bool isConst;
@@ -418,6 +433,8 @@ typedef struct DataType_t
     bool isPointer;
     bool isReference;
     bool isArray;
+    bool isGeneric;
+    bool isPrototype;
 
     DTDebug *debug; // This is the debug Object for development purposes
 

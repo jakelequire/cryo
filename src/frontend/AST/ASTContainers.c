@@ -657,6 +657,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
     node->isReference = false;
     node->isMutable = false;
     node->isIterator = false;
+    node->noInitializer = false;
     node->initializer = NULL;
     node->hasIndexExpr = false;
     node->indexExpr = NULL;

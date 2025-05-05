@@ -53,7 +53,7 @@ void DTDebug_printArrayTypeInfo(struct DataType_t *type)
     bool isDynamic = arrayType->isDynamic;
     bool isMonomorphic = arrayType->isMonomorphic;
     int elementCount = arrayType->elementCount;
-    int dimensions = arrayType->dimensions;
+    int dimensions = arrayType->dimensionCount;
     size_t size = arrayType->size;
     const char *baseTypeStr = DTM->debug->dataTypeToString(arrayType->baseType);
 

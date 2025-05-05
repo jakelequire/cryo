@@ -122,17 +122,82 @@ void DTArrayTy_printArray(struct DTArrayTy_t *arrayType)
     printf("]");
 }
 
-const char *DTArrayTy_createArrayTypeString(struct DTArrayTy_t *arrayType)
+const char *DTArrayTy_createArrayTypeString(struct DTArrayTy_t *self)
 {
-    char *typeString = (char *)malloc(256);
-    if (!typeString)
+    if (self == NULL || self->baseType == NULL)
     {
-        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for array type string\n");
-        CONDITION_FAILED;
+        return "<invalid-array>";
     }
 
-    snprintf(typeString, 256, "Array<%s>", arrayType->baseType->debug->toString(arrayType->baseType));
-    return typeString;
+    // Get base type name
+    const char *baseTypeName = self->baseType->typeName;
+    if (baseTypeName == NULL)
+    {
+        baseTypeName = "<unknown>";
+    }
+
+    // Allocate memory for the result
+    // Start with space for the base type and some extra
+    int bufferSize = strlen(baseTypeName) + 100;
+    char *result = (char *)malloc(bufferSize);
+    if (result == NULL)
+    {
+        return "<memory-error>";
+    }
+
+    // Start with the base type
+    strcpy(result, baseTypeName);
+
+    // Check if this is a multi-dimensional array
+    if (self->dimensions != NULL && self->dimensions->dimensionCount > 0)
+    {
+        // Append each dimension
+        for (int i = 0; i < self->dimensions->dimensionCount; i++)
+        {
+            char dimStr[32];
+            int size = self->dimensions->dimensionSizes[i];
+
+            // Format based on whether it's static or dynamic
+            if (size > 0)
+            {
+                snprintf(dimStr, sizeof(dimStr), "[%d]", size);
+            }
+            else
+            {
+                strcpy(dimStr, "[]");
+            }
+
+            // Check if we need to resize the buffer
+            if (strlen(result) + strlen(dimStr) + 1 > bufferSize)
+            {
+                bufferSize *= 2;
+                result = (char *)realloc(result, bufferSize);
+                if (result == NULL)
+                {
+                    return "<memory-error>";
+                }
+            }
+
+            // Append this dimension
+            strcat(result, dimStr);
+        }
+    }
+    else
+    {
+        // Single dimension array
+        char dimStr[32];
+        if (self->size > 0)
+        {
+            snprintf(dimStr, sizeof(dimStr), "[%zu]", self->size);
+        }
+        else
+        {
+            strcpy(dimStr, "[]");
+        }
+        strcat(result, dimStr);
+    }
+
+    return result;
 }
 
 DTArrayTy *createDTArrayTy(void)

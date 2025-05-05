@@ -163,6 +163,7 @@ typedef struct DTMArrayTypes_t
     DataType *(*createMonomorphicArray)(struct DataType_t *baseType, int elementCount);
     DataType *(*createMonomorphicArrayDecl)(struct DataType_t *baseType);
     DataType *(*createStaticArray)(struct DataType_t *baseType, int elementCount);
+    DataType *(*createMultiDimensionalStaticArray)(DataType *baseType, int *sizes, int dimensionCount);
 } DTMArrayTypes;
 
 // ----------------------- Property Data Type Interface ----------------------- //

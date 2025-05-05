@@ -560,7 +560,9 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer,
+                                  bool isMutable, bool isGlobal, bool isReference, bool isIterator, bool noInitializer,
+                                  Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, lexer);
@@ -585,6 +587,8 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     node->data.varDecl->isReference = isReference;
     node->data.varDecl->isMutable = isMutable;
     node->data.varDecl->isIterator = isIterator;
+    node->data.varDecl->noInitializer = noInitializer;
+
     node->data.varDecl->initializer = initializer;
 
     logMessage(LMI, "INFO", "AST", "Created variable declaration node for %s", var_name);

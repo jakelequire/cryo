@@ -182,6 +182,7 @@ namespace Cryo
         void handleStructVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
         void handlePrimitiveVarDecl(const std::string &varName, DataType *varType, ASTNode *initializer);
         void handleArrayInitializer(const std::string &varName, DataType *varType, ASTNode *initializer);
+        void handleNoInitializer(const std::string &varName, DataType *varType);
 
         // Initializer handlers
         llvm::Value *generateObjectInstance(llvm::AllocaInst *structAlloca, ASTNode *initializer);

@@ -96,6 +96,7 @@ DataType *DTMParsePrimitive(const char *typeStr)
         DTM->symbolTable->printTable(DTM->symbolTable);
         return NULL;
     }
+    return NULL;
 }
 
 // Forward declaration for the array parsing function

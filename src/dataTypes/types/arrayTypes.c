@@ -16,6 +16,117 @@
  ********************************************************************************/
 #include "dataTypes/dataTypeManager.h"
 
+// Add a new dimension to the ArrayDimensions structure
+void ArrayDimensions_addDimension(ArrayDimensions *self, int dimensionSize)
+{
+    if (self == NULL)
+    {
+        return;
+    }
+
+    // Initialize arrays if this is the first dimension
+    if (self->dimensionCount == 0)
+    {
+        int initialCapacity = 4; // Start with space for 4 dimensions
+
+        self->dimensionSizes = (int *)malloc(sizeof(int) * initialCapacity);
+        self->dimensions = (int *)malloc(sizeof(int) * initialCapacity);
+        self->dimensionCapacities = (int *)malloc(sizeof(int) * initialCapacity);
+        self->baseTypes = (DataType **)malloc(sizeof(DataType *) * initialCapacity);
+
+        // Initialize all capacity values
+        for (int i = 0; i < initialCapacity; i++)
+        {
+            self->dimensionCapacities[i] = 0;
+        }
+    }
+    else if (self->dimensionCount >= self->dimensionCapacities[0])
+    {
+        // Need to resize
+        self->resizeDimensions(self);
+    }
+
+    // Add the new dimension
+    self->dimensionSizes[self->dimensionCount] = dimensionSize;
+    self->dimensions[self->dimensionCount] = 0;   // Current index in this dimension
+    self->baseTypes[self->dimensionCount] = NULL; // To be set later
+
+    self->dimensionCount++;
+}
+
+// Resize the dimension arrays when needed
+void ArrayDimensions_resizeDimensions(ArrayDimensions *self)
+{
+    if (self == NULL || self->dimensionCount == 0)
+    {
+        return;
+    }
+
+    int newCapacity = self->dimensionCapacities[0] == 0 ? 4 : self->dimensionCapacities[0] * 2;
+
+    // Reallocate all arrays
+    self->dimensionSizes = (int *)realloc(self->dimensionSizes, sizeof(int) * newCapacity);
+    self->dimensions = (int *)realloc(self->dimensions, sizeof(int) * newCapacity);
+    self->dimensionCapacities = (int *)realloc(self->dimensionCapacities, sizeof(int) * newCapacity);
+    self->baseTypes = (DataType **)realloc(self->baseTypes, sizeof(DataType *) * newCapacity);
+
+    // Update the capacity value for all existing and new entries
+    for (int i = 0; i < newCapacity; i++)
+    {
+        if (i >= self->dimensionCapacities[0])
+        {
+            self->dimensionCapacities[i] = newCapacity;
+        }
+    }
+
+    // Update the first capacity entry
+    self->dimensionCapacities[0] = newCapacity;
+}
+
+ArrayDimensions *createArrayDimensions()
+{
+    ArrayDimensions *arrayDimensions = (ArrayDimensions *)malloc(sizeof(ArrayDimensions));
+    if (!arrayDimensions)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Array Dimensions\n");
+        CONDITION_FAILED;
+    }
+
+    arrayDimensions->dimensionCount = 0;
+    arrayDimensions->baseTypes = NULL;
+    arrayDimensions->dimensionSizes = NULL;
+    arrayDimensions->dimensions = NULL;
+    arrayDimensions->dimensionCapacities = NULL;
+
+    arrayDimensions->addDimension = ArrayDimensions_addDimension;
+    arrayDimensions->resizeDimensions = ArrayDimensions_resizeDimensions;
+
+    return arrayDimensions;
+}
+
+ArrayDimensions *createArrayDimensionsWithData(DataType **baseTypes, int *sizes, int dimensionCount)
+{
+    ArrayDimensions *arrayDimensions = createArrayDimensions();
+    if (!arrayDimensions)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Array Dimensions\n");
+        CONDITION_FAILED;
+    }
+
+    arrayDimensions->dimensionCount = dimensionCount;
+    arrayDimensions->baseTypes = baseTypes;
+    arrayDimensions->dimensionSizes = sizes;
+    arrayDimensions->dimensions = (int *)malloc(sizeof(int) * dimensionCount);
+    if (!arrayDimensions->dimensions)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Failed to allocate Array Dimensions\n");
+        CONDITION_FAILED;
+    }
+    memcpy(arrayDimensions->dimensions, sizes, sizeof(int) * dimensionCount);
+
+    return arrayDimensions;
+}
+
 DataType *DTMArrayTypes_createDynArrayType(DataType **arrayTypes, int elementCount)
 {
     DTArrayTy *arrayType = createDTArrayTy();
@@ -174,6 +285,49 @@ DataType *DTMArrayTypes_createStaticArrayType(DataType *baseType, int size)
     return arrayDataType;
 }
 
+DataType *DTMArrayTypes_createMultiDimensionalStaticArray(DataType *baseType, int *sizes, int dimensionCount)
+{
+    if (dimensionCount <= 0 || baseType == NULL || sizes == NULL)
+    {
+        return NULL;
+    }
+
+    // Create array type starting from the innermost dimension (right to left)
+    DataType *resultType = baseType;
+
+    for (int i = dimensionCount - 1; i >= 0; i--)
+    {
+        // Create a static array for this dimension
+        resultType = DTM->arrayTypes->createStaticArray(resultType, sizes[i]);
+
+        if (resultType == NULL)
+        {
+            return NULL;
+        }
+
+        // For the outermost dimension, set up the full dimensions information
+        if (i == 0 && resultType != NULL && resultType->container != NULL)
+        {
+            DTArrayTy *arrayTy = resultType->container->type.arrayType;
+
+            // Initialize dimensions array if needed
+            if (arrayTy->dimensions == NULL)
+            {
+                arrayTy->dimensions = createArrayDimensions();
+                arrayTy->dimensionCount = dimensionCount;
+
+                // Add each dimension
+                for (int j = 0; j < dimensionCount; j++)
+                {
+                    arrayTy->dimensions->addDimension(arrayTy->dimensions, sizes[j]);
+                }
+            }
+        }
+    }
+
+    return resultType;
+}
+
 DTMArrayTypes *createDTMArrayTypes(void)
 {
     DTMArrayTypes *arrayTypes = (DTMArrayTypes *)malloc(sizeof(DTMArrayTypes));
@@ -190,6 +344,7 @@ DTMArrayTypes *createDTMArrayTypes(void)
     arrayTypes->createMonomorphicArray = DTMArrayTypes_createMonomorphicArrayType;
     arrayTypes->createMonomorphicArrayDecl = DTMArrayTypes_createMonomorphicArrayTypeDecl;
     arrayTypes->createStaticArray = DTMArrayTypes_createStaticArrayType;
+    arrayTypes->createMultiDimensionalStaticArray = DTMArrayTypes_createMultiDimensionalStaticArray;
 
     return arrayTypes;
 }

@@ -258,6 +258,7 @@ typedef struct CryoVariableNode
     bool isMutable;
     bool isIterator;
     bool isNewInstance;
+    bool noInitializer;
     // Unary operators
     bool hasUnaryOp;
     ASTNode *unaryOp;
@@ -994,6 +995,7 @@ extern "C"
         bool isGlobal,
         bool isReference,
         bool isIterator,
+        bool noInitializer,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
     ASTNode *createVariableExpr(

@@ -449,29 +449,37 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *scopeName, const char
 
 DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
 {
-    // check if the name is a primitive type
-
     // Check if the name is a primitive type
+    logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
     DataType *primitive = DTMParsePrimitive(name);
     if (primitive)
     {
         return primitive;
     }
 
+    logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
     for (int i = 0; i < table->entryCount; i++)
     {
         if (strcmp(table->entries[i]->name, name) == 0)
         {
+            logMessage(LMI, "INFO", "DTM", "Found entry in symbol table: %s", name);
             return table->entries[i]->type;
         }
     }
 
     // Check if the name is in the snapshot
-    for (int i = 0; i < table->snapshot->entryCount; i++)
+    logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table snapshot: %s", name);
+    if (table->snapshot)
     {
-        if (strcmp(table->snapshot->entries[i]->name, name) == 0)
+        int snapshotEntryCount = table->snapshot->entryCount;
+        logMessage(LMI, "INFO", "DTM", "Snapshot entry count: %d", snapshotEntryCount);
+        for (int i = 0; i < table->snapshot->entryCount; i++)
         {
-            return table->snapshot->entries[i]->type;
+            if (strcmp(table->snapshot->entries[i]->name, name) == 0)
+            {
+                logMessage(LMI, "INFO", "DTM", "Found entry in symbol table snapshot: %s", name);
+                return table->snapshot->entries[i]->type;
+            }
         }
     }
 

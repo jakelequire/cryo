@@ -155,6 +155,13 @@ DataType *DTMTypeContainerWrappers_wrapTypeContainer(TypeContainer *container)
     type->container = container;
     type->debug = createDTDebug();
 
+    type->isConst = false;
+    type->isPointer = false;
+    type->isReference = false;
+    type->isArray = false;
+    type->isGeneric = false;
+    type->isPrototype = false;
+
     type->setConst = DataTypes_isConst;
     type->setPointer = DataTypes_isPointer;
     type->setReference = DataTypes_isReference;
@@ -281,6 +288,7 @@ DataType *DTMTypeContainerWrappers_createProtoType(const char *name, PrimitiveDa
 
     DataType *protoType = DTMTypeContainerWrappers_wrapTypeContainer(container);
     protoType->setTypeName(protoType, name);
+    protoType->isPrototype = true;
 
     return protoType;
 }
@@ -343,7 +351,7 @@ DataType *DTMTypeContainerWrappers_createArrayType(DataType *baseType, int dimen
     }
 
     container->type.arrayType->baseType = baseType;
-    container->type.arrayType->dimensions = dimensions;
+    container->type.arrayType->dimensionCount = dimensions;
     container->type.arrayType->elementCount = 0;
     container->type.arrayType->elementCapacity = MAX_FIELD_CAPACITY;
     container->type.arrayType->elements = (DataType **)malloc(sizeof(DataType *) * container->type.arrayType->elementCapacity);

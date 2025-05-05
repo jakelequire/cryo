@@ -1987,14 +1987,15 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     consume(__LINE__, lexer, TOKEN_KW_IMPLEMENT, "Expected `implementation` keyword.", "parseImplementation", arena, state, context);
 
     if (lexer->currentToken.type != TOKEN_KW_CLASS &&
-        lexer->currentToken.type != TOKEN_KW_STRUCT)
+        lexer->currentToken.type != TOKEN_KW_STRUCT &&
+        lexer->currentToken.type != TOKEN_KW_TYPE)
     {
-        parsingError("Expected `class` or `struct` keyword.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
-        CONDITION_FAILED;
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected `class`, `struct`, or `type` keyword.", __LINE__, __FILE__, __func__);
     }
 
     bool isClass = false;
     bool isStruct = false;
+    bool isType = false;
 
     if (lexer->currentToken.type == TOKEN_KW_CLASS)
     {
@@ -2005,6 +2006,11 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     {
         consume(__LINE__, lexer, TOKEN_KW_STRUCT, "Expected `struct` keyword.", "parseImplementation", arena, state, context);
         isStruct = true;
+    }
+    else if (lexer->currentToken.type == TOKEN_KW_TYPE)
+    {
+        consume(__LINE__, lexer, TOKEN_KW_TYPE, "Expected `type` keyword.", "parseImplementation", arena, state, context);
+        isType = true;
     }
     else
     {
@@ -2030,7 +2036,23 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
         CONDITION_FAILED;
     }
 
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for implementation name.", "parseImplementation", arena, state, context);
+    if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+    {
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for implementation name.", "parseImplementation", arena, state, context);
+    }
+    else if (lexer->currentToken.type == TOKEN_TYPE_I8 ||
+             lexer->currentToken.type == TOKEN_TYPE_I16 ||
+             lexer->currentToken.type == TOKEN_TYPE_I32 ||
+             lexer->currentToken.type == TOKEN_TYPE_I64 ||
+             lexer->currentToken.type == TOKEN_TYPE_I128)
+    {
+        consume(__LINE__, lexer, lexer->currentToken.type, "Expected an identifier for implementation name.", "parseImplementation", arena, state, context);
+    }
+    else
+    {
+        parsingError("Expected an identifier for implementation name.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        CONDITION_FAILED;
+    }
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start implementation body.", "parseImplementation", arena, state, context);
 
     ASTNode **methods = (ASTNode **)malloc(sizeof(ASTNode *) * MAX_METHOD_CAPACITY);

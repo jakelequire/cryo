@@ -588,39 +588,44 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
     case TOKEN_IDENTIFIER:
     {
         logMessage(LMI, "INFO", "Parser", "Parsing identifier...");
+        // Check for function call: {identifier}(
         if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing function call...");
             char *functionName = strndup(lexer->currentToken.start, lexer->currentToken.length);
             return parseFunctionCall(lexer, context, functionName, arena, state, globalTable);
         }
+        // Check for scoped function call: {identifier}::
         else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOUBLE_COLON)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing scope call...");
             return parseScopeCall(lexer, context, arena, state, globalTable);
         }
+        // Check for property access: {identifier}.
         else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DOT)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing property access...");
             return parsePropertyAccess(lexer, context, arena, state, globalTable);
         }
+        // Check for increment: {identifier}++
         else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_INCREMENT)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing increment...");
             return parseUnaryExpression(lexer, context, arena, state, globalTable);
         }
+        // Check for decrement: {identifier}--
         else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DECREMENT)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing decrement...");
             return parseUnaryExpression(lexer, context, arena, state, globalTable);
         }
+        // Check for assignment: {identifier} =
         else if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_ASSIGN)
         {
             logMessage(LMI, "INFO", "Parser", "Parsing variable assignment...");
             char *varName = strndup(lexer->currentToken.start, lexer->currentToken.length);
             return parseAssignment(lexer, context, varName, arena, state, globalTable);
         }
-
         else
         {
             logMessage(LMI, "INFO", "Parser", "Parsing variable assignment...");
@@ -1557,6 +1562,8 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         logMessage(LMI, "INFO", "Parser", "Data type is not a primitive type.");
     }
 
+    // Check if the data type is followed by an array instantiation
+    // i.e `i32[]` or `i32[10]`
     if (lexer->currentToken.type == TOKEN_LBRACKET)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing array type...");
@@ -1570,6 +1577,14 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
             logMessage(LMI, "ERROR", "Parser", "Failed to parse array type.");
             NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse array type.", __LINE__, __FILE__, __func__)
         }
+    }
+
+    // Check if the variable ends with a semicolon to no-initialize
+    if (lexer->currentToken.type == TOKEN_SEMICOLON)
+    {
+        logMessage(LMI, "INFO", "Parser", "Variable declaration without initialization.");
+        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
+        return createVarDeclarationNode(var_name, dataType, NULL, isMutable, isConstant, isReference, false, true, arena, state, lexer);
     }
 
     // Parse the variable initializer
@@ -1605,7 +1620,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
 
     logMessage(LMI, "INFO", "Parser", "Variable declaration parsed.");
 
-    ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, false, arena, state, lexer);
+    ASTNode *varDeclNode = createVarDeclarationNode(var_name, dataType, initializer, isMutable, isConstant, isReference, false, false, arena, state, lexer);
     if (initializer->metaData->type == NODE_INDEX_EXPR)
     {
         logMessage(LMI, "INFO", "Parser", "Index expression detected.");
@@ -3957,39 +3972,104 @@ DataType *parseArrayInstantiation(DataType *baseType, Lexer *lexer, ParsingConte
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing array instantiation...");
     consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array instantiation.", "parseArrayInstantiation", arena, state, context);
-    bool isStaticallyAllocated = false;
-    int arraySize = 0;
-    DataType *arrayType = NULL;
+
+    // Track dimensions for multidimensional arrays
+    int *dimensionSizes = (int *)malloc(sizeof(int) * 10); // Start with capacity for 10 dimensions
+    for (int i = 0; i < 10; i++)
+    {
+        dimensionSizes[i] = 0;
+    }
+    int dimensionCount = 0;
+    int dimensionCapacity = 10;
+
+    // Parse the first dimension
+    bool isFirstDimensionStatic = false;
     if (lexer->currentToken.type == TOKEN_INT_LITERAL)
     {
         char *sizeStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        arraySize = atoi(sizeStr);
+        dimensionSizes[dimensionCount] = atoi(sizeStr);
+        free(sizeStr);
         consume(__LINE__, lexer, TOKEN_INT_LITERAL, "Expected an integer literal.", "parseArrayInstantiation", arena, state, context);
-        isStaticallyAllocated = true;
-        arrayType = DTM->arrayTypes->createStaticArray(baseType, arraySize);
+        isFirstDimensionStatic = true;
     }
+    dimensionCount++;
 
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array instantiation.", "parseArrayInstantiation", arena, state, context);
 
-    if (arrayType == NULL)
+    // Parse additional dimensions if present
+    while (lexer->currentToken.type == TOKEN_LBRACKET)
     {
-        logMessage(LMI, "ERROR", "Parser", "Failed to create array type.");
-        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
-                  "Failed to create array type.", __LINE__, __FILE__, __func__)
+        logMessage(LMI, "INFO", "Parser", "Found additional array dimension...");
+        consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array dimension.", "parseArrayInstantiation", arena, state, context);
+
+        // Make sure we have enough capacity
+        if (dimensionCount >= dimensionCapacity)
+        {
+            dimensionCapacity *= 2;
+            dimensionSizes = (int *)realloc(dimensionSizes, sizeof(int) * dimensionCapacity);
+        }
+
+        // Parse this dimension's size
+        if (lexer->currentToken.type == TOKEN_INT_LITERAL)
+        {
+            char *sizeStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            dimensionSizes[dimensionCount] = atoi(sizeStr);
+            free(sizeStr);
+            consume(__LINE__, lexer, TOKEN_INT_LITERAL, "Expected an integer literal.", "parseArrayInstantiation", arena, state, context);
+        }
+        dimensionCount++;
+
+        consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array dimension.", "parseArrayInstantiation", arena, state, context);
     }
 
-    arrayType->debug->printVerbosType(arrayType);
-
-    if (isStaticallyAllocated)
+    // If we have a multidimensional array, use the dedicated function
+    if (dimensionCount > 1)
     {
-        logMessage(LMI, "INFO", "Parser", "Array is statically allocated.");
+        logMessage(LMI, "INFO", "Parser", "Creating multidimensional array with %d dimensions", dimensionCount);
+        // Using the existing createMultiDimensionalStaticArray function
+        DataType *arrayType = DTM->arrayTypes->createMultiDimensionalStaticArray(baseType, dimensionSizes, dimensionCount);
+
+        if (arrayType == NULL)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to create multidimensional array type.");
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                      "Failed to create multidimensional array type.", __LINE__, __FILE__, __func__)
+        }
+
         return arrayType;
     }
     else
     {
-        logMessage(LMI, "INFO", "Parser", "Array is dynamically allocated.");
-        return DTM->arrayTypes->createDynamicArray(baseType);
+        // Single dimension array - use existing functions
+        DataType *arrayType = NULL;
+
+        if (isFirstDimensionStatic)
+        {
+            // Create a static array with the specified size
+            arrayType = DTM->arrayTypes->createStaticArray(baseType, dimensionSizes[0]);
+            logMessage(LMI, "INFO", "Parser", "Created static array with size %d", dimensionSizes[0]);
+        }
+        else
+        {
+            // Create a dynamic array
+            arrayType = DTM->arrayTypes->createDynamicArray(baseType);
+            logMessage(LMI, "INFO", "Parser", "Created dynamic array");
+        }
+
+        if (arrayType == NULL)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to create array type.");
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                      "Failed to create array type.", __LINE__, __FILE__, __func__)
+        }
+
+        arrayType->debug->printVerbosType(arrayType);
+        return arrayType;
     }
 
+    // If we reach here, something went wrong
+    logMessage(LMI, "ERROR", "Parser", "Failed to parse array instantiation.");
+    NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+              "Failed to parse array instantiation.", __LINE__, __FILE__, __func__)
     return NULL;
 }
