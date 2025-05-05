@@ -925,17 +925,33 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
     return node;
 }
 
-/// ---
-/// ### Structure
-///```
-/// typedef struct IndexExprNode
-/// {
-///     char *name;
-///     struct ASTNode *array;
-///     struct ASTNode *index;
-/// } IndexExprNode;
-///```
-///
+void IndexExprNode_addIndex(ASTNode *self, ASTNode *index)
+{
+    __STACK_FRAME__
+    if (self->data.indexExpr->indexCount >= self->data.indexExpr->indexCapacity)
+    {
+        self->data.indexExpr->resizeIndex(self, self->data.indexExpr->indexCount + 1);
+    }
+    self->data.indexExpr->indices[self->data.indexExpr->indexCount++] = index;
+}
+
+void IndexExprNode_resizeIndex(ASTNode *self, int newSize)
+{
+    __STACK_FRAME__
+    if (newSize > self->data.indexExpr->indexCapacity)
+    {
+        logMessage(LMI, "INFO", "AST", "Resizing index array...");
+        self->data.indexExpr->indexCapacity = newSize;
+        size_t newSizeInBytes = sizeof(ASTNode *) * newSize;
+        self->data.indexExpr->indices = (ASTNode **)realloc(self->data.indexExpr->indices, newSizeInBytes);
+        if (!self->data.indexExpr->indices)
+        {
+            fprintf(stderr, "[AST] Error: Failed to reallocate memory for index array.");
+            return;
+        }
+    }
+}
+
 IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
@@ -949,6 +965,14 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)malloc(sizeof(char));
     node->array = NULL;
     node->index = NULL;
+
+    node->isMultiDimensional = false;
+    node->indexCapacity = MAX_INDEX_CAPACITY;
+    node->indexCount = 0;
+    node->indices = (ASTNode **)calloc(node->indexCapacity, sizeof(ASTNode *));
+
+    node->addIndex = IndexExprNode_addIndex;
+    node->resizeIndex = IndexExprNode_resizeIndex;
 
     return node;
 }

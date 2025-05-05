@@ -56,6 +56,7 @@ typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 #define PROPERTY_CAPACITY 32
 #define METHOD_CAPACITY 64
 #define MAX_IDENTIFIER_LENGTH 128
+#define MAX_INDEX_CAPACITY 10
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
@@ -344,6 +345,15 @@ typedef struct IndexExprNode
     struct ASTNode *array;
     // Should be a literal expression node with an int value
     struct ASTNode *index;
+
+    // For multi-dimensional arrays
+    bool isMultiDimensional;
+    struct ASTNode **indices;
+    int indexCount;
+    int indexCapacity;
+
+    void (*addIndex)(ASTNode *self, ASTNode *index);
+    void (*resizeIndex)(ASTNode *self, int newSize);
 } IndexExprNode;
 
 typedef struct VariableReassignmentNode

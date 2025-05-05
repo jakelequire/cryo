@@ -1584,7 +1584,9 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     {
         logMessage(LMI, "INFO", "Parser", "Variable declaration without initialization.");
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
-        return createVarDeclarationNode(var_name, dataType, NULL, isMutable, isConstant, isReference, false, true, arena, state, lexer);
+        ASTNode *uninitVarDecl = createVarDeclarationNode(var_name, dataType, NULL, isMutable, isConstant, isReference, false, true, arena, state, lexer);
+        FEST->addSymbol(FEST, uninitVarDecl);
+        return uninitVarDecl;
     }
 
     // Parse the variable initializer
@@ -1632,7 +1634,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     clone->print(clone);
 
     FEST->addSymbol(FEST, varDeclNode);
-    AddVariableToSymbolTable(globalTable, varDeclNode, currentScopeID);
 
     return varDeclNode;
 }
@@ -3320,10 +3321,27 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
             return NULL;
         }
     }
-
     ASTNode *index = parseExpression(lexer, context, arena, state, globalTable);
     consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array indexing.", "parseArrayIndexing", arena, state, context);
-    return createIndexExprNode(strdup(arrCpyName), arrNode, index, arena, state, lexer);
+    ASTNode *indexExprNode = createIndexExprNode(strdup(arrCpyName), arrNode, index, arena, state, lexer);
+    bool isMultiDimensional = false;
+    // If the next token in view is another `[`, this is a multi-dimensional array indexing.
+    if (lexer->currentToken.type == TOKEN_LBRACKET)
+    {
+        isMultiDimensional = true;
+        while (lexer->currentToken.type != TOKEN_EQUAL)
+        {
+            consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` to start array indexing.", "parseArrayIndexing", arena, state, context);
+            ASTNode *index = parseExpression(lexer, context, arena, state, globalTable);
+            consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` to end array indexing.", "parseArrayIndexing", arena, state, context);
+            indexExprNode->data.indexExpr->addIndex(indexExprNode, index);
+            logMessage(LMI, "INFO", "Parser", "Added index to multi-dimensional array indexing.");
+        }
+    }
+
+    indexExprNode->data.indexExpr->isMultiDimensional = isMultiDimensional;
+
+    return indexExprNode;
 }
 // </parseArrayIndexing>
 
