@@ -200,6 +200,38 @@ const char *DTArrayTy_createArrayTypeString(struct DTArrayTy_t *self)
     return result;
 }
 
+bool DTArrayTy_is1DStrUArray(struct DTArrayTy_t *self)
+{
+    if (self == NULL || self->baseType == NULL || self->dimensions == NULL)
+    {
+        return false;
+    }
+
+    int size = self->size;
+    int elementCount = self->elementCount;
+    int dimensionCount = self->dimensions->dimensionCount;
+    bool isDynamic = self->isDynamic;
+    DataType *baseType = self->baseType;
+    if (baseType->container->primitive == PRIM_STR)
+    {
+        if (size <= 0 && elementCount <= 0 && isDynamic)
+        {
+            return true;
+        }
+    }
+    if (size <= 0 && elementCount <= 0)
+    {
+        baseType->debug->printVerbosType(baseType);
+        self->printArray(self);
+        DEBUG_BREAKPOINT;
+    }
+
+    baseType->debug->printVerbosType(baseType);
+    self->printArray(self);
+
+    return false;
+}
+
 DTArrayTy *createDTArrayTy(void)
 {
     DTArrayTy *arrayType = (DTArrayTy *)malloc(sizeof(DTArrayTy));
@@ -235,6 +267,8 @@ DTArrayTy *createDTArrayTy(void)
     arrayType->freeData = DTArrayTy_freeData;
     arrayType->printArray = DTArrayTy_printArray;
     arrayType->createArrayTypeString = DTArrayTy_createArrayTypeString;
+
+    arrayType->is1DStrUArray = DTArrayTy_is1DStrUArray;
 
     return arrayType;
 }

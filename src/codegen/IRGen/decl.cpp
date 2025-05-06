@@ -30,14 +30,14 @@ namespace Cryo
         // Handle function declarations
         if (node->metaData->type == NODE_FUNCTION_DECLARATION)
         {
-            processFunctionDeclaration(node);
+            /// processFunctionDeclaration(node);
         }
 
         // Handle type declarations (structs, classes)
         if (node->metaData->type == NODE_STRUCT_DECLARATION ||
             node->metaData->type == NODE_CLASS)
         {
-            processTypeDeclaration(node);
+            // processTypeDeclaration(node);
         }
 
         // Recurse through the tree

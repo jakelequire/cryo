@@ -24,6 +24,8 @@ namespace Cryo
         logMessage(LMI, "INFO", "Visitor", "Visiting function declaration...");
         assert(node);
 
+        node->print(node);
+
         std::string funcName = node->data.functionDecl->name;
         logMessage(LMI, "INFO", "Visitor", "Function Name: %s", funcName.c_str());
 
@@ -76,7 +78,18 @@ namespace Cryo
         for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
         {
             ASTNode *param = node->data.functionDecl->params[i];
-            llvm::Type *paramType = symbolTable->getLLVMType(param->data.param->type);
+            DataType *paramDataType = param->data.param->type;
+            if (!paramDataType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Parameter data type is null");
+                continue;
+            }
+            llvm::Type *paramType = symbolTable->getLLVMType(paramDataType);
+            if (!paramType)
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Parameter type is null");
+                paramType = llvm::Type::getVoidTy(context.getInstance().context);
+            }
 
             // Create a symbol for each parameter for the symbol table
             std::string paramName = param->data.param->name;
@@ -85,7 +98,6 @@ namespace Cryo
             // Create the parameter in the function
             llvm::Function::arg_iterator argIt = function->arg_begin();
             llvm::Value *arg = argIt++;
-            arg->setName(paramName);
             if (arg->getType()->isPointerTy())
             {
                 // Store the pointer to the parameter
@@ -94,6 +106,15 @@ namespace Cryo
                 context.getInstance().builder.CreateStore(arg, allocaInst);
                 arg = allocaInst;
             }
+            else
+            {
+                // Load the value of the parameter
+                llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
+                    paramType, nullptr, paramName + ".alloca");
+                context.getInstance().builder.CreateStore(arg, allocaInst);
+                arg = allocaInst;
+            }
+            arg->setName(paramName);
             AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
             IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
                 function, nullptr, paramType, paramName, allocaType);
@@ -108,6 +129,18 @@ namespace Cryo
         // Visit the function body (This will also visit the return statement)
         logMessage(LMI, "INFO", "Visitor", "Visiting function body...");
         visit(node->data.functionDecl->body);
+
+        // for (auto &param : function->args())
+        // {
+        //     // Set the name of the parameter
+        //     ASTNode *ast_param = node->data.functionDecl->params[param.getArgNo()];
+        //     std::string paramName = ast_param->data.param->name;
+        //     if (paramName.empty())
+        //     {
+        //         continue;
+        //     }
+        //     param.setName(paramName);
+        // }
 
         // Remove the basic block
         context.getInstance().builder.ClearInsertionPoint();

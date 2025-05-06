@@ -1564,6 +1564,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
 
     // Check if the data type is followed by an array instantiation
     // i.e `i32[]` or `i32[10]`
+    bool isArray = false;
     if (lexer->currentToken.type == TOKEN_LBRACKET)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing array type...");
@@ -1571,6 +1572,7 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         if (arrayType)
         {
             dataType = arrayType;
+            isArray = true;
         }
         else
         {
@@ -1597,7 +1599,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
     }
     getNextToken(lexer, arena, state);
 
-    // Check if the variable is a reference (Note: This is not yet implemented in the lexer)
     if (lexer->currentToken.type == TOKEN_AMPERSAND)
     {
         isReference = true;
@@ -1628,6 +1629,14 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         logMessage(LMI, "INFO", "Parser", "Index expression detected.");
         varDeclNode->data.varDecl->indexExpr = initializer->data.indexExpr;
         varDeclNode->data.varDecl->hasIndexExpr = true;
+    }
+    if (initializer->metaData->type == NODE_ARRAY_LITERAL)
+    {
+        DataType *varType = varDeclNode->data.varDecl->type;
+        if (varType->container->typeOf == ARRAY_TYPE)
+        {
+            varType->container->type.arrayType->size = initializer->data.array->elementCount;
+        }
     }
 
     ASTNode *clone = varDeclNode->clone(varDeclNode);
@@ -1676,20 +1685,19 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         context->inGenericContext = true; // Set generic context flag in ParsingContext
 
         // TODO: Implement generic type parameters
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Generic type parameters are not yet implemented.", __LINE__, __FILE__, __func__)
     }
 
     ASTNode **params = parseParameterList(lexer, context, arena, strdup(functionName), state, globalTable);
 
     for (int i = 0; params[i] != NULL; i++)
     {
-        logMessage(LMI, "INFO", "Parser", "Adding parameter: %s", params[i]->data.varDecl->name);
+        logMessage(LMI, "INFO", "Parser", "Adding parameter: %s", params[i]->data.param->name);
     }
     int paramCount = 0;
     DataType **paramTypes = (DataType **)malloc(sizeof(DataType *) * 64);
     for (int i = 0; params[i] != NULL; i++)
     {
-        DataType *paramType = params[i]->data.varDecl->type;
-        logMessage(LMI, "INFO", "Parser", "Parameter type: %s", paramType->debug->toString(paramType));
         paramTypes[i] = params[i]->data.param->type;
         FEST->addSymbol(FEST, params[i]);
         paramCount++;
@@ -2356,7 +2364,7 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     }
 
     char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage(LMI, "INFO", "Parser", "Parameter name: %s", paramName);
+    logMessage(LMI, "INFO", "Parser", "Parameter name: %s", strdup(paramName));
 
     getNextToken(lexer, arena, state);
 
@@ -3310,8 +3318,8 @@ ASTNode *parseArrayIndexing(Lexer *lexer, ParsingContext *context, char *arrayNa
         {
             DataType *vartype = sym->type;
             const char *varName = sym->name;
-            ASTNode *varNameNode = createVarNameNode(strdup(varName), vartype, arena, state, lexer);
-            arrNode = varNameNode;
+            ASTNode *paramNode = sym->node;
+            arrNode = paramNode;
         }
         else
         {

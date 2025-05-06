@@ -145,6 +145,8 @@ typedef struct DTArrayTy_t
     void (*freeData)(struct DTArrayTy_t *self);
     void (*printArray)(struct DTArrayTy_t *self);
     const char *(*createArrayTypeString)(struct DTArrayTy_t *self);
+
+    bool (*is1DStrUArray)(struct DTArrayTy_t *self);
 } DTArrayTy;
 
 // ------------------------------------------------------------------------------------------- //

@@ -236,6 +236,7 @@ DataType *DTMArrayTypes_createMonomorphicArrayTypeDecl(DataType *baseType)
 
     arrayType->baseType = baseType;
     arrayType->dimensions = 0;
+    arrayType->dimensionCount = 1;
     arrayType->size = 0;
     arrayType->isMonomorphic = true;
     arrayType->isDynamic = true;

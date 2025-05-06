@@ -74,7 +74,20 @@ namespace Cryo
         case PRIM_FUNCTION:
             return getLLVMFunctionType(dataType);
         case PRIM_ARRAY:
+        {
+            DataType *baseDataType = dataType->container->type.arrayType->baseType;
+            if (baseDataType->container->primitive == PRIM_STR &&
+                dataType->container->typeOf == ARRAY_TYPE &&
+                dataType->container->type.arrayType->isDynamic &&
+                dataType->container->type.arrayType->elementCount <= 0 &&
+                dataType->container->type.arrayType->size <= 0)
+            {
+                logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMType Data type is a dynamic string array");
+                llvm::PointerType *llvmPtrType = llvm::PointerType::get(llvmTypes.i8Ty, 0);
+                return llvmPtrType;
+            }
             return getLLVMArrayType(dataType);
+        }
         case PRIM_AUTO:
             return nullptr;
         case PRIM_UNDEFINED:
@@ -121,21 +134,25 @@ namespace Cryo
         if (!dataType)
         {
             std::cerr << "Data type is null" << std::endl;
+            CONDITION_FAILED;
             return nullptr;
         }
         if (dataType->container->primitive != PRIM_ARRAY)
         {
             std::cerr << "Data type is not an array" << std::endl;
+            CONDITION_FAILED;
             return nullptr;
         }
 
         logMessage(LMI, "INFO", "IRSymbolTable", "@getLLVMArrayType Creating LLVM array type for data type: %s",
                    DTM->debug->dataTypeToString(dataType));
+
         DataType *baseDataType = dataType->container->type.arrayType->baseType;
         llvm::Type *baseType = getLLVMType(baseDataType);
         if (!baseType)
         {
             std::cerr << "Failed to get base type for array" << std::endl;
+            CONDITION_FAILED;
             return nullptr;
         }
 
@@ -146,10 +163,32 @@ namespace Cryo
         int dimensionCount = dataType->container->type.arrayType->dimensionCount;
         bool isDynamic = dataType->container->type.arrayType->isDynamic;
 
+        if (size <= 0 && elementCount <= 0)
+        {
+            std::cerr << "Array size is invalid" << std::endl;
+
+            std::cerr << "Base data type: " << DTM->debug->dataTypeToString(baseDataType) << std::endl;
+            baseDataType->debug->printVerbosType(baseDataType);
+            std::cerr << "Array data type: " << DTM->debug->dataTypeToString(dataType) << std::endl;
+            dataType->debug->printVerbosType(dataType);
+
+            // Check if it's `str[]`
+            if (baseDataType->container->primitive == PRIM_STR &&
+                dataType->container->typeOf == ARRAY_TYPE &&
+                dataType->container->type.arrayType->isDynamic)
+            {
+                std::cout << "Array is a dynamic string array" << std::endl;
+                llvm::PointerType *llvmPtrType = llvm::PointerType::get(baseType, 0);
+            }
+
+            return nullptr;
+        }
+
         llvm::ArrayType *llvmArrayType = llvm::ArrayType::get(baseType, size);
         if (!llvmArrayType)
         {
             std::cerr << "Failed to create LLVM array type" << std::endl;
+            CONDITION_FAILED;
             return nullptr;
         }
 

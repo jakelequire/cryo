@@ -260,7 +260,7 @@ namespace Cryo
 
         if (arrayNode->metaData->type == NODE_PARAM)
         {
-            logMessage(LMI, "INFO", "Initializer", "Array is a parameter");
+            logMessage(LMI, "INFO", "Initializer", "Array is a parameter: %s", arrayNode->data.param->name);
             // Handle parameter array indexing
             IRVariableSymbol *paramSymbol = context.getInstance().symbolTable->findVariable(arrayNode->data.param->name);
             if (!paramSymbol)
@@ -270,6 +270,8 @@ namespace Cryo
             }
             arrayValue = paramSymbol->value;
             arrayType = paramSymbol->type;
+            CodeGenDebug::printLLVMValue(paramSymbol->value);
+            CodeGenDebug::printLLVMType(paramSymbol->type);
         }
         else if (arrayNode->metaData->type == NODE_VAR_NAME)
         {

@@ -1381,6 +1381,7 @@ char *formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatIfStatementNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatNullLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatOperatorNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatIndexExprNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1422,5 +1423,6 @@ char *CONSOLE_formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *outpu
 char *CONSOLE_formatIfStatementNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatNullLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatOperatorNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatIndexExprNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

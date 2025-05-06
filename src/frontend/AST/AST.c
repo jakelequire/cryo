@@ -706,7 +706,7 @@ ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *
     node->data.param->type = type;
     node->data.param->hasDefaultValue = false;
     node->data.param->isMutable = true;
-    node->data.param->functionName = functionName;
+    node->data.param->functionName = strdup(functionName);
     node->data.param->defaultValue = NULL;
     return node;
 }

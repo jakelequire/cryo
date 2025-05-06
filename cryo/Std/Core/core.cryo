@@ -61,7 +61,7 @@ struct String {
     val: str;
 
     constructor(__string__: str) {
-        printStr_export(__string__);
+        printf("[String::constructor] %s\n", __string__);
         this.val = __string__;
     }
 
