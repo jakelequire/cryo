@@ -291,6 +291,130 @@ namespace Cryo
 
     void CodeGenVisitor::visitForStatement(ASTNode *node)
     {
-        DEBUG_BREAKPOINT;
+        if (!node || !node->data.forStatement)
+            return;
+        logMessage(LMI, "INFO", "Visitor", "Visiting for statement node");
+
+        // Get the current function
+        llvm::Function *function = context.getInstance().builder.GetInsertBlock()->getParent();
+
+        // Create blocks with proper naming and order
+        llvm::BasicBlock *initBB = llvm::BasicBlock::Create(context.getInstance().context, "for.init", function);
+        llvm::BasicBlock *condBB = llvm::BasicBlock::Create(context.getInstance().context, "for.cond", function);
+        llvm::BasicBlock *bodyBB = llvm::BasicBlock::Create(context.getInstance().context, "for.body", function);
+        llvm::BasicBlock *incrementBB = llvm::BasicBlock::Create(context.getInstance().context, "for.inc", function);
+        llvm::BasicBlock *exitBB = llvm::BasicBlock::Create(context.getInstance().context, "for.exit", function);
+        llvm::BasicBlock *afterBB = llvm::BasicBlock::Create(context.getInstance().context, "for.after", function);
+
+        // Set break/continue targets
+        context.getInstance().symbolTable->setBreakBlock(exitBB);
+        context.getInstance().symbolTable->setContinueBlock(incrementBB); // Changed to incrementBB
+
+        // Branch to the initialization block
+        context.getInstance().builder.CreateBr(initBB);
+
+        // Initialize the loop
+        context.getInstance().builder.SetInsertPoint(initBB);
+        visit(node->data.forStatement->initializer);
+
+        // Branch to condition
+        context.getInstance().builder.CreateBr(condBB);
+
+        context.getInstance().builder.SetInsertPoint(condBB);
+        llvm::Value *conditionVal = getLLVMValue(node->data.forStatement->condition);
+        if (!conditionVal)
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to generate condition");
+            return;
+        }
+
+        // If condition is a pointer, load it
+        if (conditionVal->getType()->isPointerTy())
+        {
+            // Handle pointer loading safely with opaque pointers
+            if (llvm::AllocaInst *allocaInst = llvm::dyn_cast<llvm::AllocaInst>(conditionVal))
+            {
+                llvm::Type *allocatedType = allocaInst->getAllocatedType();
+                conditionVal = context.getInstance().builder.CreateLoad(allocatedType, conditionVal, "condload");
+            }
+            else
+            {
+                // Try to get type from the AST
+                DataType *condType = DTM->astInterface->getTypeofASTNode(node->data.forStatement->condition);
+                if (condType)
+                {
+                    llvm::Type *loadType = symbolTable->getLLVMType(condType);
+                    if (loadType)
+                    {
+                        conditionVal = context.getInstance().builder.CreateLoad(loadType, conditionVal, "condload");
+                    }
+                    else
+                    {
+                        logMessage(LMI, "WARNING", "Visitor", "Using i8 as fallback type for condition");
+                        conditionVal = context.getInstance().builder.CreateLoad(context.getInstance().builder.getInt8Ty(), conditionVal, "condload");
+                    }
+                }
+            }
+        }
+
+        // Convert condition to boolean if needed
+        if (!conditionVal->getType()->isIntegerTy(1))
+        {
+            if (conditionVal->getType()->isIntegerTy())
+            {
+                // Integer comparison with 0
+                conditionVal = context.getInstance().builder.CreateICmpNE(
+                    conditionVal,
+                    llvm::ConstantInt::get(conditionVal->getType(), 0),
+                    "cond");
+            }
+            else if (conditionVal->getType()->isFloatingPointTy())
+            {
+                // Floating point comparison with 0.0
+                conditionVal = context.getInstance().builder.CreateFCmpONE(
+                    conditionVal,
+                    llvm::ConstantFP::get(conditionVal->getType(), 0.0),
+                    "cond");
+            }
+            else
+            {
+                logMessage(LMI, "ERROR", "Visitor", "Unsupported condition type");
+                return;
+            }
+        }
+
+        // Branch based on condition to body or exit
+        context.getInstance().builder.CreateCondBr(conditionVal, bodyBB, exitBB);
+
+        // Generate loop body
+        context.getInstance().builder.SetInsertPoint(bodyBB);
+        symbolTable->pushScope();
+        visit(node->data.forStatement->body);
+        symbolTable->popScope();
+
+        // Add branch to increment block if no terminator
+        if (!context.getInstance().builder.GetInsertBlock()->getTerminator())
+        {
+            context.getInstance().builder.CreateBr(incrementBB);
+        }
+
+        // Generate increment code
+        context.getInstance().builder.SetInsertPoint(incrementBB);
+        visit(node->data.forStatement->increment);
+        context.getInstance().builder.CreateBr(condBB);
+
+        // Set up exit block that branches to after block
+        context.getInstance().builder.SetInsertPoint(exitBB);
+        context.getInstance().builder.CreateBr(afterBB);
+
+        // Set insert point for code after the loop
+        context.getInstance().builder.SetInsertPoint(afterBB);
+
+        // Clear break/continue targets
+        context.getInstance().symbolTable->setBreakBlock(nullptr);
+        context.getInstance().symbolTable->setContinueBlock(nullptr);
+
+        logMessage(LMI, "INFO", "Visitor", "For statement processed successfully");
+        return;
     }
 } // namespace Cryo

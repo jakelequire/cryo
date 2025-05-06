@@ -761,6 +761,17 @@ char *formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel,
             formattedNode = formatIndexExprNode(node, output);
         }
     }
+    else if (strcmp(nodeType, "ForStatement") == 0)
+    {
+        if (console)
+        {
+            formattedNode = CONSOLE_formatForStatementNode(node, output);
+        }
+        else
+        {
+            formattedNode = formatForStatementNode(node, output);
+        }
+    }
     else if (strcmp(nodeType, "Namespace") == 0)
     {
         // Skip namespace nodes
@@ -1808,6 +1819,27 @@ char *CONSOLE_formatIndexExprNode(ASTDebugNode *node, DebugASTOutput *output)
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
+// </IndexExpr>
+// ============================================================
+// ============================================================
+// <ForStatement>
+char *formatForStatementNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "<ForStatement> <%i:%i>", node->line, node->column);
+    return buffer;
+}
+char *CONSOLE_formatForStatementNode(ASTDebugNode *node, DebugASTOutput *output)
+{
+    char *buffer = MALLOC_BUFFER;
+    BUFFER_FAILED_ALLOCA_CATCH
+    sprintf(buffer, "%s%s<ForStatement>%s %s%s<%i:%i>%s",
+            BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
+    return buffer;
+}
+// </ForStatement>
 
 // # ============================================================ #
 // # AST Tree Traversal                                           #
@@ -2535,7 +2567,21 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         ASTDebugNode *unaryExprNode = createASTDebugNode("UnaryOp", "UnaryOp", DTM->primitives->createVoid(), line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *unaryExprNode;
         output->nodeCount++;
-        createASTDebugView(node->data.unary_op->expression, output, indentLevel + 1);
+        // operator
+        char *opName = CryoTokenToString(node->data.unary_op->op);
+        ASTDebugNode *opNode = createASTDebugNode("Operator", opName, DTM->primitives->createVoid(), line, column, indentLevel + 1, node);
+        output->nodes[output->nodeCount] = *opNode;
+        output->nodeCount++;
+        // expression
+        if (node->data.unary_op->expression)
+        {
+            createASTDebugView(node->data.unary_op->expression, output, indentLevel + 1);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "AST", "Unary expression is NULL");
+            return;
+        }
         break;
     }
 
@@ -2652,6 +2698,32 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         if (node->data.ifStatement->thenBranch != NULL)
         {
             createASTDebugView(node->data.ifStatement->thenBranch, output, indentLevel + 1);
+        }
+        break;
+    }
+
+    case NODE_FOR_STATEMENT:
+    {
+        __LINE_AND_COLUMN__
+        logMessage(LMI, "DEBUG", "ASTDBG", "ForStatement");
+        ASTDebugNode *forNode = createASTDebugNode("ForStatement", "ForStatement", DTM->primitives->createVoid(), line, column, indentLevel, node);
+        output->nodes[output->nodeCount] = *forNode;
+        output->nodeCount++;
+        if (node->data.forStatement->initializer != NULL)
+        {
+            createASTDebugView(node->data.forStatement->initializer, output, indentLevel + 1);
+        }
+        if (node->data.forStatement->condition != NULL)
+        {
+            createASTDebugView(node->data.forStatement->condition, output, indentLevel + 1);
+        }
+        if (node->data.forStatement->increment != NULL)
+        {
+            createASTDebugView(node->data.forStatement->increment, output, indentLevel + 1);
+        }
+        if (node->data.forStatement->body != NULL)
+        {
+            createASTDebugView(node->data.forStatement->body, output, indentLevel + 1);
         }
         break;
     }

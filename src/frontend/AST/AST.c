@@ -516,16 +516,18 @@ ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_b
     return node;
 }
 
-ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createForLoopNode(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
+
     node->data.forStatement->initializer = initializer;
     node->data.forStatement->condition = condition;
     node->data.forStatement->increment = increment;
     node->data.forStatement->body = body;
+
     return node;
 }
 
@@ -826,7 +828,7 @@ ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *el
 ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, lexer);
+    ASTNode *node = createForLoopNode(initializer, condition, increment, body, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create for statement node");

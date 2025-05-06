@@ -1069,6 +1069,8 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
     }
     default:
     {
+        char *curTokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "ERROR", "Parser", "Unexpected token: %s", curTokenStr);
         NEW_ERROR(GDM,
                   CRYO_ERROR_SYNTAX,
                   CRYO_SEVERITY_FATAL,
@@ -1090,6 +1092,7 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
         logMessage(LMI, "INFO", "Parser", "Parsing array indexing");
         node = parseArrayIndexing(lexer, context, NULL, arena, state, globalTable);
     }
+
     return node;
 }
 // </parsePrimaryExpression>
@@ -1155,10 +1158,14 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
         logMessage(LMI, "INFO", "Parser", "Parsing scope call");
         return parseScopeCall(lexer, context, arena, state, globalTable);
     }
-    else
+
+    // Peek to see if the next token is `++` or `--`
+    if (nextToken == TOKEN_INCREMENT || nextToken == TOKEN_DECREMENT)
     {
-        logMessage(LMI, "INFO", "Parser", "Parsing identifier, next token: %s", CryoTokenToString(peekNextUnconsumedToken(lexer, arena, state).type));
+        logMessage(LMI, "INFO", "Parser", "Parsing increment/decrement");
+        return parseUnaryExpression(lexer, context, arena, state, globalTable);
     }
+
     logMessage(LMI, "INFO", "Parser", "Parsing identifier expression");
     // Check to see if it exists in the symbol table as a variable or parameter
     ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), arena, state, lexer, context, globalTable);
@@ -1204,6 +1211,13 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
         return NULL;
     }
 
+    CryoTokenType curTok = lexer->currentToken.type;
+    if (curTok == TOKEN_SEMICOLON || curTok == TOKEN_RPAREN)
+    {
+        logMessage(LMI, "INFO", "Parser", "End of expression");
+        return left;
+    }
+
     while (true)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing binary expression... Current Token: %s", CryoTokenToString(lexer->currentToken.type));
@@ -1226,8 +1240,16 @@ ASTNode *parseBinaryExpression(Lexer *lexer, ParsingContext *context, int minPre
         }
 
         getNextToken(lexer, arena, state); // consume operator
+        logMessage(LMI, "INFO", "Parser", "Parsing binary expression... Current Token: %s", CryoTokenToString(lexer->currentToken.type));
+
+        if (lexer->currentToken.type == TOKEN_SEMICOLON || lexer->currentToken.type == TOKEN_RPAREN)
+        {
+            logMessage(LMI, "INFO", "Parser", "End of expression");
+            break;
+        }
 
         // Parse the right side with a higher precedence
+        logMessage(LMI, "INFO", "Parser", "Parsing right side of binary expression...");
         ASTNode *right = parseBinaryExpression(lexer, context, precedence + 1, arena, state, globalTable);
         if (!right)
         {
@@ -1320,24 +1342,57 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
         right = parsePrimaryExpression(lexer, context, arena, state, globalTable);
         return createUnaryExpr(opToken, right, arena, state, lexer);
     }
-    if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_INCREMENT)
+    if (lexer->currentToken.type == TOKEN_IDENTIFIER && peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_INCREMENT ||
+        peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_DECREMENT)
     {
         // This is a postfix increment (e.g., x++)
         logMessage(LMI, "INFO", "Parser", "Parsing postfix increment expression...");
-        opToken = TOKEN_INCREMENT;
+        if (lexer->currentToken.type == TOKEN_INCREMENT)
+        {
+            opToken = TOKEN_INCREMENT;
+        }
+        else
+        {
+            opToken = TOKEN_DECREMENT;
+        }
         char *cur_token = strndup(lexer->currentToken.start, lexer->currentToken.length);
-        ASTNode *lhs = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+        FrontendSymbol *sym = FEST->lookup(FEST, cur_token);
+        if (!sym)
+        {
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse primary expression", __LINE__, __FILE__, __func__)
+            CONDITION_FAILED;
+        }
+
+        if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+        {
+            consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier", "parseUnaryExpression", arena, state, context);
+        }
+
+        ASTNode *lhs = sym->node;
         if (!lhs)
         {
             NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse primary expression", __LINE__, __FILE__, __func__)
             CONDITION_FAILED;
         }
+
+        if (sym->node->metaData->type == NODE_VAR_DECLARATION)
+        {
+            const char *varName = sym->name;
+            DataType *varType = sym->type;
+            ASTNode *varNameNode = createVarNameNode(strdup(varName), varType, arena, state, lexer);
+            lhs = varNameNode;
+        }
+
         ASTNode *postfixIncrement = createUnaryExpr(opToken, lhs, arena, state, lexer);
         postfixIncrement->data.unary_op->op = TOKEN_INCREMENT;
         postfixIncrement->data.unary_op->expression = lhs;
         postfixIncrement->data.unary_op->isPostfix = true;
         consume(__LINE__, lexer, TOKEN_INCREMENT, "Expected an increment operator", "parseUnaryExpression", arena, state, context);
-        consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseUnaryExpression", arena, state, context);
+
+        if (lexer->currentToken.type == TOKEN_SEMICOLON)
+        {
+            consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseUnaryExpression", arena, state, context);
+        }
         return postfixIncrement;
     }
 
@@ -3142,31 +3197,55 @@ ASTNode *parseForLoop(Lexer *lexer, ParsingContext *context, Arena *arena, Compi
     ASTNode *increment = NULL;
     ASTNode *body = NULL;
 
+    logMessage(LMI, "INFO", "Parser", "Parsing for loop initialization...");
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
         init = parseVarDeclaration(lexer, context, arena, state, globalTable);
     }
-    logASTNode(init);
+    init->print(init);
 
-    consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after for loop initialization.", "parseForLoop", arena, state, context);
-
+    logMessage(LMI, "INFO", "Parser", "Parsing for loop condition...");
     if (lexer->currentToken.type != TOKEN_SEMICOLON)
     {
         condition = parseExpression(lexer, context, arena, state, globalTable);
     }
-    logASTNode(condition);
+    condition->print(condition);
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` after for loop condition.", "parseForLoop", arena, state, context);
 
+    logMessage(LMI, "INFO", "Parser", "Parsing for loop increment...");
     if (lexer->currentToken.type != TOKEN_RPAREN)
     {
         increment = parseExpression(lexer, context, arena, state, globalTable);
     }
-    logASTNode(increment);
+    increment->print(increment);
 
     consume(__LINE__, lexer, TOKEN_RPAREN, "Expected `)` to end for loop.", "parseForLoop", arena, state, context);
 
-    DEBUG_BREAKPOINT;
+    logMessage(LMI, "INFO", "Parser", "Parsing for loop block...");
+    ASTNode *block = parseBlock(lexer, context, arena, state, globalTable);
+    if (block == NULL)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to parse for loop block.");
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                  "Failed to parse for loop block.", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
+    block->print(block);
+
+    logMessage(LMI, "INFO", "Parser", "Creating for loop node...");
+    ASTNode *forLoopNode = createForLoopNode(init, condition, increment, block, arena, state, lexer);
+    if (forLoopNode == NULL)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to create for loop node.");
+        NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                  "Failed to create for loop node.", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
+    forLoopNode->print(forLoopNode);
+
+    logMessage(LMI, "INFO", "Parser", "For loop node created successfully.");
+    return forLoopNode;
 }
 // </parseForLoop>
 
