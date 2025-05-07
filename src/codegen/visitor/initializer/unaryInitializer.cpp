@@ -86,6 +86,17 @@ namespace Cryo
             llvm::isa<llvm::GetElementPtrInst>(operand) ||
             operand->getType()->isPointerTy())
         {
+            if (llvm::isa<llvm::LoadInst>(operand))
+            {
+                // If it's a load instruction, get the pointer operand
+                llvm::LoadInst *loadInst = llvm::cast<llvm::LoadInst>(operand);
+                operand = loadInst->getPointerOperand();
+            }
+            else if (llvm::isa<llvm::GetElementPtrInst>(operand))
+            {
+                // If it's a GEP instruction, return it as is
+                return operand;
+            }
             return operand;
         }
 

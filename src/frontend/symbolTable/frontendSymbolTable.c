@@ -53,6 +53,9 @@ void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
         return;
     }
 
+    logMessage(LMI, "INFO", "SymbolTable", "Adding symbol to symbol table");
+    node->print(node);
+
     FrontendSymbol *symbol = astNodeToSymbol(node);
     if (!symbol)
     {

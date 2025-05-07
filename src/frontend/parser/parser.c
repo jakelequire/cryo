@@ -1130,7 +1130,7 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
         getNextToken(lexer, arena, state);
         return node;
     }
-    // Peek to see if the next token is `)` for a statement
+    // Peek to see if the next token is `)` to end a function call.
     if (nextToken == TOKEN_RPAREN)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing identifier as a statement");
@@ -1288,9 +1288,19 @@ ASTNode *parseUnaryExpression(Lexer *lexer, ParsingContext *context, Arena *aren
 
         // Parse the operand - must be an lvalue
         ASTNode *operand = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+        if (!operand)
+        {
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to parse operand for address-of operator", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
 
         // Create address-of node
         ASTNode *node = createUnaryExpr(TOKEN_AMPERSAND, operand, arena, state, lexer);
+        if (!node)
+        {
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to create address-of node", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
 
         // Set the result type to be a pointer to operand's type
         DataType *operandType = DTM->astInterface->getTypeofASTNode(operand);
@@ -1642,7 +1652,9 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         logMessage(LMI, "INFO", "Parser", "Variable declaration without initialization.");
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected ';' after variable declaration.", "parseVarDeclaration", arena, state, context);
         ASTNode *uninitVarDecl = createVarDeclarationNode(var_name, dataType, NULL, isMutable, isConstant, isReference, false, true, arena, state, lexer);
+        uninitVarDecl->data.varDecl->type = dataType;
         FEST->addSymbol(FEST, uninitVarDecl);
+        FEST->printTable(FEST);
         return uninitVarDecl;
     }
 
@@ -1693,9 +1705,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
             varType->container->type.arrayType->size = initializer->data.array->elementCount;
         }
     }
-
-    ASTNode *clone = varDeclNode->clone(varDeclNode);
-    clone->print(clone);
 
     FEST->addSymbol(FEST, varDeclNode);
 
@@ -2002,13 +2011,18 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     functionCallNode->data.functionCall->args = (ASTNode **)ARENA_ALLOC(arena,
                                                                         functionCallNode->data.functionCall->argCapacity * sizeof(ASTNode *));
 
+    char *functionNameToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
+    logMessage(LMI, "INFO", "Parser", "Function name: %s", functionNameToken);
+
+    // Consume function name
+    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
+            "parseFunctionCall", arena, state, context);
     // Look up function in global symbol table (NEW)
     const char *currentScopeID = getCurrentScopeID(context);
     DataType *functionTypeSymbol = DTM->symbolTable->getEntry(
         DTM->symbolTable,
         currentScopeID,
         functionName);
-
     if (functionTypeSymbol)
     {
         logMessage(LMI, "INFO", "Parser", "Function type symbol found.");
@@ -2024,14 +2038,9 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
     else
     {
         logMessage(LMI, "INFO", "Parser", "Function type symbol not found.");
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                  "Function undefined.", __LINE__, __FILE__, __func__)
     }
-
-    char *functionNameToken = strndup(lexer->currentToken.start, lexer->currentToken.length);
-    logMessage(LMI, "INFO", "Parser", "Function name: %s", functionNameToken);
-
-    // Consume function name
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier.",
-            "parseFunctionCall", arena, state, context);
 
     if (lexer->currentToken.type != TOKEN_LPAREN)
     {
@@ -2076,7 +2085,7 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
             {
                 char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
                 int stringLength = strlen(stringLiteral);
-                DataType *expectedType = DTM->primitives->createString();
+                DataType *expectedType = DTM->primitives->createStr();
                 ASTNode *arg = parsePrimaryExpression(lexer, context, arena, state, globalTable);
                 addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                 break;
@@ -2113,6 +2122,13 @@ ASTNode *parseFunctionCall(Lexer *lexer, ParsingContext *context,
                 {
                     logMessage(LMI, "INFO", "Parser", "Parsing identifier...");
                     ASTNode *arg = parsePrimaryExpression(lexer, context, arena, state, globalTable);
+                    if (!arg)
+                    {
+                        logMessage(LMI, "ERROR", "Parser", "Failed to parse identifier.");
+                        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL,
+                                  "Failed to parse identifier.", __LINE__, __FILE__, __func__)
+                        return NULL;
+                    }
                     addArgumentToFunctionCall(functionCallNode, arg, arena, state, globalTable);
                 }
                 break;
@@ -2436,7 +2452,6 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
     logMessage(LMI, "INFO", "Parser", "Parameter Type Resolved...");
 
     const char *paramTypeStr = paramType->debug->toString(paramType);
-    printf("TEST\n");
     logMessage(LMI, "INFO", "Parser", "<!> Parameter type: %s", paramTypeStr);
 
     // Consume data type token
@@ -2444,6 +2459,9 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
 
     // Create parameter node
     ASTNode *node = createParamNode(strdup(paramName), strdup(functionName), paramType, arena, state, lexer);
+    node->data.param->type = paramType;
+
+    FEST->addSymbol(FEST, node);
 
     return node;
 }
@@ -2474,12 +2492,6 @@ ASTNode **parseParameterList(Lexer *lexer, ParsingContext *context, Arena *arena
                 logMessage(LMI, "INFO", "Parser", "Adding parameter: %s", param->data.param->name);
                 paramListNode[paramCount] = param;
                 paramCount++;
-
-                if (globalTable)
-                {
-                    const char *functionScopeID = Generate64BitHashID(functionName);
-                    AddParamToSymbolTable(globalTable, param, functionScopeID);
-                }
             }
         }
         else
@@ -2743,7 +2755,7 @@ ASTNode *parseArgumentsWithExpectedType(Lexer *lexer, ParsingContext *context, D
         logMessage(LMI, "INFO", "Parser", "Argument is a string literal");
         char *stringLiteral = strndup(lexer->currentToken.start, lexer->currentToken.length);
         int stringLength = strlen(stringLiteral);
-        expectedType = DTM->primitives->createString();
+        expectedType = DTM->primitives->createStr();
         isLiteral = true;
         nodeType = NODE_LITERAL_EXPR;
 

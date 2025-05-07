@@ -74,8 +74,10 @@ namespace Cryo
         ASTNode *initializer = node->data.varDecl->initializer;
         bool noInitializer = node->data.varDecl->noInitializer;
 
-        if (noInitializer && !initializer)
+        if (noInitializer)
         {
+            logMessage(LMI, "INFO", "Visitor", "Variable %s has no initializer", varName.c_str());
+            varType->debug->printVerbosType(varType);
             handleNoInitializer(varName, varType);
             return;
         }

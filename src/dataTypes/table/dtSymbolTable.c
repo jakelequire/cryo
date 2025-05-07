@@ -75,6 +75,11 @@ DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, 
     }
 
     // Check if the entry is in the snapshot cache
+    if (!table->snapshot)
+    {
+        logMessage(LMI, "INFO", "DTM", "No snapshot available for symbol table");
+        return NULL;
+    }
     for (int i = 0; i < table->snapshot->entryCount; i++)
     {
         if (strcmp(table->snapshot->entries[i]->name, name) == 0)
@@ -450,7 +455,7 @@ DTMSymbolTableEntry *createDTMSymbolTableEntry(const char *scopeName, const char
 DataType *DTMSymbolTable_lookup(DTMSymbolTable *table, const char *name)
 {
     // Check if the name is a primitive type
-    logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
+    logMessage(LMI, "INFO", "DTM", "DTMSymbolTable_lookup Looking up entry in symbol table: %s", name);
     DataType *primitive = DTMParsePrimitive(name);
     if (primitive)
     {

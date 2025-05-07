@@ -1122,9 +1122,10 @@ char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output)
     // <VarName> [NAME] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<VarName>%s %s[%s]%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<VarName>%s %s[%s]%s %s{%s}%s%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -2081,7 +2082,14 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
         char *varName = strdup(node->data.varDecl->name);
         DataType *dataType = node->data.varDecl->type;
         ASTDebugNode *varDeclNode = createASTDebugNode("VarDecl", varName, dataType, line, column, indentLevel, node);
-        varDeclNode->value = node->data.varDecl->initializer;
+        if (node->data.varDecl->noInitializer)
+        {
+            varDeclNode->value = NULL;
+        }
+        else
+        {
+            varDeclNode->value = node->data.varDecl->initializer;
+        }
         output->nodes[output->nodeCount] = *varDeclNode;
         output->nodeCount++;
         break;

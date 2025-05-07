@@ -790,7 +790,7 @@ namespace Cryo
             }
 
             // If there's no initializer, we only need allocation
-            if (!varDecl->initializer)
+            if (!varDecl->noInitializer)
             {
                 return AllocaType::AllocaOnly;
             }

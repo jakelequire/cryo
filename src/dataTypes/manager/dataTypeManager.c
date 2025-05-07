@@ -513,13 +513,13 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
     }
     case NODE_STRING_LITERAL:
     {
-        DataType *stringType = DTM->primitives->createString();
+        DataType *stringType = DTM->primitives->createStr();
         return stringType;
         break;
     }
     case NODE_STRING_EXPRESSION:
     {
-        DataType *stringType = DTM->primitives->createString();
+        DataType *stringType = DTM->primitives->createStr();
         return stringType;
         break;
     }

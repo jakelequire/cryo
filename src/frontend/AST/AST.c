@@ -556,7 +556,7 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *
     if (!node)
         return NULL;
     int length = strlen(str);
-    node->data.literal->type = DTM->primitives->createString();
+    node->data.literal->type = DTM->primitives->createStr();
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
@@ -591,7 +591,14 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     node->data.varDecl->isIterator = isIterator;
     node->data.varDecl->noInitializer = noInitializer;
 
-    node->data.varDecl->initializer = initializer;
+    if (noInitializer)
+    {
+        node->data.varDecl->initializer = NULL;
+    }
+    else
+    {
+        node->data.varDecl->initializer = initializer;
+    }
 
     logMessage(LMI, "INFO", "AST", "Created variable declaration node for %s", var_name);
     return node;
