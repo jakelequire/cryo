@@ -37,6 +37,14 @@ extern "C" {
     function strnlen_export  (__str__: str, n: i32) -> i32;
     function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
 
+    function strdup          (___str__: str) -> str;
+    function strndup         (___str__: str, n: i32) -> str;
+    function strlen          (___str__: str) -> i32;
+    function strncat         (dest: str, src: str, n: i32) -> str;
+    function strcat          (dest: str, src: str) -> str;
+    function strncmp         (str1: str, str2: str, n: i32) -> i32;
+    function substr          (__str__: str, start: i32, length: i32) -> str;
+
     function c_readFile_export (filePath: str) -> str;
 }
 

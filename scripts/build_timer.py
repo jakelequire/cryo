@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 
 
 # Define the Cryo logo with proper line breaks
-cryo_logo = """                                                  
+cryo_logo = """
                   #              
                 = #^.            
       =        ^# # #.           
@@ -51,7 +51,7 @@ cryo_logo = """
       =        ^# # #.            _|   _ \   ` \   _ \  |  |   -_)   _| 
                 =.#<-           \__| \___/ _|_|_|  __/ _| _| \___| _|   
                   #                              |_|                     
-                                                  """
+"""
 
 def get_compiler_version():
     try:

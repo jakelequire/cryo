@@ -498,3 +498,33 @@ char *c_readFile_export(char *filename)
     printf("[C::DEBUG] File Contents: %s\n", strdup(buffer));
     return buffer;
 }
+
+const char *substr(const char *str, int32_t start, int32_t length)
+{
+    if (str == NULL || start < 0 || length <= 0)
+    {
+        return NULL;
+    }
+
+    int32_t str_length = strlen(str);
+    if (start >= str_length)
+    {
+        return NULL;
+    }
+
+    if (start + length > str_length)
+    {
+        length = str_length - start;
+    }
+
+    char *result = (char *)malloc(length + 1);
+    if (result == NULL)
+    {
+        return NULL;
+    }
+
+    memcpy(result, str + start, length);
+    result[length] = '\0';
+
+    return result;
+}

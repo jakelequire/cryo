@@ -65,6 +65,7 @@ namespace Cryo
                 argVal->getType()->isPointerTy())
             {
                 // Load the value if it's a pointer
+                context.getInstance().builder.CreateStore(argVal, argVal);
                 argVal = context.getInstance().builder.CreateLoad(argType, argVal);
             }
 

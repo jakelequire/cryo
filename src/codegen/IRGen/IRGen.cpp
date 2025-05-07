@@ -102,6 +102,14 @@ namespace Cryo
         std::string moduleName = context.module->getName().str();
         logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
 
+        // Verify the module
+        // logMessage(LMI, "INFO", "IRGeneration", "Verifying module...");
+        // if (llvm::verifyModule(*context.module, &llvm::errs()))
+        // {
+        //     logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
+        //     return -1;
+        // }
+
         std::cout << "\n\n";
         std::cout << "--------------------------------------------------------------------------------------------\n";
         std::cout << "Module: " << moduleName << "\n";
@@ -109,6 +117,8 @@ namespace Cryo
         context.getInstance().module->print(llvm::errs(), nullptr);
         std::cout << "--------------------------------------------------------------------------------------------\n";
         std::cout << "\n\n";
+
+        logMessage(LMI, "INFO", "IRGeneration", "Module verified successfully.");
 
         // Clone the module to avoid modifying the original
         logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");

@@ -91,6 +91,8 @@ namespace Cryo
                 paramType = llvm::Type::getVoidTy(context.getInstance().context);
             }
 
+
+
             // Create a symbol for each parameter for the symbol table
             std::string paramName = param->data.param->name;
             logMessage(LMI, "INFO", "Visitor", "Parameter Name: %s", paramName.c_str());
@@ -99,6 +101,16 @@ namespace Cryo
             llvm::Function::arg_iterator argIt = function->arg_begin();
             llvm::Value *arg = argIt++;
             arg->setName(paramName);
+
+            if (arg->getType()->isPointerTy())
+            {
+                // Store the pointer to the parameter
+                llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
+                    paramType, nullptr, paramName + ".alloca");
+                context.getInstance().builder.CreateStore(arg, allocaInst);
+                arg = allocaInst;
+            }
+
             AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
             IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
                 function, nullptr, paramType, paramName, allocaType);

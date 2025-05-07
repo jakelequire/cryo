@@ -2600,6 +2600,11 @@ ASTNode *parseArguments(Lexer *lexer, ParsingContext *context, Arena *arena, Com
             logMessage(LMI, "INFO", "Parser", "Argument is a dot notation");
             return parseDotNotation(lexer, context, arena, state, globalTable);
         }
+        if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
+        {
+            logMessage(LMI, "INFO", "Parser", "Argument is a function call");
+            return parseFunctionCall(lexer, context, argName, arena, state, globalTable);
+        }
         else
         {
             logMessage(LMI, "INFO", "Parser", "Argument is an identifier");
@@ -3457,14 +3462,15 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` for assignment.", "parseAssignment", arena, state, context);
     logMessage(LMI, "INFO", "Parser", "Variable name: %s", varNameCpy);
 
-    Symbol *sym = FindSymbol(globalTable, varNameCpy, getCurrentScopeID(context));
+    FrontendSymbol *sym = FEST->lookup(FEST, varNameCpy);
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find symbol.");
+        FEST->printTable(FEST);
         NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
                   "Failed to find symbol.", __LINE__, __FILE__, __func__)
     }
-    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
+    ASTNode *symbolNode = sym->node;
     ASTNode *oldValue = symbolNode;
     ASTNode *newValue = parseExpression(lexer, context, arena, state, globalTable);
 

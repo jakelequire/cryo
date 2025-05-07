@@ -322,12 +322,16 @@ FrontendSymbol *p_createParamDeclarationSymbol(ASTNode *node)
     }
 
     const char *paramName = node->data.param->name;
+    logMessage(LMI, "INFO", "SymbolTable", "Creating parameter symbol: %s", paramName);
     const char *paramID = "undef";
     ASTNode *paramNode = node;
     DataType *paramType = node->data.param->type;
-    ScopeType scopeType = FEST->currentScope->type;
+    paramType->debug->printVerbosType(paramType);
+    ScopeType scopeType = SCOPE_GLOBAL;
+    logMessage(LMI, "INFO", "SymbolTable", "Scope Type: %s", getScopeTypeString(scopeType));
     size_t lineNumber = node->metaData->line;
     size_t columnNumber = node->metaData->column;
+    logMessage(LMI, "INFO", "SymbolTable", "Line: %zu, Column: %zu", lineNumber, columnNumber);
     bool isDefined = true; // TODO: Determine if the parameter is defined
 
     FrontendSymbol *symbol = p_createSymbol(paramName, paramID, paramNode, paramType, scopeType, lineNumber, columnNumber, isDefined);
