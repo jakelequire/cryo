@@ -43,6 +43,7 @@ namespace Cryo
 
         logMessage(LMI, "INFO", "IRGeneration", "IR Generation Complete!");
 
+        root->print(root);
         // Complete the generation
         completeGeneration();
     }

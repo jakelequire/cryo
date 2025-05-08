@@ -57,6 +57,7 @@ typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 #define METHOD_CAPACITY 64
 #define MAX_IDENTIFIER_LENGTH 128
 #define MAX_INDEX_CAPACITY 10
+#define MAX_CHAR_ARRAY_CAPACITY 256
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
@@ -618,6 +619,7 @@ typedef struct AnnotationNode
 {
     const char *name;
     const char *value;
+    const char *valueArray[MAX_CHAR_ARRAY_CAPACITY];
 } AnnotationNode;
 
 typedef struct TypeDecl

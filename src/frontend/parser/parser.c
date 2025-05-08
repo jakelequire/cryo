@@ -667,6 +667,56 @@ ASTNode *parseStatement(Lexer *lexer, ParsingContext *context, Arena *arena, Com
 }
 // </parseStatement>
 
+ASTNode *handlePragmaArgs(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "Parser", "Handling pragma arguments...");
+
+    getNextToken(lexer, arena, state);
+
+    if (lexer->currentToken.type != TOKEN_LBRACKET)
+    {
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected `[` after `@pragma`", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
+
+    consume(__LINE__, lexer, TOKEN_LBRACKET, "Expected `[` after `@pragma`", "handlePragmaArgs", arena, state, context);
+
+    while (lexer->currentToken.type != TOKEN_RBRACKET)
+    {
+        if (lexer->currentToken.type == TOKEN_IDENTIFIER)
+        {
+            char *pragmaName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+            logMessage(LMI, "INFO", "Parser", "Pragma Name: %s", pragmaName);
+            getNextToken(lexer, arena, state);
+            context->addPragmaArg(context, pragmaName);
+        }
+        else if (lexer->currentToken.type == TOKEN_STRING_LITERAL)
+        {
+            // Remove the `"` from the string literal
+            char *pragmaValue = strndup(lexer->currentToken.start + 1, lexer->currentToken.length - 2);
+            logMessage(LMI, "INFO", "Parser", "Pragma Value: %s", pragmaValue);
+            getNextToken(lexer, arena, state);
+            context->addPragmaArg(context, pragmaValue);
+        }
+        else
+        {
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Expected identifier or string literal in pragma arguments", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
+
+        if (lexer->currentToken.type == TOKEN_COMMA)
+        {
+            getNextToken(lexer, arena, state);
+        }
+    }
+
+    consume(__LINE__, lexer, TOKEN_RBRACKET, "Expected `]` after pragma arguments", "handlePragmaArgs", arena, state, context);
+    logMessage(LMI, "INFO", "Parser", "Pragma arguments handled successfully");
+
+    return createAnnotationNode("pragma", "undef", arena, state, lexer);
+}
+
 ASTNode *parseAnnotation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
 {
     __STACK_FRAME__
@@ -677,6 +727,15 @@ ASTNode *parseAnnotation(Lexer *lexer, ParsingContext *context, Arena *arena, Co
     {
         consume(__LINE__, lexer, TOKEN_AT, "Expected '@' symbol", "parseAnnotation", arena, state, context);
         char *annotationName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        if (!annotationName)
+        {
+            NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Failed to allocate memory for annotation name", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
+        if (strcmp(annotationName, "pragma") == 0)
+        {
+            return handlePragmaArgs(lexer, context, arena, state, globalTable);
+        }
 
         getNextToken(lexer, arena, state);
 
@@ -2436,6 +2495,13 @@ ASTNode *parseParameter(Lexer *lexer, ParsingContext *context, Arena *arena, cha
 
     char *paramName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Parameter name: %s", strdup(paramName));
+
+    if (!DTM->validation->isIdentifierDataType(paramName))
+    {
+        logMessage(LMI, "ERROR", "Parser", "Parameter name cannot be a data type.");
+        NEW_ERROR(GDM, CRYO_ERROR_SYNTAX, CRYO_SEVERITY_FATAL, "Parameter name cannot be a data type.", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
 
     getNextToken(lexer, arena, state);
 

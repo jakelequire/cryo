@@ -325,7 +325,8 @@
     "compilerdefs.h": "c",
     "ast_verifier.h": "c",
     "test_runner.h": "c",
-    "frontendsymboltable.h": "c"
+    "frontendsymboltable.h": "c",
+    "attributes.h": "c"
   },
   "cmake.ignoreCMakeListsMissing": true,
   "C_Cpp.errorSquiggles": "enabled",

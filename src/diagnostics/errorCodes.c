@@ -95,6 +95,8 @@ const char *CryoErrorCodeToString(CryoErrorCode errorCode)
         return "INVALID TYPE";
     case CRYO_ERROR_UNDEFINED_TYPE:
         return "UNDEFINED TYPE";
+    case CRYO_ERROR_INVALID_TYPE_DECLARATION:
+        return "INVALID TYPE DECLARATION";
 
     // Linker Errors (300-399)
     case CRYO_ERROR_LINK_FAILED:

@@ -42,6 +42,7 @@
 #define MAX_ARGUMENTS 255
 #define MAX_USING_MODULES 16
 #define MAX_FILES 1024
+#define MAX_ARRAY_SIZE 128
 
 typedef struct Lexer Lexer;
 typedef struct ASTNode ASTNode;
@@ -99,6 +100,11 @@ typedef struct ParsingContext
     const char *currentNamespace;
     const char *namespaceScopeID;
     const char *functionName;
+
+    const char *pragmaArgs[MAX_ARRAY_SIZE];
+    int pragmaArgCount;
+    void (*addPragmaArg)(ParsingContext *context, const char *arg);
+    bool (*doesPragmaExist)(ParsingContext *context, const char *arg);
 
     ASTNode *programNodePtr;
 

@@ -19,7 +19,7 @@
 
 #define AST_OUTPUT_EXT ".txt"
 #define AST_OUTPUT_FILENAME "ast_debug"
-#define AST_DEBUG_VIEW_NODE_COUNT 1024 * 1024
+#define AST_DEBUG_VIEW_NODE_COUNT 10512 * 1024
 #define __LINE_AND_COLUMN__          \
     int line = node->metaData->line; \
     int column = node->metaData->column;
@@ -31,7 +31,7 @@
         return NULL;                                                                 \
     }
 
-#define BUFFER_CHAR_SIZE sizeof(char) * 10512 * 32
+#define BUFFER_CHAR_SIZE sizeof(char) * 10512 * 128
 #define MALLOC_BUFFER (char *)malloc(BUFFER_CHAR_SIZE)
 #define AST_BUFFER_SIZE 10512 * 1024
 #define MALLOC_AST_BUFFER (char *)malloc(sizeof(char) * AST_BUFFER_SIZE)
@@ -82,6 +82,11 @@ void logASTNodeDebugView(ASTNode *node)
 DebugASTOutput *createDebugASTOutput(const char *fileName, const char *filePath, const char *fileExt, const char *cwd)
 {
     DebugASTOutput *output = (DebugASTOutput *)malloc(sizeof(DebugASTOutput));
+    if (!output)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST debug output");
+        return NULL;
+    }
     output->short_fileName = strstr(fileName, "/");
     output->fileName = strdup(fileName);
     output->filePath = strdup(filePath);
@@ -99,6 +104,14 @@ ASTDebugNode *createASTDebugNode(const char *nodeType, const char *nodeName, Dat
     {
         logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST debug node");
         return NULL;
+    }
+    if (!line)
+    {
+        line = 0;
+    }
+    if (!column)
+    {
+        column = 0;
     }
     node->nodeType = nodeType;
     node->nodeName = strdup(nodeName);
@@ -1857,6 +1870,11 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     }
 
     CryoNodeType nodeType = node->metaData->type;
+    if (!nodeType)
+    {
+        logMessage(LMI, "ERROR", "AST", "Node type is NULL");
+        return;
+    }
 
     switch (nodeType)
     {
@@ -2318,9 +2336,11 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
             logMessage(LMI, "ERROR", "AST", "Failed to create AST debug node");
             return;
         }
-        paramNode->sourceNode = node;
+        logMessage(LMI, "DEBUG", "ASTDBG", "ParamNode: %s", paramNode->nodeName);
         output->nodes[output->nodeCount] = *paramNode;
+        logMessage(LMI, "DEBUG", "ASTDBG", "ParamNode: %s", output->nodes[output->nodeCount].nodeName);
         output->nodeCount++;
+        logMessage(LMI, "DEBUG", "ASTDBG", "ParamNode: %s", output->nodes[output->nodeCount - 1].nodeName);
         break;
     }
 

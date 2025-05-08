@@ -333,6 +333,7 @@ typedef struct DTMTypeValidation_t
     bool (*isSameType)(DataType *type1, DataType *type2);
     bool (*isCompatibleType)(DataType *type1, DataType *type2);
     bool (*isStringType)(DataType *type);
+    bool (*isIdentifierDataType)(const char *typeStr);
 } DTMTypeValidation;
 
 typedef struct DTMastInterface_t

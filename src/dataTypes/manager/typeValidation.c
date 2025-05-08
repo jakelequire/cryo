@@ -50,6 +50,31 @@ bool DTMTypeValidation_isStringType(DataType *type)
     return type->container->primitive == PRIM_STRING;
 }
 
+bool DTMTypeValidation_isIdentifierDataType(const char *typeStr)
+{
+    if (!typeStr)
+    {
+        fprintf(stderr, "[Data Type Manager] Error: Attempted to compare NULL data type\n");
+        CONDITION_FAILED;
+    }
+
+    if (cStringCompare(typeStr, "i8") == 0 ||
+        cStringCompare(typeStr, "i16") == 0 ||
+        cStringCompare(typeStr, "i32") == 0 ||
+        cStringCompare(typeStr, "i64") == 0 ||
+        cStringCompare(typeStr, "str") == 0 ||
+        cStringCompare(typeStr, "char") == 0 ||
+        cStringCompare(typeStr, "null") == 0 ||
+        cStringCompare(typeStr, "boolean") == 0 ||
+        cStringCompare(typeStr, "any") == 0 ||
+        cStringCompare(typeStr, "float") == 0 ||
+        cStringCompare(typeStr, "void") == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 DTMTypeValidation *createDTMTypeValidation(void)
 {
     DTMTypeValidation *validation = (DTMTypeValidation *)malloc(sizeof(DTMTypeValidation));
@@ -64,6 +89,7 @@ DTMTypeValidation *createDTMTypeValidation(void)
     validation->isSameType = DTMTypeValidation_isSameType;
     validation->isCompatibleType = DTMTypeValidation_isCompatibleType;
     validation->isStringType = DTMTypeValidation_isStringType;
+    validation->isIdentifierDataType = DTMTypeValidation_isIdentifierDataType;
 
     return validation;
 }

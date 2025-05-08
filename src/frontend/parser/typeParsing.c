@@ -941,16 +941,33 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
     logMessage(LMI, "INFO", "Parser", "Parsing type declaration...");
     consume(__LINE__, lexer, TOKEN_KW_TYPE, "Expected `type` keyword.", "parseTypeDeclaration", arena, state, context);
 
-    if (lexer->currentToken.type != TOKEN_IDENTIFIER)
+    if (lexer->currentToken.type == TOKEN_TYPE_I8 ||
+        lexer->currentToken.type == TOKEN_TYPE_I16 ||
+        lexer->currentToken.type == TOKEN_TYPE_I32 ||
+        lexer->currentToken.type == TOKEN_TYPE_I64 ||
+        lexer->currentToken.type == TOKEN_TYPE_I128 ||
+        lexer->currentToken.type == TOKEN_TYPE_STRING ||
+        lexer->currentToken.type == TOKEN_TYPE_FLOAT ||
+        lexer->currentToken.type == TOKEN_TYPE_BOOLEAN)
     {
-        parsingError("Expected an identifier.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
-        return NULL;
+        char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
+        logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
+        bool inCoreContext = context->doesPragmaExist(context, "core");
+        if (inCoreContext)
+        {
+            logMessage(LMI, "INFO", "Parser", "In core context, skipping type declaration.");
+        }
+        else
+        {
+            // If we not are in the core context, we don't want to parse primitive types as type declarations
+            NEW_ERROR(GDM, CRYO_ERROR_INVALID_TYPE_DECLARATION, CRYO_SEVERITY_FATAL,
+                      "Invalid type declaration. Primitive types cannot be declared as type aliases.", __LINE__, __FILE__, __func__);
+        }
     }
-
     // The name of the type definition
     char *typeName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
-    consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected type name.", "parseTypeDeclaration", arena, state, context);
+    getNextToken(lexer, arena, state);
 
     // Check for the `extends` keyword
     if (lexer->currentToken.type == TOKEN_KW_EXTENDS)
@@ -1115,6 +1132,21 @@ DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *
     {
         consume(__LINE__, lexer, TOKEN_KW_NULL, "Expected `null` keyword.", "parseForPrimitive", arena, state, context);
         return DTM->primitives->createNull();
+    }
+    else if (cStringCompare("str", currentTokenStr))
+    {
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected `str` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createString();
+    }
+    else if (cStringCompare("char", currentTokenStr))
+    {
+        consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected `char` keyword.", "parseForPrimitive", arena, state, context);
+        return DTM->primitives->createChar();
+    }
+    else if (cStringCompare("byte", currentTokenStr))
+    {
+        consume(__LINE__, lexer, TOKEN_KW_BYTE, "Expected `byte` keyword.", "parseForPrimitive", arena, state, context);
+        DEBUG_BREAKPOINT;
     }
     else
     {

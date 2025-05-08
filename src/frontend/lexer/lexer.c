@@ -68,6 +68,7 @@ KeywordToken keywords[] = {
     {"i32", TOKEN_TYPE_I32},
     {"i64", TOKEN_TYPE_I64},
     {"i128", TOKEN_TYPE_I128},
+    {"float", TOKEN_TYPE_FLOAT},
     {"auto", TOKEN_KW_AUTO},
     {"undefined", TOKEN_KW_UNDEFINED},
     {"pragma", TOKEN_KW_PRAGMA},

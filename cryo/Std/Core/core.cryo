@@ -1,5 +1,5 @@
 namespace Std.Core;
-@pragma "core"
+@pragma ["core"]
 
 // core.cryo
 //
@@ -52,6 +52,24 @@ extern "C" {
 // ======================================================== //
 //                       Core Types                         //
 // ======================================================== //
+
+// ---------------------------------------------------------------------------- 
+// These are the core types of Cryo.
+// The types below are commented out because they are defined in the compiler.
+// I only included them for reference.
+// ---------------------------------------------------------------------------- 
+
+// type char       = char;     // [Compiler Defined Type]
+// type i8         = i8;       // [Compiler Defined Type]
+// type i16        = i16;      // [Compiler Defined Type]
+// type i32        = i32;      // [Compiler Defined Type]
+// type i64        = i64;      // [Compiler Defined Type]
+// type i128       = i128;     // [Compiler Defined Type]
+// type float      = float;    // [Compiler Defined Type]
+// type boolean    = boolean;  // [Compiler Defined Type]
+// type void       = void;     // [Compiler Defined Type]
+// type null       = null;     // [Compiler Defined Type]
+// type any        = any;      // [Compiler Defined Type]
 
 struct Int {
     // The core Int properties.
@@ -128,24 +146,7 @@ implement type i32 {
 }
 
 
-// ---------------------------------------------------------------------------- 
-// These are the core types of Cryo.
-// The types below are commented out because they are defined in the compiler.
-// I only included them for reference.
-// ---------------------------------------------------------------------------- 
 
-/// type str        = str;      #[Compiler Defined Type]
-/// type char       = char;     #[Compiler Defined Type]
-/// type i8         = i8;       #[Compiler Defined Type]
-/// type i16        = i16;      #[Compiler Defined Type]
-/// type i32        = i32;      #[Compiler Defined Type]
-/// type i64        = i64;      #[Compiler Defined Type]
-/// type i128       = i128;     #[Compiler Defined Type]
-/// type float      = float;    #[Compiler Defined Type]
-/// type boolean    = boolean;  #[Compiler Defined Type]
-/// type void       = void;     #[Compiler Defined Type]
-/// type null       = null;     #[Compiler Defined Type]
-/// type any        = any;      #[Compiler Defined Type]
 
 // ======================================================== //
 //                    Core Functions                        //

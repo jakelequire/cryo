@@ -59,6 +59,31 @@ void ParsingContext_clearStringContextType(ParsingContext *context)
     }
 }
 
+void ParsingContext_addPragmaArg(ParsingContext *context, const char *arg)
+{
+    __STACK_FRAME__
+    if (context->pragmaArgCount >= MAX_ARGUMENTS)
+    {
+        fprintf(stderr, "Error: Too many pragma arguments\n");
+        return;
+    }
+    context->pragmaArgs[context->pragmaArgCount] = strdup(arg);
+    context->pragmaArgCount++;
+}
+
+bool ParsingContext_doesPragmaExist(ParsingContext *context, const char *arg)
+{
+    __STACK_FRAME__
+    for (int i = 0; i < context->pragmaArgCount; i++)
+    {
+        if (strcmp(context->pragmaArgs[i], arg) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 ParsingContext *createParsingContext(void)
 {
     __STACK_FRAME__
@@ -70,6 +95,10 @@ ParsingContext *createParsingContext(void)
     context->namespaceScopeID = (char *)malloc(sizeof(char) * 128);
     context->scopeLevel = 0;
     context->lastTokenCount = 0;
+
+    context->pragmaArgCount = 0;
+    context->addPragmaArg = ParsingContext_addPragmaArg;
+    context->doesPragmaExist = ParsingContext_doesPragmaExist;
 
     context->programNodePtr = NULL;
 
