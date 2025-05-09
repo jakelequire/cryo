@@ -19,6 +19,62 @@
 
 GlobalDiagnosticsManager *g_diagnosticsManager = NULL;
 
+ModuleFileCache *newModuleFileCache(const char *moduleName, const char *fileName, const char *fileContents)
+{
+    ModuleFileCache *cache = (ModuleFileCache *)malloc(sizeof(ModuleFileCache));
+    if (!cache)
+    {
+        logMessage(LMI, "ERROR", "Diagnostics", "Failed to allocate memory for ModuleFileCache");
+        return NULL;
+    }
+    cache->moduleName = moduleName;
+    cache->fileName = fileName;
+    cache->fileContents = fileContents;
+
+    return cache;
+}
+
+void GlobalDiagnosticsManager_addModuleFileCache(GlobalDiagnosticsManager *self, const char *moduleName,
+                                                 const char *fileName, const char *fileContents)
+{
+    if (self->moduleFileCacheCount >= self->moduleFileCacheCapacity)
+    {
+        self->moduleFileCacheCapacity *= 2;
+        self->moduleFileCache = (ModuleFileCache **)realloc(self->moduleFileCache, sizeof(ModuleFileCache *) * self->moduleFileCacheCapacity);
+    }
+    ModuleFileCache *cache = newModuleFileCache(moduleName, fileName, fileContents);
+    if (!cache)
+    {
+        logMessage(LMI, "ERROR", "Diagnostics", "Failed to create ModuleFileCache");
+        return;
+    }
+    self->moduleFileCache[self->moduleFileCacheCount++] = cache;
+}
+
+ModuleFileCache *GlobalDiagnosticsManager_getModuleFileCache(GlobalDiagnosticsManager *self, const char *moduleName)
+{
+    for (size_t i = 0; i < self->moduleFileCacheCount; i++)
+    {
+        if (strcmp(self->moduleFileCache[i]->moduleName, moduleName) == 0)
+        {
+            return self->moduleFileCache[i];
+        }
+    }
+    return NULL;
+}
+
+void GlobalDiagnosticsManager_printModuleFileCache(GlobalDiagnosticsManager *self)
+{
+    printf("------------------- [ Module File Cache ] -------------------\n");
+    for (size_t i = 0; i < self->moduleFileCacheCount; i++)
+    {
+        ModuleFileCache *cache = self->moduleFileCache[i];
+        printf("Module Name: %s\n", cache->moduleName);
+        printf("File Name: %s\n", cache->fileName);
+        printf("---------------------------------------------------------------\n");
+    }
+}
+
 void FrontendState_clearLexer(FrontendState *self)
 {
     if (self)
@@ -253,20 +309,7 @@ void GlobalDiagnosticsManager_reportDiagnostic(GlobalDiagnosticsManager *self, C
     }
 
     // Add error to the list
-    if (self->errors == NULL)
-    {
-        self->errorCapacity = ERROR_CAPACITY;
-        self->errors = (DiagnosticEntry **)malloc(sizeof(DiagnosticEntry *) * self->errorCapacity);
-    }
-    else if (self->errorCount >= self->errorCapacity)
-    {
-        // Double capacity if needed
-        self->errorCapacity *= 2;
-        self->errors = (DiagnosticEntry **)realloc(self->errors,
-                                                   sizeof(DiagnosticEntry *) * self->errorCapacity);
-    }
-
-    self->errors[self->errorCount++] = entry;
+    self->addError(self, entry);
 
     // Print the `FrontendState_printErrorScreen`
     if (self->frontendState != NULL)
@@ -289,6 +332,69 @@ void GlobalDiagnosticsManager_reportBackendDiagnostic(GlobalDiagnosticsManager *
 {
     // TODO: Implement this function
     DEBUG_BREAKPOINT;
+}
+
+void GlobalDiagnosticsManager_reportConditionFailed(GlobalDiagnosticsManager *self,
+                                                    CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                                    const char *message, const char *function, const char *file, int line)
+{
+    DiagnosticEntry *entry = newDiagnosticEntry(errorCode, NULL, NULL);
+    entry->isInternalError = true;
+    entry->isCryoError = false;
+    entry->internalErr = newCompilerInternalError(
+        (char *)function, (char *)file, line, (char *)message);
+    entry->severity = CRYO_SEVERITY_INTERNAL;
+    // Add error to the list
+    self->addError(self, entry);
+    // Print the stack trace
+    self->printStackTrace(self);
+    // Print the error message
+    if (self->frontendState != NULL)
+    {
+        self->frontendState->printErrorScreen(self->frontendState, errorCode, severity,
+                                              message, file, function, line);
+    }
+    else
+    {
+        printf("Error: FrontendState is NULL\n");
+    }
+    // Exit the program
+    exit(EXIT_FAILURE);
+}
+
+void GlobalDiagnosticsManager_reportDebugBreakpoint(GlobalDiagnosticsManager *self,
+                                                    const char *message, const char *function, const char *file, int line)
+{
+    // TODO: Implement this function
+    // - This function is called when a debug breakpoint is hit.
+    // - It should print the current position of the program without the stack trace.
+
+    DiagnosticEntry *entry = newDiagnosticEntry(CRYO_ERROR_DEBUG_BREAKPOINT, NULL, NULL);
+    entry->isInternalError = true;
+    entry->isCryoError = false;
+    entry->internalErr = newCompilerInternalError(
+        (char *)function, (char *)file, line, (char *)message);
+    entry->severity = CRYO_SEVERITY_INTERNAL;
+
+    // Add error to the list
+    self->addError(self, entry);
+
+    // Print the stack trace
+    self->printStackTrace(self);
+
+    // Print the error message
+    if (self->frontendState != NULL)
+    {
+        self->frontendState->printErrorScreen(self->frontendState, CRYO_ERROR_DEBUG_BREAKPOINT,
+                                              CRYO_SEVERITY_INTERNAL, message, file, function, line);
+    }
+    else
+    {
+        printf("Error: FrontendState is NULL\n");
+    }
+
+    // Exit the program
+    exit(EXIT_FAILURE);
 }
 
 void GlobalDiagnosticsManager_printDiagnostics(GlobalDiagnosticsManager *self)
@@ -372,6 +478,19 @@ void GlobalDiagnosticsManager_setCompilationStage(GlobalDiagnosticsManager *self
     }
 }
 
+void GlobalDiagnosticsManager_addError(GlobalDiagnosticsManager *self, DiagnosticEntry *entry)
+{
+    if (self->errorCount >= self->errorCapacity)
+    {
+        // Double capacity if needed
+        self->errorCapacity *= 2;
+        self->errors = (DiagnosticEntry **)realloc(self->errors,
+                                                   sizeof(DiagnosticEntry *) * self->errorCapacity);
+    }
+
+    self->errors[self->errorCount++] = entry;
+}
+
 __C_CONSTRUCTOR__
 void initGlobalDiagnosticsManager(void)
 {
@@ -380,7 +499,16 @@ void initGlobalDiagnosticsManager(void)
         g_diagnosticsManager = (GlobalDiagnosticsManager *)malloc(sizeof(GlobalDiagnosticsManager));
         GDM->errorCount = 0;
         GDM->errors = NULL;
+        GDM->errorCapacity = 0;
+        GDM->addError = GlobalDiagnosticsManager_addError;
         GDM->stackTrace = newStackTrace();
+
+        GDM->moduleFileCacheCount = 0;
+        GDM->moduleFileCacheCapacity = 16;
+        GDM->moduleFileCache = (ModuleFileCache **)malloc(sizeof(ModuleFileCache *) * GDM->moduleFileCacheCapacity);
+        GDM->addModuleFileCache = GlobalDiagnosticsManager_addModuleFileCache;
+        GDM->getModuleFileCache = GlobalDiagnosticsManager_getModuleFileCache;
+        GDM->printModuleFileCache = GlobalDiagnosticsManager_printModuleFileCache;
 
         GDM->stage = COMPILATION_STAGE_NONE;
         GDM->setCompilationStage = GlobalDiagnosticsManager_setCompilationStage;
@@ -394,6 +522,10 @@ void initGlobalDiagnosticsManager(void)
 
         GDM->reportDiagnostic = GlobalDiagnosticsManager_reportDiagnostic;
         GDM->reportInternalError = GlobalDiagnosticsManager_reportInternalError;
+        GDM->reportBackendDiagnostic = GlobalDiagnosticsManager_reportBackendDiagnostic;
+        GDM->reportConditionFailed = GlobalDiagnosticsManager_reportConditionFailed;
+        GDM->reportDebugBreakpoint = GlobalDiagnosticsManager_reportDebugBreakpoint;
+
         GDM->hasFatalErrors = GlobalDiagnosticsManager_hasFatalErrors;
         GDM->printDiagnostics = GlobalDiagnosticsManager_printDiagnostics;
     }

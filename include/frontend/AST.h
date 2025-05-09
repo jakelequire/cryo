@@ -103,7 +103,7 @@ typedef struct CryoMetaData
     int line;               // Line number for error reporting
     int column;             // Column number for error reporting
 
-    char *moduleName; // Current Module
+    const char *moduleName; // Current Module
     Position position;
 } CryoMetaData;
 

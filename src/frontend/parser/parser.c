@@ -112,6 +112,7 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
     buildASTTreeLinks(program);
 
     DTM->symbolTable->printTable(DTM->symbolTable);
+    GDM->printModuleFileCache(GDM);
 
     CompleteFrontend(globalTable);
     return program;
@@ -1006,6 +1007,8 @@ ASTNode *parseNamespace(Lexer *lexer, ParsingContext *context, Arena *arena, Com
         createNamespaceScope(context, namespaceName);
         FEST->enterNamespace(FEST, namespaceName);
     }
+
+    GDM->addModuleFileCache(GDM, namespaceName, lexer->fileName, lexer->source);
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon", "parseNamespace", arena, state, context);
 

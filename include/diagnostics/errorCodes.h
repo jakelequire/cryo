@@ -55,6 +55,7 @@ extern "C"
         CRYO_ERROR_UNEXPECTED_TOKEN = 101,
         CRYO_ERROR_UNTERMINATED_STRING = 102,
         CRYO_ERROR_INVALID_CHARACTER = 103,
+        CRYO_ERROR_UNKNOWN_NODE_TYPE = 104,
 
         // Semantic Errors (200-299)
         CRYO_ERROR_UNDEFINED_SYMBOL = 200,
@@ -98,6 +99,8 @@ extern "C"
         CRYO_ERROR_PANIC = 902,
         CRYO_ERROR_NULL_AST_NODE = 903,
         CRYO_ERROR_INTEGER_OVERFLOW = 904,
+        CRYO_ERROR_INVALID_MEMORY_ACCESS = 905,
+        CRYO_ERROR_DEBUG_BREAKPOINT = 906,
     } CryoErrorCode;
 
     // Error severity levels

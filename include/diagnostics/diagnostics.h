@@ -97,34 +97,6 @@ typedef struct FrontendState_t
     struct FrontendState_t *(*takeSnapshot)(struct FrontendState_t *self);
 } FrontendState;
 
-typedef struct GlobalDiagnosticsManager
-{
-    // The current compilation stage
-    CompilationStage stage;
-    void (*setCompilationStage)(GlobalDiagnosticsManager *self, CompilationStage stage);
-
-    DiagnosticEntry **errors; // Array of error entries
-    size_t errorCount;        // Number of errors
-    size_t errorCapacity;     // Capacity of the error array
-
-    StackTrace *stackTrace; // The current stack trace
-
-    FrontendState *frontendState; // The current frontend state
-    void (*initFrontendState)(GlobalDiagnosticsManager *self);
-    void (*debugPrintCurrentState)(GlobalDiagnosticsManager *self);
-
-    void (*reportDiagnostic)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
-                             const char *message, const char *function, const char *file, int line);
-    void (*reportInternalError)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
-                                const char *message, const char *function, const char *file, int line);
-    bool (*hasFatalErrors)(GlobalDiagnosticsManager *self);
-    void (*printDiagnostics)(GlobalDiagnosticsManager *self);
-
-    void (*createStackFrame)(GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
-
-    void (*printStackTrace)(GlobalDiagnosticsManager *self);
-} GlobalDiagnosticsManager;
-
 typedef struct DiagnosticEntry
 {
     CryoErrorCode err;
@@ -168,6 +140,57 @@ typedef struct StackTrace
     _NEW_METHOD(void, push, StackFrame *frame);
 } StackTrace;
 
+typedef struct ModuleFileCache_t
+{
+    const char *moduleName;
+    const char *fileName;
+    const char *fileContents;
+} ModuleFileCache;
+
+typedef struct GlobalDiagnosticsManager
+{
+    // The current compilation stage
+    CompilationStage stage;
+    void (*setCompilationStage)(GlobalDiagnosticsManager *self, CompilationStage stage);
+
+    DiagnosticEntry **errors; // Array of error entries
+    size_t errorCount;        // Number of errors
+    size_t errorCapacity;     // Capacity of the error array
+
+    ModuleFileCache **moduleFileCache; // Array of module file caches
+    size_t moduleFileCacheCount;       // Number of module file caches
+    size_t moduleFileCacheCapacity;    // Capacity of the module file cache array
+    void (*addModuleFileCache)(GlobalDiagnosticsManager *self, const char *moduleName,
+                               const char *fileName, const char *fileContents);
+    ModuleFileCache *(*getModuleFileCache)(GlobalDiagnosticsManager *self, const char *moduleName);
+    void (*printModuleFileCache)(GlobalDiagnosticsManager *self);
+
+    void (*addError)(GlobalDiagnosticsManager *self, DiagnosticEntry *entry);
+
+    StackTrace *stackTrace; // The current stack trace
+
+    FrontendState *frontendState; // The current frontend state
+    void (*initFrontendState)(GlobalDiagnosticsManager *self);
+    void (*debugPrintCurrentState)(GlobalDiagnosticsManager *self);
+
+    bool (*hasFatalErrors)(GlobalDiagnosticsManager *self);
+    void (*printDiagnostics)(GlobalDiagnosticsManager *self);
+    void (*createStackFrame)(GlobalDiagnosticsManager *self, char *functionName, char *filename, int line);
+    void (*printStackTrace)(GlobalDiagnosticsManager *self);
+
+    void (*reportDiagnostic)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                             const char *message, const char *function, const char *file, int line);
+    void (*reportInternalError)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                const char *message, const char *function, const char *file, int line);
+    void (*reportBackendDiagnostic)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                    const char *moduleName, ASTNode *failedNode,
+                                    const char *message, const char *function, const char *file, int line);
+    void (*reportConditionFailed)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                  const char *message, const char *function, const char *file, int line);
+    void (*reportDebugBreakpoint)(GlobalDiagnosticsManager *self,
+                                  const char *message, const char *function, const char *file, int line);
+} GlobalDiagnosticsManager;
+
 // =============================================================================
 // Initialization & Cleanup
 
@@ -186,6 +209,11 @@ StackTrace *newStackTrace(void);
 void FrontendState_printErrorScreen(struct FrontendState_t *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
                                     const char *message, const char *compiler_file, const char *compiler_function, int compiler_line);
 
+void GlobalDiagnosticsManager_printASTErrorScreen(GlobalDiagnosticsManager *self,
+                                                  CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                                  const char *moduleName, ASTNode *failedNode,
+                                                  const char *message,
+                                                  const char *compiler_file, const char *compiler_function, int compiler_line);
 // =============================================================================
 // Implementation Methods
 
@@ -228,6 +256,31 @@ const char *CryoErrorSeverityToString(CryoErrorSeverity severity);
 // FN: Function Name (COMPILER)
 #define NEW_ERROR(GDM, ERR, SEV, MSG, LN, FL, FN) \
     GDM->reportDiagnostic(GDM, ERR, SEV, MSG, FN, FL, LN);
+
+// GDM: Global Diagnostics Manager
+// ERR: Error Code
+// SEV: Error Severity
+// MSG: Error Message
+// NODE: AST Node
+// LN: Line Number (COMPILER)
+// FL: File Name (COMPILER)
+// FN: Function Name (COMPILER)
+#define NEW_BACKEND_ERROR(GDM, ERR, SEV, MSG, NODE, LN, FL, FN) \
+    GDM->reportBackendDiagnostic(GDM, ERR, SEV, MSG, NODE, FN, FL, LN);
+
+// GDM: Global Diagnostics Manager
+// ERR: Error Code
+// SEV: Error Severity
+// MSG: Error Message
+// LN: Line Number (COMPILER)
+// FL: File Name (COMPILER)
+// FN: Function Name (COMPILER)
+#define DIAG_CONDITION_FAILED(GDM, ERR, SEV, MSG, LN, FL, FN) \
+    GDM->reportConditionFailed(GDM, ERR, SEV, MSG, FN, FL, LN);
+
+// GDM: Global Diagnostics Manager
+#define DIAG_DEBUG_BREAKPOINT(GDM, LN, FL, FN) \
+    GDM->reportDebugBreakpoint(GDM, LN, FL, FN);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================

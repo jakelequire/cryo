@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "symbolTable/cInterfaceTable.h"
+#include "frontend/frontendSymbolTable.h"
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
 
@@ -56,10 +57,14 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         return NULL;
     }
 
-    const char *moduleName = GetNamespace(state->globalTable);
+    const char *moduleName = FEST->currentNamespace;
     if (moduleName)
     {
         node->metaData->moduleName = (char *)moduleName;
+    }
+    else
+    {
+        node->metaData->moduleName = "NULL";
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
@@ -228,6 +233,8 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         break;
     default:
         logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
+        NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN_NODE_TYPE, CRYO_SEVERITY_FATAL,
+                  "Unknown Node Type", __LINE__, __FILE__, __func__);
         return NULL;
     }
 

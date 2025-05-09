@@ -574,3 +574,11 @@ void FrontendState_printErrorScreen(struct FrontendState_t *self, CryoErrorCode 
     printf("%s%s%s%s\n\n", LIGHT_RED, BOX_BOTTOM_LEFT, BOX_HORIZONTAL, COLOR_RESET);
     printf("\n\n");
 }
+
+void GlobalDiagnosticsManager_printASTErrorScreen(GlobalDiagnosticsManager *self,
+                                                  CryoErrorCode errorCode, CryoErrorSeverity severity,
+                                                  const char *moduleName, ASTNode *failedNode,
+                                                  const char *message,
+                                                  const char *compiler_file, const char *compiler_function, int compiler_line)
+{
+}

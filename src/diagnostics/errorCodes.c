@@ -37,6 +37,8 @@ const char *CryoErrorCodeToString(CryoErrorCode errorCode)
         return "UNTERMINATED STRING";
     case CRYO_ERROR_INVALID_CHARACTER:
         return "INVALID CHARACTER";
+    case CRYO_ERROR_UNKNOWN_NODE_TYPE:
+        return "UNKNOWN NODE TYPE";
 
     // Semantic Errors (200-299)
     case CRYO_ERROR_UNDEFINED_SYMBOL:
@@ -117,6 +119,10 @@ const char *CryoErrorCodeToString(CryoErrorCode errorCode)
         return "NULL AST NODE";
     case CRYO_ERROR_INTEGER_OVERFLOW:
         return "INTEGER OVERFLOW";
+    case CRYO_ERROR_INVALID_MEMORY_ACCESS:
+        return "INVALID MEMORY ACCESS";
+    case CRYO_ERROR_DEBUG_BREAKPOINT:
+        return "DEBUG BREAKPOINT";
 
     default:
         return "UNKNOWN ERROR CODE";

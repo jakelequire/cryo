@@ -1873,6 +1873,8 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     if (!nodeType)
     {
         logMessage(LMI, "ERROR", "AST", "Node type is NULL");
+        const char *moduleName = node->metaData->moduleName;
+        logMessage(LMI, "ERROR", "AST", "Module Name: %s", moduleName);
         return;
     }
 
