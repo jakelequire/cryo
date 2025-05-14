@@ -1843,6 +1843,7 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     }
 
     logMessage(LMI, "INFO", "Parser", "Function Return Type: %s", returnType->debug->toString(returnType));
+    DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
 
     // Initialize the function symbol
     if (isGeneric)
@@ -1852,6 +1853,11 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
     else
     {
         InitFunctionDeclaration(globalTable, functionName, namespaceScopeID, params, paramCount, returnType); // Global Symbol Table
+        DTM->symbolTable->addEntry(
+            DTM->symbolTable,
+            functionScopeID,
+            functionName,
+            functionType);
     }
 
     // Ensure the next token is `{` for the function block
@@ -1883,7 +1889,6 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
         return NULL;
     }
 
-    DataType *functionType = DTM->functionTypes->createFunctionType(paramTypes, paramCount, returnType);
     ASTNode *functionNode = createFunctionNode(visibility, strdup(functionName), params, functionBlock, functionType, arena, state, lexer);
     functionNode->data.functionDecl->type = functionType;
 
@@ -1906,12 +1911,6 @@ ASTNode *parseFunctionDeclaration(Lexer *lexer, ParsingContext *context, CryoVis
             functionNode->data.functionDecl->isVariadic = true;
         }
     }
-
-    DTM->symbolTable->addEntry(
-        DTM->symbolTable,
-        functionDefNode->data.functionDecl->parentScopeID,
-        functionDefNode->data.functionDecl->name,
-        functionType);
 
     CompleteFunctionDeclaration(globalTable, functionNode, functionName, namespaceScopeID); // Global Symbol Table
     context->inGenericContext = false;                                                      // Reset generic context flag in ParsingContext

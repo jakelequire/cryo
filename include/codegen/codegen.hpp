@@ -242,6 +242,18 @@ namespace Cryo
         llvm::Value *generatePrimitiveValue(ASTNode *node, PrimitiveDataType primitiveType);
         llvm::Value *createIntObjectFromLiteral(ASTNode *node, DataType *literalDataType);
         bool callConstructor(std::vector<llvm::Value *> ctorArg, const std::string &typeName);
+
+    private: // Helper methods for binary expression generation
+        llvm::Value *loadIfPointerToValue(llvm::Value *val, const char *name);
+        std::pair<llvm::Value *, llvm::Value *> handlePointerArithmetic(
+            llvm::Value *left, llvm::Value *right, CryoOperatorType opType, const char *opName);
+        llvm::Value *handleNullComparison(llvm::Value *lhs, llvm::Value *rhs,
+                                          CryoOperatorType opType, ASTNode *node);
+        llvm::Value *handleArithmeticOp(llvm::Value *lhs, llvm::Value *rhs, CryoOperatorType opType);
+        llvm::Value *handleBitwiseOp(llvm::Value *lhs, llvm::Value *rhs, CryoOperatorType opType);
+        llvm::Value *handleComparisonOp(llvm::Value *lhs, llvm::Value *rhs, CryoOperatorType opType);
+        llvm::Value *handlePointerArithmeticOp(llvm::Value *left, llvm::Value *right,
+                                               CryoOperatorType opType);
     };
 
 } // namespace Cryo

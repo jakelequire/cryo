@@ -147,6 +147,17 @@ namespace Cryo
         return nullptr;
     }
 
+    bool IRSymbolTable::updateVariable(const std::string &name, llvm::Value *value)
+    {
+        auto varSymbol = findVariable(name);
+        if (varSymbol)
+        {
+            varSymbol->value = value;
+            return true;
+        }
+        return false;
+    }
+
     IRVariableSymbol *IRSymbolTable::findLocalVariable(const std::string &name)
     {
         if (scopeStack.empty())

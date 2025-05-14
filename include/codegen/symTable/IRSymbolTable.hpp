@@ -159,6 +159,7 @@ namespace Cryo
 
         // Symbol management
         bool addVariable(const IRVariableSymbol &symbol);
+        bool updateVariable(const std::string &name, llvm::Value *value);
         bool addFunction(const IRFunctionSymbol &symbol);
         bool addExternFunction(const IRFunctionSymbol &symbol);
         bool addType(const IRTypeSymbol &symbol);
