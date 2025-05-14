@@ -109,27 +109,22 @@ namespace Cryo
         if (!node || !node->data.bin_op)
             return;
 
-        // Visit left and right operands first
-        visit(node->data.bin_op->left);
-        visit(node->data.bin_op->right);
-
-        // Get the values generated for left and right operands
-        llvm::Value *left = getLLVMValue(node->data.bin_op->left);
-        llvm::Value *right = getLLVMValue(node->data.bin_op->right);
-
-        if (!left || !right)
-            return;
-
-        llvm::Value *result = nullptr;
-        switch (node->data.bin_op->op)
+        if (node->metaData->type != NODE_BINARY_EXPR)
         {
-        case OPERATOR_ADD:
-            result = builder.CreateAdd(left, right, "addtmp");
-            break;
-        case OPERATOR_SUB:
-            result = builder.CreateSub(left, right, "subtmp");
-            break;
-            // Add other operators as needed
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Node is not a binary expression");
+            return;
+        }
+
+        llvm::Value *result = context.getInstance().initializer->generateBinaryExpr(node);
+        if (result)
+        {
+            logMessage(LMI, "DEBUG", "CodeGenVisitor", "Binary expression result: %p", result);
+            // Store the result properly so it can be retrieved
+            lastValue = result;
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "CodeGenVisitor", "Failed to generate binary expression");
         }
     }
 

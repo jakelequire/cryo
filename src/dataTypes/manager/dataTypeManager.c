@@ -434,7 +434,20 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
         CONDITION_FAILED;
         break;
     case NODE_BINARY_EXPR:
+    {
+        DataType *leftType = DTMastInterface_getTypeofASTNode(node->data.bin_op->left);
+        DataType *rightType = DTMastInterface_getTypeofASTNode(node->data.bin_op->right);
+        if (leftType && rightType)
+        {
+            return leftType;
+        }
+        else
+        {
+            fprintf(stderr, "Invalid Node Type! {Binary Expression}\n");
+            CONDITION_FAILED;
+        }
         break;
+    }
     case NODE_UNARY_EXPR:
     {
         DataType *exprType = DTMastInterface_getTypeofASTNode(node->data.unary_op->expression);

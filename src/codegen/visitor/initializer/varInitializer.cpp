@@ -321,13 +321,22 @@ namespace Cryo
     {
         llvm::Value *initVal = nullptr;
 
+        // Log the initializer type before processing
+        logMessage(LMI, "DEBUG", "Visitor", "Processing initializer of type: %s",
+                   CryoNodeTypeToString(initializer->metaData->type));
+
         if (initializer->metaData->type == NODE_LITERAL_EXPR &&
             initializer->data.literal->literalType == LITERAL_STRING &&
             initializer->data.literal->type->container->primitive == PRIM_STR)
         {
-
             logMessage(LMI, "INFO", "Visitor", "String literal initializer detected");
             initVal = context.getInstance().initializer->generateStringInitializer(initializer);
+        }
+        else if (initializer->metaData->type == NODE_BINARY_EXPR)
+        {
+            logMessage(LMI, "DEBUG", "Visitor", "Binary expression initializer detected with operator: %s",
+                       CryoOperatorTypeToString(initializer->data.bin_op->op));
+            initVal = getLLVMValue(initializer);
         }
         else
         {
@@ -344,8 +353,13 @@ namespace Cryo
                 initVal = convertInitializerType(initVal, llvmType);
             }
 
-            // Store the initializer value
-            builder.CreateStore(initVal, allocaInst);
+            // Store the initializer value with logging
+            llvm::StoreInst *storeInst = builder.CreateStore(initVal, allocaInst);
+            logMessage(LMI, "DEBUG", "Visitor", "Stored value %p in alloca %p", initVal, allocaInst);
+        }
+        else
+        {
+            logMessage(LMI, "ERROR", "Visitor", "Failed to get initializer value");
         }
     }
 

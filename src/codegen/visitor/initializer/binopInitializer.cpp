@@ -50,9 +50,41 @@ namespace Cryo
     {
         if (left->getType()->isPointerTy() && right->getType()->isPointerTy())
         {
-            // Can't add/subtract/etc. two pointers directly
-            logMessage(LMI, "ERROR", "Initializer", "Cannot perform %s on two pointers", opName);
-            return {nullptr, nullptr};
+            // Both are pointers, dereference them
+            logMessage(LMI, "INFO", "Initializer", "Both operands are pointers, dereferencing for arithmetic operation");
+
+            // Dereference left pointer
+            if (llvm::AllocaInst *allocaInstLeft = llvm::dyn_cast<llvm::AllocaInst>(left))
+            {
+                llvm::Type *allocaTypeLeft = allocaInstLeft->getAllocatedType();
+                left = context.getInstance().builder.CreateLoad(allocaTypeLeft, left, "deref_left");
+            }
+            else
+            {
+                // Throw an error if not an alloca instruction
+                logMessage(LMI, "ERROR", "Initializer", "Left operand is not an alloca instruction");
+                return {nullptr, nullptr};
+            }
+
+            // Dereference right pointer
+            if (llvm::AllocaInst *allocaInstRight = llvm::dyn_cast<llvm::AllocaInst>(right))
+            {
+                llvm::Type *allocaTypeRight = allocaInstRight->getAllocatedType();
+                right = context.getInstance().builder.CreateLoad(allocaTypeRight, right, "deref_right");
+            }
+            else
+            {
+                // Throw an error if not an alloca instruction
+                logMessage(LMI, "ERROR", "Initializer", "Right operand is not an alloca instruction");
+                return {nullptr, nullptr};
+            }
+
+            // Log the dereferenced types
+            logMessage(LMI, "INFO", "Initializer", "After dereferencing - LHS type: %d, RHS type: %d",
+                       left->getType()->getTypeID(), right->getType()->getTypeID());
+
+            // Continue with the dereferenced values
+            return {left, right};
         }
 
         // If the right operand is a pointer, swap them
@@ -190,21 +222,41 @@ namespace Cryo
         lhs = loadIfPointerToValue(lhs, "lhs_arith_load");
         rhs = loadIfPointerToValue(rhs, "rhs_arith_load");
 
+        // Add logging to show types after loading
+        logMessage(LMI, "INFO", "Initializer", "After loading - LHS type: %s, RHS type: %s",
+                   lhs->getType()->getTypeID() == llvm::Type::IntegerTyID ? "integer" : "other",
+                   rhs->getType()->getTypeID() == llvm::Type::IntegerTyID ? "integer" : "other");
+
+        llvm::Value *result = nullptr;
         switch (opType)
         {
         case OPERATOR_ADD:
-            return context.getInstance().builder.CreateAdd(lhs, rhs, "add");
+            result = context.getInstance().builder.CreateAdd(lhs, rhs, "add");
+            logMessage(LMI, "DEBUG", "Initializer", "Created ADD operation: %p with result: %d",
+                       result, llvm::dyn_cast<llvm::ConstantInt>(result) ? llvm::dyn_cast<llvm::ConstantInt>(result)->getSExtValue() : -1);
+            break;
         case OPERATOR_SUB:
-            return context.getInstance().builder.CreateSub(lhs, rhs, "sub");
+            result = context.getInstance().builder.CreateSub(lhs, rhs, "sub");
+            logMessage(LMI, "DEBUG", "Initializer", "Created SUB operation: %p", result);
+            break;
         case OPERATOR_MUL:
-            return context.getInstance().builder.CreateMul(lhs, rhs, "mul");
+            result = context.getInstance().builder.CreateMul(lhs, rhs, "mul");
+            logMessage(LMI, "DEBUG", "Initializer", "Created MUL operation: %p", result);
+            break;
         case OPERATOR_DIV:
-            return context.getInstance().builder.CreateSDiv(lhs, rhs, "div");
+            result = context.getInstance().builder.CreateSDiv(lhs, rhs, "div");
+            logMessage(LMI, "DEBUG", "Initializer", "Created DIV operation: %p", result);
+            break;
         case OPERATOR_MOD:
-            return context.getInstance().builder.CreateSRem(lhs, rhs, "mod");
+            result = context.getInstance().builder.CreateSRem(lhs, rhs, "mod");
+            logMessage(LMI, "DEBUG", "Initializer", "Created MOD operation: %p", result);
+            break;
         default:
+            logMessage(LMI, "ERROR", "Initializer", "Unsupported arithmetic operation");
             return nullptr;
         }
+
+        return result;
     }
 
     // Handle bitwise operations
