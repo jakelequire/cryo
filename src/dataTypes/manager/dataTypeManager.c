@@ -402,7 +402,9 @@ DataType *DTMastInterface_getTypeofASTNode(ASTNode *node)
     {
         logMessage(LMI, "ERROR", "DTM", "Node is Null or Undefined!");
         fprintf(stderr, "Node is Null or Undefined!\n");
-        FEST->printTable(FEST);
+        DEBUG_PRINT_FILTER({
+            FEST->printTable(FEST);
+        });
         CONDITION_FAILED;
     }
 

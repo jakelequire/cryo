@@ -31,15 +31,16 @@ namespace Cryo
         }
 
         // Find the function in the symbol table
-        IRFunctionSymbol *funcSymbol = getSymbolTable()->findFunction(node->data.functionCall->name);
+        std::string funcName = node->data.functionCall->name;
+        IRFunctionSymbol *funcSymbol = getSymbolTable()->findFunction(funcName);
         if (!funcSymbol)
         {
-            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", node->data.functionCall->name);
+            logMessage(LMI, "ERROR", "Initializer", "Function %s not found", funcName.c_str());
             // Check the DTM to see if the function exists
-            DataType *functionDataType = DTM->symbolTable->lookup(DTM->symbolTable, node->data.functionCall->name);
+            DataType *functionDataType = DTM->symbolTable->lookup(DTM->symbolTable, funcName.c_str());
             if (functionDataType)
             {
-                logMessage(LMI, "INFO", "Initializer", "Function %s found in DTM", node->data.functionCall->name);
+                logMessage(LMI, "INFO", "Initializer", "Function %s found in DTM", funcName.c_str());
             }
             else
             {
@@ -47,35 +48,39 @@ namespace Cryo
             }
         }
 
-        // Process arguments
-        std::vector<llvm::Value *> args;
-        int argCount = node->data.functionCall->argCount;
-        for (int i = 0; i < argCount; i++)
+        // Get expected parameter types if available
+        DataType **expectedParamTypes = nullptr;
+        if (funcSymbol && funcSymbol->functionDataType &&
+            funcSymbol->functionDataType->container->typeOf == FUNCTION_TYPE)
         {
-            ASTNode *argNode = node->data.functionCall->args[i];
-            DataType *argDataType = DTM->astInterface->getTypeofASTNode(argNode);
-            if (!argDataType)
-            {
-                logMessage(LMI, "ERROR", "Initializer", "Argument %d has no data type", i);
-                return nullptr;
-            }
-            llvm::Type *argType = context.getInstance().symbolTable->getLLVMType(argDataType);
-            llvm::Value *argVal = getInitializerValue(argNode);
-            if (argDataType->container->primitive == PRIM_STR ||
-                argVal->getType()->isPointerTy())
-            {
-                // Load the value if it's a pointer
-                context.getInstance().builder.CreateStore(argVal, argVal);
-                argVal = context.getInstance().builder.CreateLoad(argType, argVal);
-            }
-
-            args.push_back(argVal);
-            logMessage(LMI, "INFO", "Initializer", "Argument %d: %s", i, argVal->getName().str().c_str());
+            expectedParamTypes = funcSymbol->functionDataType->container->type.functionType->paramTypes;
         }
-        std::string funcName = node->data.functionCall->name;
-        logMessage(LMI, "INFO", "Initializer", "Function call: %s", funcName.c_str());
 
-        return context.getInstance().builder.CreateCall(funcSymbol->function, args, funcName);
+        // Process arguments using the new utility function
+        std::vector<llvm::Value *> args = processArguments(
+            node->data.functionCall->args,
+            node->data.functionCall->argCount,
+            expectedParamTypes,
+            funcName);
+
+        // Create the call
+        llvm::Value *result = context.getInstance().builder.CreateCall(
+            funcSymbol->function,
+            args,
+            funcName + ".call");
+
+        // Get return type for processing
+        DataType *returnType = nullptr;
+        if (funcSymbol && funcSymbol->functionDataType &&
+            funcSymbol->functionDataType->container->typeOf == FUNCTION_TYPE)
+        {
+            returnType = funcSymbol->functionDataType->container->type.functionType->returnType;
+        }
+
+        return processReturnValue(
+            result,
+            returnType,
+            funcName);
     }
 
 } // namespace Cryo

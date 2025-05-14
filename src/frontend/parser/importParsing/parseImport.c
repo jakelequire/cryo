@@ -129,8 +129,10 @@ ASTNode *handleRelativeImport(const char *modulePath,
         CONDITION_FAILED;
     }
 
-    DTM->symbolTable->printTable(DTM->symbolTable);
-    moduleNode->print(moduleNode);
+    DEBUG_PRINT_FILTER({
+        DTM->symbolTable->printTable(DTM->symbolTable);
+        moduleNode->print(moduleNode);
+    });
 
     ASTNode *programNodePtr = context->programNodePtr;
     if (!programNodePtr)

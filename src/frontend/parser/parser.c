@@ -111,8 +111,10 @@ ASTNode *parseProgram(Lexer *lexer, Arena *arena, CompilerState *state, CryoGlob
 
     buildASTTreeLinks(program);
 
-    DTM->symbolTable->printTable(DTM->symbolTable);
-    GDM->printModuleFileCache(GDM);
+    DEBUG_PRINT_FILTER({
+        DTM->symbolTable->printTable(DTM->symbolTable);
+        GDM->printModuleFileCache(GDM);
+    });
 
     CompleteFrontend(globalTable);
     return program;
@@ -1716,7 +1718,6 @@ ASTNode *parseVarDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena
         ASTNode *uninitVarDecl = createVarDeclarationNode(var_name, dataType, NULL, isMutable, isConstant, isReference, false, true, arena, state, lexer);
         uninitVarDecl->data.varDecl->type = dataType;
         FEST->addSymbol(FEST, uninitVarDecl);
-        FEST->printTable(FEST);
         return uninitVarDecl;
     }
 
@@ -1975,7 +1976,6 @@ ASTNode *parseExternFunctionDeclaration(Lexer *lexer, ParsingContext *context, A
         NEW_ERROR(GDM, CRYO_ERROR_NULL_DATA_TYPE, CRYO_SEVERITY_FATAL, "Failed to create function type.", __LINE__, __FILE__, __func__)
         return NULL;
     }
-    printf("Printing Extern Function Type...\n");
     ASTNode *externFunc = createExternFuncNode(strdup(functionName), params, paramCount, functionType, arena, state, lexer);
 
     AddExternFunctionToTable(globalTable, externFunc, namespaceScopeID);
@@ -3534,7 +3534,6 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find symbol.");
-        FEST->printTable(FEST);
         NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
                   "Failed to find symbol.", __LINE__, __FILE__, __func__)
     }

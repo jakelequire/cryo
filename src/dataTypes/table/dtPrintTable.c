@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "diagnostics/diagnostics.h"
+#include "tools/logger/logger_config.h"
 #include "dataTypes/dataTypeManager.h"
 
 void DTMSymbolTable_printTable(DTMSymbolTable *table)

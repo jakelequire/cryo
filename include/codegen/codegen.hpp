@@ -198,8 +198,24 @@ namespace Cryo
         llvm::Value *createIntegerLiteral(unsigned int numBits, uint64_t val, bool isSigned = false);
         llvm::Value *generateNullLiteral();
 
+        std::vector<llvm::Value *> processArguments(
+            ASTNode **args,
+            int argCount,
+            DataType **expectedParamTypes,
+            const std::string &functionName);
+        void processDeclarationParameters(
+            llvm::Function *function,
+            ASTNode **params,
+            int paramCount,
+            const std::string &functionName);
+        llvm::Value *processReturnValue(
+            llvm::Value *result,
+            DataType *returnType,
+            const std::string &functionName);
+
     private:
         CodegenContext &context;
+        bool isStructOrObjectDataType(DataType *dataType);
 
     protected:
         IRSymbolTable *getSymbolTable(void) { return context.getInstance().symbolTable.get(); }

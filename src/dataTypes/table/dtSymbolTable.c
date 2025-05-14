@@ -15,6 +15,7 @@
  *                                                                              *
  ********************************************************************************/
 #include "diagnostics/diagnostics.h"
+#include "tools/logger/logger_config.h"
 #include "dataTypes/dataTypeManager.h"
 
 // --------------------------------------------------------------------------------------------------- //
@@ -64,7 +65,9 @@ DataType *DTMSymbolTable_getProtoType(
 DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, const char *name)
 {
     logMessage(LMI, "INFO", "DTM", "Looking up entry in symbol table: %s", name);
-    table->printTable(table);
+    DEBUG_PRINT_FILTER({
+        table->printTable(table);
+    });
     for (int i = 0; i < table->entryCount; i++)
     {
         if (strcmp(table->entries[i]->name, name) == 0)
@@ -90,7 +93,9 @@ DataType *DTMSymbolTable_getEntry(DTMSymbolTable *table, const char *scopeName, 
     }
 
     logMessage(LMI, "INFO", "DTM", "Failed to find entry in symbol table: %s", name);
-    DTM->symbolTable->printTable(DTM->symbolTable);
+    DEBUG_PRINT_FILTER({
+        DTM->symbolTable->printTable(DTM->symbolTable);
+    });
     return NULL;
 }
 
@@ -145,7 +150,9 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                                    name,
                                    DTM->debug->typeofObjectTypeToString(existingType->container->objectType),
                                    DTM->debug->typeofObjectTypeToString(type->container->objectType));
-                        DTM->symbolTable->printTable(DTM->symbolTable);
+                        DEBUG_PRINT_FILTER({
+                            DTM->symbolTable->printTable(DTM->symbolTable);
+                        });
                         CONDITION_FAILED;
                     }
                 }
@@ -156,7 +163,9 @@ void DTMSymbolTable_addEntry(DTMSymbolTable *table, const char *scopeName, const
                                name,
                                DTM->debug->typeofDataTypeToString(existingType->container->typeOf),
                                DTM->debug->typeofDataTypeToString(type->container->typeOf));
-                    DTM->symbolTable->printTable(DTM->symbolTable);
+                    DEBUG_PRINT_FILTER({
+                        DTM->symbolTable->printTable(DTM->symbolTable);
+                    });
 
                     CONDITION_FAILED;
                 }

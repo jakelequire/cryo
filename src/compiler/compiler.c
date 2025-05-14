@@ -282,7 +282,9 @@ int exe_project_build(CompilerSettings *settings)
 
     LINK_ALL_MODULES(linker);
 
-    FEST->printTable(FEST);
+    DEBUG_PRINT_FILTER({
+        FEST->printTable(FEST);
+    });
 
     DEBUG_PRINT_FILTER({
         END_COMPILATION_MESSAGE;

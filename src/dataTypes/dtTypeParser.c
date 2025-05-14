@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/logger/logger_config.h"
 #include "dataTypes/dataTypeManager.h"
 
 DataType *DTMParsePrimitive(const char *typeStr)
@@ -93,7 +94,9 @@ DataType *DTMParsePrimitive(const char *typeStr)
     {
         // Do not fail, just return NULL
         logMessage(LMI, "WARN", "DTM", "Type '%s' is not a primitive type", typeStr);
-        DTM->symbolTable->printTable(DTM->symbolTable);
+        DEBUG_PRINT_FILTER({
+            DTM->symbolTable->printTable(DTM->symbolTable);
+        });
         return NULL;
     }
     return NULL;
@@ -291,7 +294,9 @@ DataType *DTMParseType(const char *typeStr)
         // If the type is not found in the symbol table, return NULL
         logMessage(LMI, "ERROR", "DTM", "Failed to parse type string '%s'", typeStr);
         fprintf(stderr, "[Data Type Manager] Error: Failed to parse type string '%s'\n", typeStr);
-        DTM->symbolTable->printTable(DTM->symbolTable);
+        DEBUG_PRINT_FILTER({
+            DTM->symbolTable->printTable(DTM->symbolTable);
+        });
         return NULL;
     }
 

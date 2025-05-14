@@ -79,20 +79,20 @@ FrontendSymbol *FrontendSymbolTable_lookup(FrontendSymbolTable *self, const char
     // Only look up in the current scope
     if (!self || self == NULL)
     {
-        fprintf(stderr, "Error: FrontendSymbolTable is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "SymbolTable is NULL");
         return NULL;
     }
 
     if (!name || name == NULL)
     {
-        fprintf(stderr, "Error: Symbol name is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Name is NULL");
         return NULL;
     }
 
     FrontendScope *scope = self->currentScope;
     if (!scope || scope == NULL)
     {
-        fprintf(stderr, "Error: Current scope is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Current scope is NULL");
         return NULL;
     }
 
@@ -103,7 +103,6 @@ FrontendSymbol *FrontendSymbolTable_lookup(FrontendSymbolTable *self, const char
             return scope->symbols[i];
         }
     }
-    fprintf(stderr, "Error: Symbol '%s' not found in current scope\n", name);
     return NULL;
 }
 

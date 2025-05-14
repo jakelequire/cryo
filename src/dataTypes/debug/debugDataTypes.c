@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/logger/logger_config.h"
 #include "dataTypes/dataTypeManager.h"
 
 // --------------------------------------------------------------------------------------------------- //
@@ -22,7 +23,9 @@
 
 void DTDebug_printType(struct DataType_t *type)
 {
-    DTM->debug->printDataType(type);
+    DEBUG_PRINT_FILTER({
+        DTM->debug->printDataType(type);
+    });
 }
 
 void DTDebug_printArrayTypeInfo(struct DataType_t *type)
@@ -68,22 +71,23 @@ void DTDebug_printVerbosType(struct DataType_t *type)
     {
         fprintf(stderr, "[Data Type Manager] Error: Attempted to print NULL data type (DTDebug_printVerbosType)\n");
     }
-
-    printf(">------------------------- [ Verbose Data Type ] -------------------------<\n");
-    printf("Data Type Name: %s\n", type->typeName);
-    printf("Const: %s\n", type->isConst ? "true" : "false");
-    printf("Pointer: %s\n", type->isPointer ? "true" : "false");
-    printf("Reference: %s\n", type->isReference ? "true" : "false");
-    printf("Array: %s\n", type->isArray ? "true" : "false");
-    printf("TypeOf: %s | Primitive: %s | ObjectType: %s\n",
-           DTM->debug->typeofDataTypeToString(type->container->typeOf),
-           DTM->debug->primitiveDataTypeToString(type->container->primitive),
-           DTM->debug->typeofObjectTypeToString(type->container->objectType));
-    if (type->isArray)
-    {
-        DTDebug_printArrayTypeInfo(type);
-    }
-    printf(">-------------------------------------------------------------------------<\n");
+    DEBUG_PRINT_FILTER({
+        printf(">------------------------- [ Verbose Data Type ] -------------------------<\n");
+        printf("Data Type Name: %s\n", type->typeName);
+        printf("Const: %s\n", type->isConst ? "true" : "false");
+        printf("Pointer: %s\n", type->isPointer ? "true" : "false");
+        printf("Reference: %s\n", type->isReference ? "true" : "false");
+        printf("Array: %s\n", type->isArray ? "true" : "false");
+        printf("TypeOf: %s | Primitive: %s | ObjectType: %s\n",
+               DTM->debug->typeofDataTypeToString(type->container->typeOf),
+               DTM->debug->primitiveDataTypeToString(type->container->primitive),
+               DTM->debug->typeofObjectTypeToString(type->container->objectType));
+        if (type->isArray)
+        {
+            DTDebug_printArrayTypeInfo(type);
+        }
+        printf(">-------------------------------------------------------------------------<\n");
+    });
 }
 
 const char *DTDebug_toString(struct DataType_t *type)

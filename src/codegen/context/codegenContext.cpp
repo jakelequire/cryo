@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/logger/logger_config.h"
 #include "codegen/codegen.hpp"
 
 namespace Cryo
@@ -70,14 +71,16 @@ namespace Cryo
 
     void CodegenContext::printModule(void)
     {
-        std::string moduleName = module->getName().str();
-        std::cout << "\n\n";
-        std::cout << "<!> [ NEW CODEGEN ] Printing Module: " << moduleName << "\n";
-        std::cout << "\n\n";
-        std::cout << "<!> ===----------------------- Module: " << moduleName << " -----------------------=== <!>\n";
-        module->print(llvm::errs(), nullptr);
-        std::cout << "<!> ===------------------------------------------------------------=== <!>\n";
-        std::cout << "\n\n";
+        DEBUG_PRINT_FILTER({
+            std::string moduleName = module->getName().str();
+            std::cout << "\n\n";
+            std::cout << "<!> [ NEW CODEGEN ] Printing Module: " << moduleName << "\n";
+            std::cout << "\n\n";
+            std::cout << "<!> ===----------------------- Module: " << moduleName << " -----------------------=== <!>\n";
+            module->print(llvm::errs(), nullptr);
+            std::cout << "<!> ===------------------------------------------------------------=== <!>\n";
+            std::cout << "\n\n";
+        });
         return;
     }
 } // namespace Cryo

@@ -26,6 +26,7 @@
  * 3. The Cryo Implementation enables a Full Standard Library in Cryo
  */
 
+#include "tools/logger/logger_config.h"
 #include "linker/linker.hpp"
 #include "linker/init.h"
 #include "diagnostics/diagnostics.h"
@@ -115,7 +116,9 @@ namespace Cryo
         }
 
         // Process symbol table
-        DTM->symbolTable->printTable(DTM->symbolTable);
+        DEBUG_PRINT_FILTER({
+            DTM->symbolTable->printTable(DTM->symbolTable);
+        });
         logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", corePath);
 
         // Create compilation unit and generate IR

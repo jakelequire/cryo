@@ -2059,7 +2059,9 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     }
     logMessage(LMI, "INFO", "Parser", "Implementation of <%s> %s", isClass ? "class" : "struct", typeName);
 
-    DTM->symbolTable->printTable(DTM->symbolTable);
+    DEBUG_PRINT_FILTER({
+        DTM->symbolTable->printTable(DTM->symbolTable);
+    });
     DataType *interfaceType = DTM->symbolTable->lookup(DTM->symbolTable, typeName);
     if (!interfaceType)
     {

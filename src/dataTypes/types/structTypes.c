@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/logger/logger_config.h"
 #include "dataTypes/dataTypeManager.h"
 
 // --------------------------------------------------------------------------------------------------- //
@@ -47,7 +48,9 @@ void DTStructTy_addMethod(DTStructTy *structType, DataType *method)
             fprintf(stderr, "[Data Type Manager] Error: Failed to resize DTStructTy methods\n");
             fprintf(stderr, "Method Count: %d, Method Capacity: %d\n", structType->methodCount, structType->methodCapacity);
             fprintf(stderr, "Struct Name: %s\n", structType->name);
-            DTM->symbolTable->printTable(DTM->symbolTable);
+            DEBUG_PRINT_FILTER({
+                DTM->symbolTable->printTable(DTM->symbolTable);
+            });
             CONDITION_FAILED;
         }
     }

@@ -17,6 +17,7 @@
 #include "tools/utils/buildStats.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "tools/macros/consoleColors.h"
 
 // Helper macro for padding calculation
 #define PRINT_PADDED(label, value, format)                                              \

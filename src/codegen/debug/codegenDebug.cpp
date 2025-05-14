@@ -14,163 +14,180 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "codegen/codegenDebug.hpp"
 #include "tools/logger/logger_config.h"
+#include "codegen/codegenDebug.hpp"
 
 namespace Cryo
 {
 
     void CodeGenDebug::printLLVMValue(llvm::Value *value)
     {
-        if (value == nullptr)
-        {
-            std::cerr << "LLVM Value is null" << std::endl;
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (value == nullptr)
+            {
+                std::cerr << "LLVM Value is null" << std::endl;
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Value Node>-----------===<<" << std::endl;
-        std::string valueStr;
-        llvm::raw_string_ostream rso(valueStr);
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Value Node>-----------===<<" << std::endl;
+            std::string valueStr;
+            llvm::raw_string_ostream rso(valueStr);
 
-        // This prints out the line of IR that was generated
-        value->print(rso);
-        std::cout << "Inst:" << "" << rso.str() << std::endl;
+            // This prints out the line of IR that was generated
+            value->print(rso);
+            std::cout << "Inst:" << "" << rso.str() << std::endl;
 
-        // Print out the type of the value
-        std::string tyName = LLVMTypeIDToString(value->getType());
-        std::cout << "Type: " << tyName << std::endl;
+            // Print out the type of the value
+            std::string tyName = LLVMTypeIDToString(value->getType());
+            std::cout << "Type: " << tyName << std::endl;
 
-        // Print out the name of the value
-        std::string valName = value->getName().str();
-        std::cout << "Name: " << valName << std::endl;
+            // Print out the name of the value
+            std::string valName = value->getName().str();
+            std::cout << "Name: " << valName << std::endl;
 
-        // Print out the address of the value
-        std::cout << "Address: " << value << std::endl;
+            // Print out the address of the value
+            std::cout << "Address: " << value << std::endl;
 
-        std::cout << ">>===--------------------------------------===<<" << std::endl;
-        std::cout << "\n";
+            std::cout << ">>===--------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void CodeGenDebug::printLLVMType(llvm::Type *type)
     {
-        if (type == nullptr)
-        {
-            std::cerr << "LLVM Type is null" << std::endl;
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (type == nullptr)
+            {
+                std::cerr << "LLVM Type is null" << std::endl;
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Type Node>-----------===<<" << std::endl;
 
-        // Print out the name of the type
-        std::string typeName = LLVMTypeIDToString(type);
-        std::cout << "Name: " << typeName << std::endl;
+            // Print out the name of the type
+            std::string typeName = LLVMTypeIDToString(type);
+            std::cout << "Name: " << typeName << std::endl;
 
-        // Print out the instruction of the type
-        std::string typeInst;
-        llvm::raw_string_ostream rso(typeInst);
-        type->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the type
+            std::string typeInst;
+            llvm::raw_string_ostream rso(typeInst);
+            type->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the type
-        std::cout << "Address: " << type << std::endl;
-        std::cout << ">>===--------------------------------------===<<" << std::endl;
+            // Print out the address of the type
+            std::cout << "Address: " << type << std::endl;
+            std::cout << ">>===--------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void CodeGenDebug::printLLVMFunction(llvm::Function *function)
     {
-        if (function == nullptr)
-        {
-            std::cerr << "LLVM Function is null" << std::endl;
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (function == nullptr)
+            {
+                std::cerr << "LLVM Function is null" << std::endl;
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Function Node>-----------===<<" << std::endl;
 
-        // Print out the name of the function
-        std::string funcName = function->getName().str();
-        std::cout << "Name: " << funcName << std::endl;
+            // Print out the name of the function
+            std::string funcName = function->getName().str();
+            std::cout << "Name: " << funcName << std::endl;
 
-        // Print out the instruction of the function
-        std::string funcInst;
-        llvm::raw_string_ostream rso(funcInst);
-        function->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the function
+            std::string funcInst;
+            llvm::raw_string_ostream rso(funcInst);
+            function->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the function
-        std::cout << "Address: " << function << std::endl;
-        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            // Print out the address of the function
+            std::cout << "Address: " << function << std::endl;
+            std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void CodeGenDebug::printLLVMStruct(llvm::StructType *structType)
     {
-        if (structType == nullptr)
-        {
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (structType == nullptr)
+            {
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Struct Type Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Struct Type Node>-----------===<<" << std::endl;
 
-        // Print out the name of the struct
-        std::string structName = structType->getName().str();
-        std::cout << "Name: " << structName << std::endl;
+            // Print out the name of the struct
+            std::string structName = structType->getName().str();
+            std::cout << "Name: " << structName << std::endl;
 
-        // Print out the instruction of the struct
-        std::string structInst;
-        llvm::raw_string_ostream rso(structInst);
-        structType->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the struct
+            std::string structInst;
+            llvm::raw_string_ostream rso(structInst);
+            structType->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the struct
-        std::cout << "Address: " << structType << std::endl;
-        std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            // Print out the address of the struct
+            std::cout << "Address: " << structType << std::endl;
+            std::cout << ">>===-------------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void CodeGenDebug::printLLVMInstruction(llvm::Instruction *inst)
     {
-        if (inst == nullptr)
-        {
-            std::cerr << "LLVM Instruction is null" << std::endl;
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (inst == nullptr)
+            {
+                std::cerr << "LLVM Instruction is null" << std::endl;
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Instruction Node>-----------===<<" << std::endl;
 
-        // Print out the instruction of the instruction
-        std::string instStr;
-        llvm::raw_string_ostream rso(instStr);
-        inst->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the instruction
+            std::string instStr;
+            llvm::raw_string_ostream rso(instStr);
+            inst->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the instruction
-        std::cout << "Address: " << inst << std::endl;
-        std::cout << ">>===---------------------------------------------===<<" << std::endl;
+            // Print out the address of the instruction
+            std::cout << "Address: " << inst << std::endl;
+            std::cout << ">>===---------------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     void CodeGenDebug::printLLVMAllocaInst(llvm::AllocaInst *allocaInst)
     {
-        if (allocaInst == nullptr)
-        {
-            std::cerr << "LLVM Alloca Instruction is null" << std::endl;
-            return;
-        }
+        DEBUG_PRINT_FILTER({
+            if (allocaInst == nullptr)
+            {
+                std::cerr << "LLVM Alloca Instruction is null" << std::endl;
+                return;
+            }
 
-        std::cout << "\n";
-        std::cout << ">>===-----------<LLVM Alloca Instruction Node>-----------===<<" << std::endl;
+            std::cout << "\n";
+            std::cout << ">>===-----------<LLVM Alloca Instruction Node>-----------===<<" << std::endl;
 
-        // Print out the instruction of the alloca instruction
-        std::string allocaInstStr;
-        llvm::raw_string_ostream rso(allocaInstStr);
-        allocaInst->print(rso);
-        std::cout << "Inst: " << rso.str() << std::endl;
+            // Print out the instruction of the alloca instruction
+            std::string allocaInstStr;
+            llvm::raw_string_ostream rso(allocaInstStr);
+            allocaInst->print(rso);
+            std::cout << "Inst: " << rso.str() << std::endl;
 
-        // Print out the address of the alloca instruction
-        std::cout << "Address: " << allocaInst << std::endl;
-        std::cout << ">>===---------------------------------------------------===<<" << std::endl;
+            // Print out the address of the alloca instruction
+            std::cout << "Address: " << allocaInst << std::endl;
+            std::cout << ">>===---------------------------------------------------===<<" << std::endl;
+            std::cout << "\n";
+        });
     }
 
     std::string CodeGenDebug::LLVMTypeIDToString(llvm::Type *type)

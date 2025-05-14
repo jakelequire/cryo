@@ -14,6 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
+#include "tools/logger/logger_config.h"
 #include "linker/compilationUnit.h"
 #include "diagnostics/diagnostics.h"
 
@@ -74,31 +75,33 @@ int CompilationUnit_Verify(CompilationUnit *self)
 
 void CompilationUnitDir_print(CompilationUnitDir dir)
 {
-    printf("\n");
-    printf("\n");
-    printf(BOLD GREEN);
-    printf("+ ------------------------------- CompilationUnitDir ------------------------------- +\n");
-    printf("| Compilation Unit Type: %s\n", compilationUnitTypeToString(dir.type));
-    printf(COLOR_RESET);
-    printf("|\n");
-    printf("| Source File Name: \t\t%s\n", dir.src_fileName);
-    printf("| Source File Full Name: \t%s\n", dir.src_fullFileName);
-    printf("| Source File Dir: \t\t%s\n", dir.src_fileDir);
-    printf("| Source File Path: \t\t%s\n", dir.src_filePath);
-    printf("| Source File Ext: \t\t%s\n", dir.src_fileExt);
-    printf(BOLD GREEN);
-    printf("| ---------------------------------------------------------------------------------- |\n");
-    printf(COLOR_RESET);
-    printf("| Output File Name: \t\t%s\n", dir.out_fileName);
-    printf("| Output File Full Name: \t%s\n", dir.out_fullFileName);
-    printf("| Output File Dir: \t\t%s\n", dir.out_fileDir);
-    printf("| Output File Path: \t\t%s\n", dir.out_filePath);
-    printf("| Output File Ext: \t\t%s\n", dir.out_fileExt);
-    printf(BOLD GREEN);
-    printf("+ ---------------------------------------------------------------------------------- +\n");
-    printf(COLOR_RESET);
-    printf("\n");
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf("\n");
+        printf(BOLD GREEN);
+        printf("+ ------------------------------- CompilationUnitDir ------------------------------- +\n");
+        printf("| Compilation Unit Type: %s\n", compilationUnitTypeToString(dir.type));
+        printf(COLOR_RESET);
+        printf("|\n");
+        printf("| Source File Name: \t\t%s\n", dir.src_fileName);
+        printf("| Source File Full Name: \t%s\n", dir.src_fullFileName);
+        printf("| Source File Dir: \t\t%s\n", dir.src_fileDir);
+        printf("| Source File Path: \t\t%s\n", dir.src_filePath);
+        printf("| Source File Ext: \t\t%s\n", dir.src_fileExt);
+        printf(BOLD GREEN);
+        printf("| ---------------------------------------------------------------------------------- |\n");
+        printf(COLOR_RESET);
+        printf("| Output File Name: \t\t%s\n", dir.out_fileName);
+        printf("| Output File Full Name: \t%s\n", dir.out_fullFileName);
+        printf("| Output File Dir: \t\t%s\n", dir.out_fileDir);
+        printf("| Output File Path: \t\t%s\n", dir.out_filePath);
+        printf("| Output File Ext: \t\t%s\n", dir.out_fileExt);
+        printf(BOLD GREEN);
+        printf("+ ---------------------------------------------------------------------------------- +\n");
+        printf(COLOR_RESET);
+        printf("\n");
+        printf("\n");
+    });
 }
 
 char *compilationUnitTypeToString(CompilationUnitType type)

@@ -50,7 +50,6 @@ void dyn_stackframe_push(StackFrame *frame)
     StackTrace *stackTrace = GDM->stackTrace;
     if (stackTrace->frameCount == stackTrace->frameCapacity)
     {
-        printf("Resizing stack trace\n");
         stackTrace->frameCapacity *= 2;
         stackTrace->frames = (StackFrame **)realloc(stackTrace->frames, sizeof(StackFrame *) * stackTrace->frameCapacity);
     }

@@ -75,50 +75,12 @@ namespace Cryo
             function, funcName, returnTy, funcType, entryBlock, false, false);
         symbolTable->addFunction(funcSymbol);
 
-        for (size_t i = 0; i < node->data.functionDecl->paramCount; i++)
-        {
-            ASTNode *param = node->data.functionDecl->params[i];
-            DataType *paramDataType = param->data.param->type;
-            if (!paramDataType)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "Parameter data type is null");
-                continue;
-            }
-            llvm::Type *paramType = symbolTable->getLLVMType(paramDataType);
-            if (!paramType)
-            {
-                logMessage(LMI, "ERROR", "Visitor", "Parameter type is null");
-                paramType = llvm::Type::getVoidTy(context.getInstance().context);
-            }
-
-
-
-            // Create a symbol for each parameter for the symbol table
-            std::string paramName = param->data.param->name;
-            logMessage(LMI, "INFO", "Visitor", "Parameter Name: %s", paramName.c_str());
-
-            // Create the parameter in the function
-            llvm::Function::arg_iterator argIt = function->arg_begin();
-            llvm::Value *arg = argIt++;
-            arg->setName(paramName);
-
-            if (arg->getType()->isPointerTy())
-            {
-                // Store the pointer to the parameter
-                llvm::AllocaInst *allocaInst = context.getInstance().builder.CreateAlloca(
-                    paramType, nullptr, paramName + ".alloca");
-                context.getInstance().builder.CreateStore(arg, allocaInst);
-                arg = allocaInst;
-            }
-
-            AllocaType allocaType = AllocaTypeInference::inferFromNode(param, false);
-            IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
-                function, nullptr, paramType, paramName, allocaType);
-            paramSymbol.dataType = param->data.param->type;
-            paramSymbol.value = arg;
-
-            symbolTable->addVariable(paramSymbol);
-        }
+        // Process parameters using the new utility method
+        context.getInstance().initializer->processDeclarationParameters(
+            function,
+            node->data.functionDecl->params,
+            node->data.functionDecl->paramCount,
+            funcName);
 
         logMessage(LMI, "INFO", "Visitor", "Function prototype created");
 

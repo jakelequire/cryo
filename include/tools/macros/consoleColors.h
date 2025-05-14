@@ -17,6 +17,8 @@
 #ifndef CONSOLE_COLORS_H
 #define CONSOLE_COLORS_H
 
+// Only include these definitions for C, not for C++
+#ifndef __cplusplus
 // ANSI Color codes
 #define COLOR_RESET "\033[0m"
 #define BOLD "\033[1m"
@@ -91,7 +93,19 @@
 #define BOX_LEFT_T "╠"
 #define BOX_RIGHT_T "╣"
 #define BOX_VERTICAL_SEP "│"
-
+#else
+// When compiling with C++, this header does nothing
+// Add a warning message to help developers understand why the header is empty
+#ifdef __GNUC__
+#warning "consoleColors.h is meant for C only, not C++"
+#else
+// For non-GCC compilers that might not support #warning
+// Static_assert would work in C++11 and above
+#if __cplusplus >= 201103L
+static_assert(false, "consoleColors.h is meant for C only, not C++");
+#endif
+#endif
+#endif // __cplusplus
 /*
     Box Drawing Characters Reference Table
     ====================================
