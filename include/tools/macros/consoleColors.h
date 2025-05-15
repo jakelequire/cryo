@@ -17,8 +17,6 @@
 #ifndef CONSOLE_COLORS_H
 #define CONSOLE_COLORS_H
 
-// Only include these definitions for C, not for C++
-#ifndef __cplusplus
 // ANSI Color codes
 #define COLOR_RESET "\033[0m"
 #define BOLD "\033[1m"
@@ -93,61 +91,5 @@
 #define BOX_LEFT_T "╠"
 #define BOX_RIGHT_T "╣"
 #define BOX_VERTICAL_SEP "│"
-#else
-// When compiling with C++, this header does nothing
-// Add a warning message to help developers understand why the header is empty
-#ifdef __GNUC__
-#warning "consoleColors.h is meant for C only, not C++"
-#else
-// For non-GCC compilers that might not support #warning
-// Static_assert would work in C++11 and above
-#if __cplusplus >= 201103L
-static_assert(false, "consoleColors.h is meant for C only, not C++");
-#endif
-#endif
-#endif // __cplusplus
-/*
-    Box Drawing Characters Reference Table
-    ====================================
-
-    Basic Box Elements        Heavy/Double Elements
-    ------------------       -------------------
-    │  Single vertical      ║  Double vertical
-    ─  Single horizontal    ═  Double horizontal
-
-    Corner Pieces           Double Corners
-    -------------          --------------
-    ┌  Top left            ╔  Top left
-    ┐  Top right           ╗  Top right
-    └  Bottom left         ╚  Bottom left
-    ┘  Bottom right        ╝  Bottom right
-
-    T-Junctions            Double T-Junctions
-    ------------           -----------------
-    ├  Left T              ╠  Left T
-    ┤  Right T             ╣  Right T
-    ┬  Top T               ╦  Top T
-    ┴  Bottom T            ╩  Bottom T
-
-    Mixed Junctions        Special Junctions
-    ---------------        -----------------
-    ╞  Single-Double L     ╟  Heavy-Light L
-    ╡  Single-Double R     ╢  Heavy-Light R
-    ╥  Double-Single Up    ╫  Heavy vertical
-    ╨  Double-Single Down  ╪  Heavy horizontal
-    ╒  Single-Double TL    ╓  Heavy-Light TL
-    ╕  Single-Double TR    ╖  Heavy-Light TR
-    ╘  Single-Double BL    ╙  Heavy-Light BL
-    ╛  Single-Double BR    ╜  Heavy-Light BR
-
-    Intersections
-    ------------
-    ┼  Single cross
-    ╬  Double cross
-
-↖ ↑ ↗
-← · →
-↙ ↓ ↘
-*/
 
 #endif // CONSOLE_COLORS_H

@@ -15,11 +15,23 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/logger/logger_config.h"
+// Due to name collisions, we need to undefine these macros
+// in order to use the `DEBUG_PRINT_FILTER` macro.
+// Unsure of another way to do this.
+#undef RED
+#undef GREEN
+#undef YELLOW
+#undef BLUE
+#undef MAGENTA
+#undef CYAN
+#undef WHITE
+#undef BLACK
+#undef GRAY
+#undef BOLD
 #include "codegen/codegenDebug.hpp"
 
 namespace Cryo
 {
-
     void CodeGenDebug::printLLVMValue(llvm::Value *value)
     {
         DEBUG_PRINT_FILTER({
