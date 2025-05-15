@@ -14,7 +14,6 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/frontendSymbolTable.h"
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"

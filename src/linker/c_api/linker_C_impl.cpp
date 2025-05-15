@@ -67,13 +67,13 @@ extern "C"
     }
 
     void CryoLinker_InitCryoCore(CryoLinker *linker, const char *compilerRootPath, const char *buildDir,
-                                 CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                 CompilerState *state)
     {
         __STACK_FRAME__
         if (linker)
         {
             logMessage(LMI, "INFO", "CryoLinker", "Initializing Cryo Core");
-            reinterpret_cast<Cryo::Linker *>(linker)->initCryoCore(compilerRootPath, buildDir, state, globalTable);
+            reinterpret_cast<Cryo::Linker *>(linker)->initCryoCore(compilerRootPath, buildDir, state);
         }
     }
 

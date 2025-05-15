@@ -44,8 +44,7 @@ namespace Cryo
      * @param state Current compiler state
      * @param globalTable Global symbol table
      */
-    void Linker::initCryoCore(const char *compilerRootPath, const char *buildDir,
-                              CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    void Linker::initCryoCore(const char *compilerRootPath, const char *buildDir, CompilerState *state)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Initializing Cryo Core...");
@@ -59,7 +58,7 @@ namespace Cryo
         }
 
         // Process core.cryo file
-        if (!processCoreFile(compilerRootPath, buildDir, state, globalTable))
+        if (!processCoreFile(compilerRootPath, buildDir, state))
         {
             return;
         }
@@ -72,7 +71,7 @@ namespace Cryo
             return;
         }
 
-        if (buildStandardLib(state, globalTable) != 0)
+        if (buildStandardLib(state) != 0)
         {
             fprintf(stderr, "[Linker] Error: Failed to build standard library\n");
             CONDITION_FAILED;
@@ -92,7 +91,7 @@ namespace Cryo
      * @return true if successful, false otherwise
      */
     bool Linker::processCoreFile(const char *compilerRootPath, const char *buildDir,
-                                 CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                 CompilerState *state)
     {
         __STACK_FRAME__
         logMessage(LMI, "INFO", "Linker", "Processing core file...");
@@ -106,7 +105,7 @@ namespace Cryo
         }
 
         // Compile the core file to AST
-        ASTNode *defsNode = compileForASTNode(strdup(corePath), state, globalTable);
+        ASTNode *defsNode = compileForASTNode(strdup(corePath), state);
         if (!defsNode)
         {
             fprintf(stderr, "[Data Type Manager] Error: Failed to compile definitions\n");
@@ -116,7 +115,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "DTM", "Definitions Path: %s", corePath);
 
         // Create compilation unit and generate IR
-        return generateCoreIR(defsNode, corePath, buildDir, state, globalTable);
+        return generateCoreIR(defsNode, corePath, buildDir, state);
     }
 
     /**
@@ -129,8 +128,7 @@ namespace Cryo
      * @param globalTable Global symbol table
      * @return true if successful, false otherwise
      */
-    bool Linker::generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir,
-                                CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    bool Linker::generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir, CompilerState *state)
     {
         logMessage(LMI, "INFO", "Linker", "Generating IR for core file...");
         // Create compilation unit directory
@@ -156,7 +154,7 @@ namespace Cryo
 
         // Generate IR from AST
         CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
-        if (generateIRFromAST(unit, state, linker, globalTable) != 0)
+        if (generateIRFromAST(unit, state, linker) != 0)
         {
             logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
             CONDITION_FAILED;
@@ -511,7 +509,7 @@ namespace Cryo
      * @param globalTable Global symbol table
      * @return 0 if successful, non-zero otherwise
      */
-    int Linker::buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    int Linker::buildStandardLib(CompilerState *state)
     {
         logMessage(LMI, "INFO", "Linker", "Building standard library...");
         // Get paths to standard library directories
@@ -540,7 +538,7 @@ namespace Cryo
         // printFoundFiles(cryoFiles);
 
         // Compile each file
-        if (!compileAllStandardLibraryFiles(cryoFiles, state, globalTable))
+        if (!compileAllStandardLibraryFiles(cryoFiles, state))
         {
             return 1;
         }
@@ -605,13 +603,13 @@ namespace Cryo
      * @return true if successful, false otherwise
      */
     bool Linker::compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
-                                                CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                                CompilerState *state)
     {
         logMessage(LMI, "INFO", "Linker", "Compiling standard library files...");
         for (const std::string &file : cryoFiles)
         {
             // Compile the file and create the shared library
-            int result = compileLibItem(file, state, globalTable);
+            int result = compileLibItem(file, state);
             if (result != 0)
             {
                 fprintf(stderr, "[Linker] Error: Failed to compile %s\n", file.c_str());
@@ -632,7 +630,7 @@ namespace Cryo
      * @param globalTable Global symbol table
      * @return 0 if successful, non-zero otherwise
      */
-    int Linker::compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+    int Linker::compileLibItem(std::string filePath, CompilerState *state)
     {
         logMessage(LMI, "INFO", "Linker", "Compiling library item: %s", filePath.c_str());
 
@@ -641,7 +639,7 @@ namespace Cryo
         std::string buildDir = compilerRootPath + "/cryo/Std/bin/.ll/";
 
         // Compile to AST
-        ASTNode *programNode = compileForASTNode(filePath.c_str(), state, globalTable);
+        ASTNode *programNode = compileForASTNode(filePath.c_str(), state);
         if (programNode == NULL)
         {
             logMessage(LMI, "ERROR", "Linker", "Failed to compile %s", filePath.c_str());
@@ -651,7 +649,7 @@ namespace Cryo
         programNode->print(programNode);
 
         // Create compilation unit
-        return createAndLinkLibraryItem(programNode, filePath, buildDir, compilerRootPath, state, globalTable);
+        return createAndLinkLibraryItem(programNode, filePath, buildDir, compilerRootPath, state);
     }
 
     /**
@@ -669,7 +667,7 @@ namespace Cryo
      */
     int Linker::createAndLinkLibraryItem(ASTNode *programNode, const std::string &filePath,
                                          const std::string &buildDir, const std::string &compilerRootPath,
-                                         CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                         CompilerState *state)
     {
         logMessage(LMI, "INFO", "Linker", "Creating and linking library item...");
 
@@ -697,7 +695,7 @@ namespace Cryo
 
         // Generate IR from AST
         CryoLinker *linker = reinterpret_cast<CryoLinker *>(this);
-        if (generateIRFromAST(unit, state, linker, globalTable) != 0)
+        if (generateIRFromAST(unit, state, linker) != 0)
         {
             logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
             CONDITION_FAILED;

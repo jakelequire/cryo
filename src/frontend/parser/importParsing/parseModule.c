@@ -14,13 +14,12 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "diagnostics/diagnostics.h"
 #include <dirent.h>
 
 ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
-                                Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     // The syntax for the module keyword is as follows:
@@ -63,7 +62,7 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     logMessage(LMI, "INFO", "Parser", "Module file path: %s", moduleFilePath);
     // Handle the module parsing
 
-    int moduleParsingResult = handleModuleParsing(moduleFilePath, state, globalTable, arena);
+    int moduleParsingResult = handleModuleParsing(moduleFilePath, state, arena);
     if (moduleParsingResult == 0)
     {
         logMessage(LMI, "INFO", "Parser", "Module parsing successful.");
@@ -91,34 +90,12 @@ ASTNode *parseModuleDeclaration(CryoVisibilityType visibility,
     return moduleNode;
 }
 
-int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, CryoGlobalSymbolTable *globalTable, Arena *arena)
+int handleModuleParsing(const char *moduleSrcPath, CompilerState *state, Arena *arena)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Handling module parsing...");
-
-    logMessage(LMI, "INFO", "Parser", "File path: %s", moduleSrcPath);
-    const char *fileName = getFileNameFromPath(moduleSrcPath);
-    const char *rootDir = state->settings->rootDir;
-    const char *outputFileName = changeFileExtension(fileName, ".ll");
-    const char *moduleDir = appendPathToFileName(rootDir, "build/out/deps", true);
-    const char *outputPath = appendPathToFileName(moduleDir, outputFileName, true);
-
-    logMessage(LMI, "INFO", "Parser", "Output path: %s", outputPath);
-
-    SymbolTable *moduleSymbolTable = compileToReapSymbols(moduleSrcPath, outputPath, state, arena, globalTable);
-    if (moduleSymbolTable == NULL)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to compile module file: %s", moduleSrcPath);
-        return 1;
-    }
-
-    logMessage(LMI, "INFO", "Parser", "Module file compiled successfully.");
-
-    // Import the module symbols into the global symbol table
-    ImportReapedTable(globalTable, moduleSymbolTable);
-
-    printGlobalSymbolTable(globalTable);
-
+    NEW_ERROR(GDM, CRYO_ERROR_I_UNIMPLMENTED_FUNCTION, CRYO_SEVERITY_FATAL,
+              "Module parsing failed", __LINE__, __FILE__, __func__);
     return 0;
 }
 
@@ -127,6 +104,7 @@ const char *getModuleFile(const char **dirList, const char *moduleName)
     __STACK_FRAME__
     for (int i = 0; i < sizeof(dirList); i++)
     {
+        
         const char *fileName = dirList[i];
         if (strstr(fileName, moduleName) != NULL)
         {

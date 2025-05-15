@@ -15,12 +15,11 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/cxx/IDGen.hpp"
-#include "symbolTable/cInterfaceTable.h"
 #include "diagnostics/diagnostics.h"
 #include "frontend/parser.h"
 
 // Parse generic type parameters: <T, U, V>
-GenericType **parseGenericTypeParams(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, int *paramCount)
+GenericType **parseGenericTypeParams(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, int *paramCount)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing generic type parameters...");

@@ -15,7 +15,6 @@
  *                                                                              *
  ********************************************************************************/
 #include "tools/cxx/IDGen.hpp"
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "diagnostics/diagnostics.h"
 #include "dataTypes/dataTypeManager.h"
@@ -57,7 +56,7 @@ void freeStructComponents(StructComponents *components)
 
 // <parseStructDeclaration>
 
-ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct declaration...");
@@ -68,14 +67,14 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     // Parse struct name
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier for struct name.", "parseStructDeclaration", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected an identifier for struct name.", "parseStructDeclaration", arena, state, lexer, lexer->source);
         return NULL;
     }
 
     char *structName = strndup(lexer->currentToken.start, lexer->currentToken.length);
     if (!structName)
     {
-        parsingError("Memory allocation failed for struct name.", "parseStructDeclaration", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Memory allocation failed for struct name.", "parseStructDeclaration", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -120,11 +119,11 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     ASTNode *result = NULL;
     if (lexer->currentToken.type == TOKEN_LESS)
     {
-        result = parseGenericStructDeclaration(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+        result = parseGenericStructDeclaration(lexer, context, arena, state, structName, parentNamespaceNameID);
     }
     else
     {
-        result = parseStructBody(lexer, context, arena, state, globalTable, structName, parentNamespaceNameID);
+        result = parseStructBody(lexer, context, arena, state, structName, parentNamespaceNameID);
     }
 
     // Clean up
@@ -136,7 +135,7 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
 }
 
 ASTNode *parseStructBody(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state,
-                         CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID)
+                         const char *structName, const char *parentNamespaceNameID)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct body...");
@@ -163,12 +162,12 @@ ASTNode *parseStructBody(Lexer *lexer, ParsingContext *context, Arena *arena, Co
         if (lexer->currentToken.type == TOKEN_EOF)
         {
             parsingError("Unexpected end of file while parsing struct body.",
-                         "parseStructBody", arena, state, lexer, lexer->source, globalTable);
+                         "parseStructBody", arena, state, lexer, lexer->source);
             freeStructComponents(&components);
             return NULL;
         }
 
-        if (!parseStructMember(lexer, context, arena, state, globalTable, structName,
+        if (!parseStructMember(lexer, context, arena, state, structName,
                                structDefinition, &components))
         {
             // Error message already reported in parseStructMember
@@ -179,7 +178,7 @@ ASTNode *parseStructBody(Lexer *lexer, ParsingContext *context, Arena *arena, Co
 
     // Create the final struct node
     ASTNode *structNode = finalizeStructDeclaration(
-        lexer, context, arena, state, globalTable, structName,
+        lexer, context, arena, state, structName,
         components.properties, components.propertyCount,
         components.methods, components.methodCount,
         components.hasDefaultProperty, components.hasConstructor,
@@ -195,7 +194,7 @@ ASTNode *parseStructBody(Lexer *lexer, ParsingContext *context, Arena *arena, Co
 }
 
 bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state,
-                       CryoGlobalSymbolTable *globalTable, const char *structName,
+                       const char *structName,
                        DataType *structDefinition, StructComponents *components)
 {
     __STACK_FRAME__
@@ -206,14 +205,14 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
         if (components->hasConstructor)
         {
             parsingError("Multiple constructors are not allowed in a struct.",
-                         "parseStructMember", arena, state, lexer, lexer->source, globalTable);
+                         "parseStructMember", arena, state, lexer, lexer->source);
             return false;
         }
 
         ConstructorMetaData *metaData = createConstructorMetaData(
             structName, NODE_STRUCT_DECLARATION, components->hasDefaultProperty);
 
-        ASTNode *ctorNode = parseConstructor(lexer, context, arena, state, metaData, globalTable);
+        ASTNode *ctorNode = parseConstructor(lexer, context, arena, state, metaData);
         if (!ctorNode)
         {
             return false; // Error already reported in parseConstructor
@@ -249,7 +248,7 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
         if (components->hasDefaultProperty)
         {
             parsingError("Struct can only have one default property.",
-                         "parseStructMember", arena, state, lexer, lexer->source, globalTable);
+                         "parseStructMember", arena, state, lexer, lexer->source);
             return false;
         }
         isDefault = true;
@@ -257,7 +256,7 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
     }
 
     // Parse property or method
-    ASTNode *field = parseStructField(structName, lexer, context, arena, state, globalTable);
+    ASTNode *field = parseStructField(structName, lexer, context, arena, state);
     if (!field)
     {
         return false; // Error already reported in parseStructField
@@ -277,7 +276,7 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
             if (!newProps)
             {
                 parsingError("Memory allocation failed for struct properties.",
-                             "parseStructMember", arena, state, lexer, lexer->source, globalTable);
+                             "parseStructMember", arena, state, lexer, lexer->source);
                 return false;
             }
             components->properties = newProps;
@@ -312,7 +311,7 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
             if (!newMethods)
             {
                 parsingError("Memory allocation failed for struct methods.",
-                             "parseStructMember", arena, state, lexer, lexer->source, globalTable);
+                             "parseStructMember", arena, state, lexer, lexer->source);
                 return false;
             }
             components->methods = newMethods;
@@ -339,7 +338,7 @@ bool parseStructMember(Lexer *lexer, ParsingContext *context, Arena *arena, Comp
 }
 
 ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *context,
-                          Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                          Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct field...");
@@ -366,7 +365,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
     {
         logMessage(LMI, "ERROR", "Parser", "Expected an identifier in struct field, got %s",
                    CryoTokenToString(lexer->currentToken.type));
-        parsingError("Expected an identifier.", "parseStructField", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected an identifier.", "parseStructField", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -375,7 +374,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
     if (nextToken == TOKEN_LPAREN)
     {
         logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
-        return parseMethodDeclaration(false, parentName, lexer, context, arena, state, globalTable);
+        return parseMethodDeclaration(false, parentName, lexer, context, arena, state);
     }
 
     // This is a property declaration (identifier: type;)
@@ -383,7 +382,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
     if (!fieldName)
     {
         parsingError("Memory allocation failed for field name.",
-                     "parseStructField", arena, state, lexer, lexer->source, globalTable);
+                     "parseStructField", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -397,11 +396,11 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
             "parseStructField", arena, state, context);
 
     // Parse the field type
-    DataType *fieldType = parseType(lexer, context, arena, state, globalTable);
+    DataType *fieldType = parseType(lexer, context, arena, state);
     if (!fieldType)
     {
         parsingError("Failed to parse field type.",
-                     "parseStructField", arena, state, lexer, lexer->source, globalTable);
+                     "parseStructField", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -424,29 +423,23 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
     if (!propertyNode)
     {
         parsingError("Failed to create property node.",
-                     "parseStructField", arena, state, lexer, lexer->source, globalTable);
+                     "parseStructField", arena, state, lexer, lexer->source);
         return NULL;
     }
 
     return propertyNode;
 }
 
-ASTNode *parseGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable, const char *structName, const char *parentNamespaceNameID)
+ASTNode *parseGenericStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, const char *structName, const char *parentNamespaceNameID)
 {
     logMessage(LMI, "INFO", "Parser", "Parsing generic struct declaration...");
-    InitGenericStructDeclaration(globalTable, structName, parentNamespaceNameID); // GlobalSymbolTable
-    printGlobalSymbolTable(globalTable);
-    // ASTNode *genericStruct = parseGenericStructDeclaration(structName, lexer, context, arena, state, globalTable, parentNamespaceNameID);
-    // if (genericStruct)
-    // {
-    //     return genericStruct;
-    // }
-    DEBUG_BREAKPOINT;
+    NEW_ERROR(GDM, CRYO_ERROR_I_UNIMPLMENTED_FUNCTION, CRYO_SEVERITY_FATAL,
+              "Generic Structs are unimplemented.", __LINE__, __FILE__, __func__);
     return NULL;
 }
 
 ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena,
-                                   CompilerState *state, CryoGlobalSymbolTable *globalTable,
+                                   CompilerState *state,
                                    const char *structName,
                                    ASTNode **properties, int propertyCount,
                                    ASTNode **methods, int methodCount,
@@ -465,7 +458,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     if (!structNode)
     {
         parsingError("Failed to create struct node", "finalizeStructDeclaration",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -479,7 +472,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     if (!propertyTypes && propertyCount > 0)
     {
         parsingError("Failed to create property type array", "finalizeStructDeclaration",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return structNode; // Still return the struct node since it's valid
     }
 
@@ -487,7 +480,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     if (!methodTypes && methodCount > 0)
     {
         parsingError("Failed to create method type array", "finalizeStructDeclaration",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return structNode; // Still return the struct node since it's valid
     }
 
@@ -525,7 +518,7 @@ ASTNode *finalizeStructDeclaration(Lexer *lexer, ParsingContext *context, Arena 
     return structNode;
 }
 
-ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, ConstructorMetaData *metaData)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing constructor...");
@@ -535,18 +528,18 @@ ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, C
     strcat(consturctorName, (char *)metaData->parentName);
     strcat(consturctorName, ".constructor");
 
-    ASTNode **params = parseParameterList(lexer, context, arena, consturctorName, state, globalTable);
+    ASTNode **params = parseParameterList(lexer, context, arena, consturctorName, state);
     int paramCount = 0;
     while (params[paramCount] != NULL)
     {
         paramCount++;
     }
 
-    ASTNode *constructorBody = parseBlock(lexer, context, arena, state, globalTable);
+    ASTNode *constructorBody = parseBlock(lexer, context, arena, state);
     if (!constructorBody)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to parse constructor body.");
-        parsingError("Failed to parse constructor body.", "parseConstructor", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to parse constructor body.", "parseConstructor", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -554,7 +547,7 @@ ASTNode *parseConstructor(Lexer *lexer, ParsingContext *context, Arena *arena, C
     if (!constructorNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create constructor node.");
-        parsingError("Failed to create constructor node.", "parseConstructor", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create constructor node.", "parseConstructor", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -575,13 +568,13 @@ bool parsePropertyForDefaultFlag(ASTNode *propertyNode)
     return false;
 }
 
-ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier.", "parseMethodDeclaration", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected an identifier.", "parseMethodDeclaration", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -596,7 +589,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
 
     getNextToken(lexer, arena, state);
 
-    ASTNode **params = parseParameterList(lexer, context, arena, strdup(methodName), state, globalTable);
+    ASTNode **params = parseParameterList(lexer, context, arena, strdup(methodName), state);
     int paramCount = 0;
     while (params[paramCount] != NULL)
     {
@@ -605,7 +598,7 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
 
     // Get the return type `-> <type>`
     consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseMethodDeclaration", arena, state, context);
-    DataType *returnType = parseType(lexer, context, arena, state, globalTable);
+    DataType *returnType = parseType(lexer, context, arena, state);
     returnType->typeName = strdup(methodName);
     getNextToken(lexer, arena, state);
 
@@ -629,15 +622,13 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
         // Remove the static identifier from the context
         addStaticIdentifierToContext(context, false);
 
-        AddMethodToStruct(globalTable, parentName, methodNode); // GlobalSymbolTable
-
         resetCurrentMethod(context); // ParsingContext
 
         return methodNode;
     }
 
     // Create the method body
-    ASTNode *methodBody = parseBlock(lexer, context, arena, state, globalTable);
+    ASTNode *methodBody = parseBlock(lexer, context, arena, state);
     // Create the method node
     ASTNode *methodNode = createMethodNode(returnType, methodBody, strdup(methodName), params, paramCount, parentName, isStatic,
                                            arena, state, lexer);
@@ -655,24 +646,23 @@ ASTNode *parseMethodDeclaration(bool isStatic, const char *parentName, Lexer *le
 
     // Remove the static identifier from the context
     addStaticIdentifierToContext(context, false);
-    AddMethodToStruct(globalTable, parentName, methodNode); // GlobalSymbolTable
-    resetCurrentMethod(context);                            // ParsingContext
+    resetCurrentMethod(context); // ParsingContext
     FEST->addSymbol(FEST, methodNode);
 
     return methodNode;
 }
 
 ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType *instanceType,
-                         Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                         Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing method call...");
 
-    ASTNode *argList = parseArgumentList(lexer, context, arena, state, globalTable);
+    ASTNode *argList = parseArgumentList(lexer, context, arena, state);
     if (!argList)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to parse argument list.");
-        parsingError("Failed to parse argument list.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to parse argument list.", "parseMethodCall", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     int paramCount = argList->data.argList->argCount;
@@ -731,7 +721,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType 
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Invalid instance type, received: %s", varType->debug->toString(varType));
-            parsingError("Invalid instance type.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Invalid instance type.", "parseMethodCall", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
         break;
@@ -739,21 +729,21 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType 
     default:
     {
         logMessage(LMI, "ERROR", "Parser", "Invalid instance type, received: %s", CryoNodeTypeToString(accessorObj->metaData->type));
-        parsingError("Invalid instance type.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Invalid instance type.", "parseMethodCall", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     }
 
-    Symbol *sym = FindMethodSymbol(globalTable, methodName, strdup(instanceTypeName), typeOfSymbol);
+    FrontendSymbol *sym = FEST->lookup(FEST, methodName);
     if (!sym)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find instance symbol.");
-        parsingError("Failed to find instance symbol.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to find instance symbol.", "parseMethodCall", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     logMessage(LMI, "INFO", "Parser", "Found instance symbol.");
-    ASTNode *symbolNode = GetASTNodeFromSymbol(globalTable, sym);
-    DataType *returnType = GetDataTypeFromSymbol(globalTable, sym);
+    ASTNode *symbolNode = sym->node;
+    DataType *returnType = sym->type;
 
     bool isStatic = symbolNode->data.method->isStatic;
     ASTNode *methodCall = createMethodCallNode(accessorObj, returnType, instanceType, methodName,
@@ -762,7 +752,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType 
     if (!methodCall)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create method call node.");
-        parsingError("Failed to create method call node.", "parseMethodCall", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create method call node.", "parseMethodCall", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -773,8 +763,7 @@ ASTNode *parseMethodCall(ASTNode *accessorObj, const char *methodName, DataType 
 
 // Enhanced parseGenericDecl implementation
 ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
-                          ParsingContext *context, Arena *arena, CompilerState *state,
-                          CryoGlobalSymbolTable *globalTable)
+                          ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
 
@@ -784,8 +773,7 @@ ASTNode *parseGenericDecl(const char *typeName, Lexer *lexer,
 // Helper function to parse generic type instantiation
 ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
                                    ParsingContext *context,
-                                   Arena *arena, CompilerState *state,
-                                   CryoGlobalSymbolTable *globalTable)
+                                   Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     consume(__LINE__, lexer, TOKEN_LESS, "Expected `<` in generic instantiation.",
@@ -805,11 +793,11 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
         if (paramCount >= expectedParamCount)
         {
             parsingError("Too many type arguments.", "parseGenericInstantiation",
-                         arena, state, lexer, lexer->source, globalTable);
+                         arena, state, lexer, lexer->source);
             return NULL;
         }
 
-        DataType *concreteType = parseType(lexer, context, arena, state, globalTable);
+        DataType *concreteType = parseType(lexer, context, arena, state);
 
         concreteTypes[paramCount++] = concreteType;
 
@@ -823,7 +811,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
         {
             parsingError("Expected ',' or '>' in type argument list.",
                          "parseGenericInstantiation", arena, state,
-                         lexer, lexer->source, globalTable);
+                         lexer, lexer->source);
             return NULL;
         }
     }
@@ -831,7 +819,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
     if (paramCount != expectedParamCount)
     {
         parsingError("Wrong number of type arguments.", "parseGenericInstantiation",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -841,7 +829,7 @@ ASTNode *parseGenericInstantiation(const char *baseName, Lexer *lexer,
     return NULL;
 }
 
-ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct instance...");
@@ -849,11 +837,11 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
     Token currentToken = lexer->currentToken;
 
     // Find struct type in type table
-    DataType *structType = ResolveDataType(globalTable, structName);
+    DataType *structType = DTM->symbolTable->lookup(DTM->symbolTable, structName);
     if (!structType)
     {
         parsingError("Failed to resolve struct type.", "parseStructInstance",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -861,17 +849,17 @@ ASTNode *parseStructInstance(const char *structName, Lexer *lexer, ParsingContex
             "parseStructInstance", arena, state, context);
 
     // Parse struct arguments
-    ASTNode *args = parseArgumentList(lexer, context, arena, state, globalTable);
+    ASTNode *args = parseArgumentList(lexer, context, arena, state);
     if (!args)
     {
         parsingError("Failed to parse struct arguments.", "parseStructInstance",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
     DEBUG_BREAKPOINT;
 }
 
-ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing struct instance...");
@@ -879,11 +867,11 @@ ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingConte
     Token currentToken = lexer->currentToken;
 
     // Find struct type in type table
-    DataType *structType = ResolveDataType(globalTable, structName);
+    DataType *structType = DTM->symbolTable->lookup(DTM->symbolTable, structName);
     if (!structType)
     {
         parsingError("Failed to resolve struct type.", "parseStructInstance",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -898,11 +886,11 @@ ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingConte
             "parseStructInstance", arena, state, context);
 
     // Parse struct arguments
-    ASTNode *args = parseArgumentList(lexer, context, arena, state, globalTable);
+    ASTNode *args = parseArgumentList(lexer, context, arena, state);
     if (!args)
     {
         parsingError("Failed to parse struct arguments.", "parseStructInstance",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
     ASTNode **_args = args->data.argList->args;
@@ -912,7 +900,7 @@ ASTNode *parseNewStructObject(const char *structName, Lexer *lexer, ParsingConte
     if (!structObject)
     {
         parsingError("Failed to create struct object.", "parseStructInstance",
-                     arena, state, lexer, lexer->source, globalTable);
+                     arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -935,7 +923,7 @@ ConstructorMetaData *createConstructorMetaData(const char *parentName, CryoNodeT
 // |                                                                                                                                             | //
 // | =========================================================================================================================================== | //
 
-ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing type declaration...");
@@ -979,7 +967,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
         DataType *parentType = DTM->symbolTable->getEntry(DTM->symbolTable, getNamespaceScopeID(context), parentName);
         if (!parentType)
         {
-            parsingError("Failed to resolve parent type.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to resolve parent type.", "parseTypeDeclaration", arena, state, lexer, lexer->source);
             return NULL;
         }
 
@@ -990,7 +978,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
             DataType *typeAlias = DTM->dataTypes->createTypeAlias(typeName, parentType);
             if (!typeAlias)
             {
-                parsingError("Failed to create type alias.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+                parsingError("Failed to create type alias.", "parseTypeDeclaration", arena, state, lexer, lexer->source);
                 return NULL;
             }
 
@@ -1000,7 +988,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
             ASTNode *aliasTypeNode = createTypeDeclNode(typeName, typeAlias, arena, state, lexer);
             if (!aliasTypeNode)
             {
-                parsingError("Failed to create type alias node.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+                parsingError("Failed to create type alias node.", "parseTypeDeclaration", arena, state, lexer, lexer->source);
                 return NULL;
             }
             return aliasTypeNode;
@@ -1008,10 +996,10 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
     }
 
     consume(__LINE__, lexer, TOKEN_EQUAL, "Expected `=` after type name.", "parseTypeDeclaration", arena, state, context);
-    DataType *typeDefinition = parseTypeDefinition(typeName, lexer, context, arena, state, globalTable);
+    DataType *typeDefinition = parseTypeDefinition(typeName, lexer, context, arena, state);
     if (!typeDefinition)
     {
-        parsingError("Failed to parse type definition.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to parse type definition.", "parseTypeDeclaration", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -1021,7 +1009,7 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
     ASTNode *typeDeclNode = createTypeDeclNode(typeName, typeDefinition, arena, state, lexer);
     if (!typeDeclNode)
     {
-        parsingError("Failed to create type declaration node.", "parseTypeDeclaration", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create type declaration node.", "parseTypeDeclaration", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -1041,13 +1029,13 @@ ASTNode *parseTypeDeclaration(Lexer *lexer, ParsingContext *context, Arena *aren
 // - Class Type:        class {CLASS_NAME}
 // - Function Type:     (?args...) -> returnType
 //
-DataType *parseTypeDefinition(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseTypeDefinition(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing type definition...");
 
     // Check if the current token is a primitive type
-    DataType *primitiveType = parseForPrimitive(typeName, lexer, context, arena, state, globalTable);
+    DataType *primitiveType = parseForPrimitive(typeName, lexer, context, arena, state);
     if (primitiveType)
     {
         return primitiveType;
@@ -1056,12 +1044,12 @@ DataType *parseTypeDefinition(const char *typeName, Lexer *lexer, ParsingContext
     // Check if the definition is a function type
     if (lexer->currentToken.type == TOKEN_LPAREN)
     {
-        return parseFunctionType(typeName, lexer, context, arena, state, globalTable);
+        return parseFunctionType(typeName, lexer, context, arena, state);
     }
     else if (lexer->currentToken.type == TOKEN_LBRACE)
     {
         // This is an object type
-        return parseObjectType(typeName, lexer, context, arena, state, globalTable);
+        return parseObjectType(typeName, lexer, context, arena, state);
     }
 
     DEBUG_BREAKPOINT;
@@ -1069,7 +1057,7 @@ DataType *parseTypeDefinition(const char *typeName, Lexer *lexer, ParsingContext
 
 // This function looks at the current token and determines if it is a primitive type.
 // If not, then it will return NULL.
-DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "@parseForPrimitive Parsing for primitive type...");
@@ -1156,7 +1144,7 @@ DataType *parseForPrimitive(const char *typeName, Lexer *lexer, ParsingContext *
     return NULL;
 }
 
-DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing function type...");
@@ -1168,10 +1156,10 @@ DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *
     // Parse function arguments
     while (lexer->currentToken.type != TOKEN_RPAREN)
     {
-        DataType *argType = parseType(lexer, context, arena, state, globalTable);
+        DataType *argType = parseType(lexer, context, arena, state);
         if (!argType)
         {
-            parsingError("Failed to parse function argument type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to parse function argument type.", "parseFunctionType", arena, state, lexer, lexer->source);
             return NULL;
         }
         logMessage(LMI, "INFO", "Parser", "Function argument completed");
@@ -1187,7 +1175,7 @@ DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *
 
         if (lexer->currentToken.type != TOKEN_RPAREN)
         {
-            parsingError("Expected ',' or ')' in function argument list.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Expected ',' or ')' in function argument list.", "parseFunctionType", arena, state, lexer, lexer->source);
             return NULL;
         }
     }
@@ -1198,10 +1186,10 @@ DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *
     consume(__LINE__, lexer, TOKEN_RESULT_ARROW, "Expected `->` for return type.", "parseFunctionType", arena, state, context);
 
     logMessage(LMI, "INFO", "Parser", "Parsing function return type...");
-    DataType *returnType = parseType(lexer, context, arena, state, globalTable);
+    DataType *returnType = parseType(lexer, context, arena, state);
     if (!returnType)
     {
-        parsingError("Failed to parse function return type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to parse function return type.", "parseFunctionType", arena, state, lexer, lexer->source);
         return NULL;
     }
     logMessage(LMI, "INFO", "Parser", "Function return type parsed.");
@@ -1214,7 +1202,7 @@ DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *
     DataType *functionType = DTM->functionTypes->createFunctionType(argArray->data, argArray->count, returnType);
     if (!functionType)
     {
-        parsingError("Failed to create function type.", "parseFunctionType", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create function type.", "parseFunctionType", arena, state, lexer, lexer->source);
         return NULL;
     }
 
@@ -1225,7 +1213,7 @@ DataType *parseFunctionType(const char *typeName, Lexer *lexer, ParsingContext *
     return functionType;
 }
 
-DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing object type...");
@@ -1237,10 +1225,10 @@ DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *co
     // Parse object properties
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
-        DataType *propertyType = parseType(lexer, context, arena, state, globalTable);
+        DataType *propertyType = parseType(lexer, context, arena, state);
         if (!propertyType)
         {
-            parsingError("Failed to parse object property type.", "parseObjectType", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to parse object property type.", "parseObjectType", arena, state, lexer, lexer->source);
             return NULL;
         }
 
@@ -1248,7 +1236,7 @@ DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *co
 
         if (lexer->currentToken.type != TOKEN_IDENTIFIER)
         {
-            parsingError("Expected an identifier for object property.", "parseObjectType", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Expected an identifier for object property.", "parseObjectType", arena, state, lexer, lexer->source);
             return NULL;
         }
 
@@ -1268,12 +1256,12 @@ DataType *parseObjectType(const char *typeName, Lexer *lexer, ParsingContext *co
     return NULL;
 }
 
-DataType *parseStructType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseStructType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     DEBUG_BREAKPOINT;
 }
 
-DataType *parseClassType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+DataType *parseClassType(const char *typeName, Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     DEBUG_BREAKPOINT;
 }
@@ -1285,7 +1273,7 @@ DataType *parseClassType(const char *typeName, Lexer *lexer, ParsingContext *con
 // | =========================================================================================================================================== | //
 
 ASTNode *parseClassDeclaration(bool isStatic,
-                               Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                               Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing class declaration");
@@ -1293,7 +1281,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
 
     if (lexer->currentToken.type != TOKEN_IDENTIFIER)
     {
-        parsingError("Expected an identifier for class name.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected an identifier for class name.", "parseclassNodearation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -1301,7 +1289,6 @@ ASTNode *parseClassDeclaration(bool isStatic,
     logMessage(LMI, "INFO", "Parser", "Class name: %s", className);
 
     FEST->enterScope(FEST, className, SCOPE_CLASS);
-    InitClassDeclaration(globalTable, className);
     createClassScope(context, className);
 
     consume(__LINE__, lexer, TOKEN_IDENTIFIER, "Expected an identifier for class name.", "parseclassNodearation", arena, state, context);
@@ -1310,7 +1297,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
     if (!classNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create class declaration node.");
-        parsingError("Failed to create class declaration node.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create class declaration node.", "parseclassNodearation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -1319,11 +1306,11 @@ ASTNode *parseClassDeclaration(bool isStatic,
 
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start class body.", "parseclassNodearation", arena, state, context);
 
-    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, context, arena, state, globalTable);
+    ASTNode *classBody = parseClassBody(classNode, className, isStatic, lexer, context, arena, state);
     if (!classBody)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to parse class body.");
-        parsingError("Failed to parse class body.", "parseclassNodearation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to parse class body.", "parseclassNodearation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     logMessage(LMI, "INFO", "Parser", "Class body parsed.");
@@ -1356,9 +1343,6 @@ ASTNode *parseClassDeclaration(bool isStatic,
     logMessage(LMI, "INFO", "Parser", "Class methods added to class type.");
     classNode->data.classNode->type = classDataType;
 
-    CompleteClassDeclaration(globalTable, classNode, className); // Global Symbol Table
-    classNode->data.classNode->type = classDataType;
-
     DTM->symbolTable->addEntry(DTM->symbolTable, getNamespaceScopeID(context), className, classDataType);
     FEST->addSymbol(FEST, classNode);
 
@@ -1374,7 +1358,7 @@ ASTNode *parseClassDeclaration(bool isStatic,
 }
 
 ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic,
-                        Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                        Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing class body...");
@@ -1396,11 +1380,11 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         case TOKEN_KW_CONSTRUCTOR:
         {
             ConstructorMetaData *constructorMetaData = createConstructorMetaData(className, NODE_CLASS, false);
-            ASTNode *constructor = parseConstructor(lexer, context, arena, state, constructorMetaData, globalTable);
+            ASTNode *constructor = parseConstructor(lexer, context, arena, state, constructorMetaData);
             if (!constructor)
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
-                parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source);
                 CONDITION_FAILED;
             }
 
@@ -1450,7 +1434,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     getNextToken(lexer, arena, state);
 
                     logMessage(LMI, "INFO", "Parser", "Parsing property declaration...");
-                    DataType *type = parseType(lexer, context, arena, state, globalTable);
+                    DataType *type = parseType(lexer, context, arena, state);
                     type->typeName = strdup(identifier);
 
                     // Move past the data type token
@@ -1461,14 +1445,14 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     if (lexer->currentToken.type == TOKEN_EQUAL)
                     {
                         consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseClassBody", arena, state, context);
-                        initializer = parseExpression(lexer, context, arena, state, globalTable);
+                        initializer = parseExpression(lexer, context, arena, state);
                     }
 
                     // Consume the semicolon
                     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", arena, state, context);
 
                     ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, initializer, arena, state, lexer);
-                    addPropertyToClass(classNode, propNode, visibility, arena, state, context, globalTable);
+                    addPropertyToClass(classNode, propNode, visibility, arena, state, context);
 
                     logMessage(LMI, "INFO", "Parser", "Property added to class.");
 
@@ -1486,15 +1470,15 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
                 {
                     logMessage(LMI, "INFO", "Parser", "Parsing method declaration...");
-                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state, globalTable);
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state);
                     if (!methodNode)
                     {
                         logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
-                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source);
                         CONDITION_FAILED;
                     }
                     logMessage(LMI, "INFO", "Parser", "Method node created.");
-                    addMethodToClass(classNode, methodNode, visibility, arena, state, context, globalTable);
+                    addMethodToClass(classNode, methodNode, visibility, arena, state, context);
 
                     if (visibility == VISIBILITY_PUBLIC)
                         publicMethodCount++;
@@ -1508,14 +1492,14 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else
                 {
                     printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source);
                     CONDITION_FAILED;
                 }
             }
             else
             {
                 printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source);
                 CONDITION_FAILED;
             }
 
@@ -1541,7 +1525,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     getNextToken(lexer, arena, state);
 
                     logMessage(LMI, "INFO", "Parser", "Parsing static property declaration...");
-                    DataType *type = parseType(lexer, context, arena, state, globalTable);
+                    DataType *type = parseType(lexer, context, arena, state);
                     type->typeName = strdup(identifier);
 
                     // Move past the data type token
@@ -1552,14 +1536,14 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                     if (lexer->currentToken.type == TOKEN_EQUAL)
                     {
                         consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseClassBody", arena, state, context);
-                        initializer = parseExpression(lexer, context, arena, state, globalTable);
+                        initializer = parseExpression(lexer, context, arena, state);
                     }
 
                     // Consume the semicolon
                     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon.", "parseClassBody", arena, state, context);
 
                     ASTNode *propNode = createFieldNode(identifier, type, className, NODE_CLASS, initializer, arena, state, lexer);
-                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, context, globalTable);
+                    addPropertyToClass(classNode, propNode, VISIBILITY_PUBLIC, arena, state, context);
 
                     logMessage(LMI, "INFO", "Parser", "Static property added to class.");
 
@@ -1572,15 +1556,15 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else if (peekNextUnconsumedToken(lexer, arena, state).type == TOKEN_LPAREN)
                 {
                     logMessage(LMI, "INFO", "Parser", "Parsing static method declaration...");
-                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state, globalTable);
+                    ASTNode *methodNode = parseMethodDeclaration(isStatic, className, lexer, context, arena, state);
                     if (!methodNode)
                     {
                         logMessage(LMI, "ERROR", "Parser", "Failed to parse method declaration.");
-                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                        parsingError("Failed to parse method declaration.", "parseClassBody", arena, state, lexer, lexer->source);
                         CONDITION_FAILED;
                     }
                     logMessage(LMI, "INFO", "Parser", "Static method node created.");
-                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, context, globalTable);
+                    addMethodToClass(classNode, methodNode, VISIBILITY_PUBLIC, arena, state, context);
 
                     publicMethodCount++;
 
@@ -1590,14 +1574,14 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
                 else
                 {
                     printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                    parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source);
                     CONDITION_FAILED;
                 }
             }
             else
             {
                 printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+                parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source);
                 CONDITION_FAILED;
             }
 
@@ -1612,7 +1596,7 @@ ASTNode *parseClassBody(ASTNode *classNode, const char *className, bool isStatic
         default:
         {
             printf("Unexpected token: %s @Line: %i\n", CryoTokenToString(lexer->currentToken.type), __LINE__);
-            parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Unexpected token in class body.", "parseClassBody", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
         }
@@ -1691,7 +1675,7 @@ void addConstructorToClass(ASTNode *classNode, ASTNode *constructorNode, Arena *
 }
 
 void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityType visibility,
-                      Arena *arena, CompilerState *state, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+                      Arena *arena, CompilerState *state, ParsingContext *context)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding method to class...");
@@ -1724,7 +1708,7 @@ void addMethodToClass(ASTNode *classNode, ASTNode *methodNode, CryoVisibilityTyp
 }
 
 void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityType visibility,
-                        Arena *arena, CompilerState *state, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+                        Arena *arena, CompilerState *state, ParsingContext *context)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Adding property to class...");
@@ -1750,7 +1734,6 @@ void addPropertyToClass(ASTNode *classNode, ASTNode *propNode, CryoVisibilityTyp
     }
 
     const char *className = classNode->data.classNode->name;
-    AddPropertyToClass(globalTable, className, propNode); // Update Global Symbol Table
 
     logMessage(LMI, "INFO", "Parser", "Property added to class.");
     return;
@@ -1903,7 +1886,7 @@ void addProtectedProperty(ASTNode *classNode, ASTNode *propNode,
 }
 
 ASTNode *parseMethodScopeResolution(const char *scopeName,
-                                    Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                    Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing method scope resolution...");
@@ -1913,19 +1896,19 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
 
     logMessage(LMI, "INFO", "Parser", "Method name: %s", methodName);
 
-    Symbol *symbol = FindMethodSymbol(globalTable, methodName, strdup(scopeName), OBJECT_TYPE);
+    FrontendSymbol *symbol = FEST->lookup(FEST, methodName);
     if (!symbol)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find method symbol.");
-        parsingError("Failed to find method symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to find method symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
-    ASTNode *methodNode = GetASTNodeFromSymbol(globalTable, symbol);
+    ASTNode *methodNode = symbol->node;
     if (!methodNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to get method node from symbol.");
-        parsingError("Failed to get method node from symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to get method node from symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -1935,22 +1918,22 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
     if (methodNode->metaData->type == NODE_METHOD)
     {
         bool isStaticMethod = methodNode->data.method->isStatic;
-        ASTNode *argList = parseArgumentList(lexer, context, arena, state, globalTable);
+        ASTNode *argList = parseArgumentList(lexer, context, arena, state);
         if (!argList)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to parse method arguments.");
-            parsingError("Failed to parse method arguments.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to parse method arguments.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
         ASTNode **args = argList->data.argList->args;
         int argCount = argList->data.argList->argCount;
 
         // We need to get the AST Node of the class as well as its type
-        DataType *classType = ResolveDataType(globalTable, scopeName);
+        DataType *classType = DTM->symbolTable->lookup(DTM->symbolTable, scopeName);
         if (!classType)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to find class type.");
-            parsingError("Failed to find class type.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to find class type.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
 
@@ -1960,19 +1943,18 @@ ASTNode *parseMethodScopeResolution(const char *scopeName,
         if (!methodCall)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to create method call node.");
-            parsingError("Failed to create method call node.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to create method call node.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
 
-        const char *classScopeID = Generate64BitHashID(scopeName);
-        Symbol *classSym = FindSymbol(globalTable, scopeName, classScopeID);
+        FrontendSymbol *classSym = FEST->lookup(FEST, scopeName);
         if (!classSym)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to find class symbol.");
-            parsingError("Failed to find class symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to find class symbol.", "parseMethodScopeResolution", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
-        ASTNode *classASTNode = GetASTNodeFromSymbol(globalTable, classSym);
+        ASTNode *classASTNode = classSym->node;
         methodCall->data.methodCall->accessorObj = classASTNode;
 
         logASTNode(methodCall);
@@ -1992,7 +1974,7 @@ ASTNode *createClassPropertyAccessNode(ASTNode *object, ASTNode *property, const
     if (!propAccess)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create property access node.");
-        parsingError("Failed to create property access node.", "createClassPropertyAccessNode", arena, state, lexer, lexer->source, NULL);
+        parsingError("Failed to create property access node.", "createClassPropertyAccessNode", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -2009,7 +1991,7 @@ ASTNode *createClassPropertyAccessNode(ASTNode *object, ASTNode *property, const
 // The `implementation` keyword is used to define the implementation of a class or struct.
 // The syntax is as follows:
 // implement <struct|class> <typeName> { <body> }
-ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing implementation...");
@@ -2044,7 +2026,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     }
     else
     {
-        parsingError("Expected `class` or `struct` keyword.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected `class` or `struct` keyword.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -2052,7 +2034,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     if (!typeName)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to allocate memory for type name.");
-        parsingError("Failed to allocate memory for type name.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to allocate memory for type name.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     logMessage(LMI, "INFO", "Parser", "Implementation of <%s> %s", isClass ? "class" : "struct", typeName);
@@ -2064,7 +2046,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     if (!interfaceType)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to find interface type.");
-        parsingError("Failed to find interface type.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to find interface type.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -2082,7 +2064,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     }
     else
     {
-        parsingError("Expected an identifier for implementation name.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Expected an identifier for implementation name.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     consume(__LINE__, lexer, TOKEN_LBRACE, "Expected `{` to start implementation body.", "parseImplementation", arena, state, context);
@@ -2091,14 +2073,14 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     if (!methods)
     {
         logMessage(LMI, "ERROR", "Memory", "Failed to allocate memory for methods.");
-        parsingError("Failed to allocate memory for methods.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to allocate memory for methods.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
     ASTNode **properties = (ASTNode **)malloc(sizeof(ASTNode *) * MAX_FIELD_CAPACITY);
     if (!properties)
     {
         logMessage(LMI, "ERROR", "Memory", "Failed to allocate memory for properties.");
-        parsingError("Failed to allocate memory for properties.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to allocate memory for properties.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -2107,11 +2089,11 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
 
     while (lexer->currentToken.type != TOKEN_RBRACE)
     {
-        ASTNode *fieldNode = parseImplementationBody(interfaceType, lexer, context, arena, state, globalTable);
+        ASTNode *fieldNode = parseImplementationBody(interfaceType, lexer, context, arena, state);
         if (!fieldNode)
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to parse field declaration.");
-            parsingError("Failed to parse field declaration.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Failed to parse field declaration.", "parseImplementation", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
 
@@ -2126,7 +2108,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
         else
         {
             logMessage(LMI, "ERROR", "Parser", "Unknown node type.");
-            parsingError("Unknown node type.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+            parsingError("Unknown node type.", "parseImplementation", arena, state, lexer, lexer->source);
             CONDITION_FAILED;
         }
     }
@@ -2139,7 +2121,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
     if (!implementationNode)
     {
         logMessage(LMI, "ERROR", "Parser", "Failed to create implementation node.");
-        parsingError("Failed to create implementation node.", "parseImplementation", arena, state, lexer, lexer->source, globalTable);
+        parsingError("Failed to create implementation node.", "parseImplementation", arena, state, lexer, lexer->source);
         CONDITION_FAILED;
     }
 
@@ -2150,7 +2132,7 @@ ASTNode *parseImplementation(Lexer *lexer, ParsingContext *context, Arena *arena
 }
 
 ASTNode *parseImplementationBody(DataType *interfaceType,
-                                 Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                 Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing implementation body...");
@@ -2169,7 +2151,7 @@ ASTNode *parseImplementationBody(DataType *interfaceType,
         consume(__LINE__, lexer, TOKEN_COLON, "Expected `:` after field name.", "parseImplementationBody", arena, state, context);
 
         // Parse the type
-        DataType *fieldType = parseType(lexer, context, arena, state, globalTable);
+        DataType *fieldType = parseType(lexer, context, arena, state);
         getNextToken(lexer, arena, state);
 
         fieldType->debug->printType(fieldType);
@@ -2179,7 +2161,7 @@ ASTNode *parseImplementationBody(DataType *interfaceType,
         if (lexer->currentToken.type == TOKEN_EQUAL)
         {
             consume(__LINE__, lexer, TOKEN_EQUAL, "Expected '=' for property initializer.", "parseImplementationBody", arena, state, context);
-            initializer = parseExpression(lexer, context, arena, state, globalTable);
+            initializer = parseExpression(lexer, context, arena, state);
         }
 
         // Consume the semicolon
@@ -2204,13 +2186,13 @@ ASTNode *parseImplementationBody(DataType *interfaceType,
         logMessage(LMI, "INFO", "Parser", "Method parent name: %s", parentName);
 
         // Parse the method declaration
-        return parseMethodDeclaration(isStatic, parentName, lexer, context, arena, state, globalTable);
+        return parseMethodDeclaration(isStatic, parentName, lexer, context, arena, state);
     }
 
     // If we reach here, we couldn't parse a valid implementation member
     char *tokenStr = strndup(lexer->currentToken.start, lexer->currentToken.length);
     logMessage(LMI, "ERROR", "Parser", "Unexpected token in implementation body: %s", tokenStr);
-    parsingError("Unexpected token in implementation body.", "parseImplementationBody", arena, state, lexer, lexer->source, globalTable);
+    parsingError("Unexpected token in implementation body.", "parseImplementationBody", arena, state, lexer, lexer->source);
 
     return NULL;
 }

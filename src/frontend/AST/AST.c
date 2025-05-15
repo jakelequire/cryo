@@ -14,7 +14,6 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
@@ -450,7 +449,7 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);

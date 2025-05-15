@@ -25,7 +25,6 @@
  * - Specific exports: `using Std::IO::{FS, Console};`
  */
 
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
@@ -39,13 +38,12 @@
 static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain, size_t *chainLength,
                              ParsingContext *context, Arena *arena, CompilerState *state);
 static void parseTypeList(Lexer *lexer, const char *modulePath, const char **moduleChain, size_t chainLength,
-                          ParsingContext *context, Arena *arena, CompilerState *state,
-                          CryoGlobalSymbolTable *globalTable);
+                          ParsingContext *context, Arena *arena, CompilerState *state);
 static void cleanupModuleChain(char **names, size_t length);
 static bool importModule(const char *primaryModule, const char **moduleChain, size_t chainLength,
-                         CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                         CompilerState *state);
 static bool importSpecificExports(const char *modulePath, const char **exports, size_t exportCount,
-                                  CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                                  CompilerState *state);
 static char *buildModulePath(const char *compilerRoot, const char *primaryModule, const char **moduleChain,
                              size_t chainLength);
 static bool isValidModulePath(const char *path);
@@ -68,8 +66,7 @@ static char *findModuleFile(const char *dirPath, const char *moduleName);
  * @return ASTNode* Node representing the using statement
  */
 ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
-                           Arena *arena, CompilerState *state,
-                           CryoGlobalSymbolTable *globalTable)
+                           Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing using keyword...");
@@ -77,9 +74,6 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
     // Consume 'using' keyword
     consume(__LINE__, lexer, TOKEN_KW_USING, "Expected `using` keyword.",
             "parseUsingKeyword", arena, state, context);
-
-    // Temporarily disable primary table to prepare for imports
-    setPrimaryTableStatus(globalTable, false);
 
     // Get primary module name (e.g., 'Std')
     Token primaryModuleToken = lexer->currentToken;
@@ -93,15 +87,13 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
     if (lexer->currentToken.type == TOKEN_SEMICOLON)
     {
         // Import the entire standard library
-        if (!importFullStandardLibrary(primaryModule, state, globalTable))
+        if (!importFullStandardLibrary(primaryModule, state))
         {
             logMessage(LMI, "ERROR", "Parser", "Failed to import full standard library: %s", primaryModule);
         }
 
         consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
                 "parseUsingKeyword", arena, state, context);
-
-        setPrimaryTableStatus(globalTable, true);
 
         // Create AST node for the using statement
         const char *moduleChain[] = {primaryModule};
@@ -134,7 +126,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
 
         if (modulePath)
         {
-            parseTypeList(lexer, modulePath, moduleChainStr, chainLength, context, arena, state, globalTable);
+            parseTypeList(lexer, modulePath, moduleChainStr, chainLength, context, arena, state);
             free(modulePath);
         }
         else
@@ -147,15 +139,12 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
         // Import the entire module path
         if (!context->isParsingModuleFile)
         {
-            if (!importModule(primaryModule, moduleChainStr, chainLength, state, globalTable))
+            if (!importModule(primaryModule, moduleChainStr, chainLength, state))
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to import module: %s", primaryModule);
             }
         }
     }
-
-    // Re-enable primary table after imports
-    setPrimaryTableStatus(globalTable, true);
 
     consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected `;` to end using statement.",
             "parseUsingKeyword", arena, state, context);
@@ -174,7 +163,7 @@ ASTNode *parseUsingKeyword(Lexer *lexer, ParsingContext *context,
  * @param globalTable Global symbol table
  * @return true if successful, false otherwise
  */
-bool importFullStandardLibrary(const char *primaryModule, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+bool importFullStandardLibrary(const char *primaryModule, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Importing full standard library: %s", primaryModule);
@@ -206,7 +195,7 @@ bool importFullStandardLibrary(const char *primaryModule, CompilerState *state, 
     }
 
     // Find all .cryo files in the standard library directory and subdirectories
-    importStandardLibraryRecursive(stdLibPath, state, globalTable);
+    importStandardLibraryRecursive(stdLibPath, state);
 
     free(stdLibPath);
     return true;
@@ -219,7 +208,7 @@ bool importFullStandardLibrary(const char *primaryModule, CompilerState *state, 
  * @param state Compiler state
  * @param globalTable Global symbol table
  */
-void importStandardLibraryRecursive(const char *dirPath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+void importStandardLibraryRecursive(const char *dirPath, CompilerState *state)
 {
     __STACK_FRAME__
     DIR *dir = opendir(dirPath);
@@ -256,14 +245,14 @@ void importStandardLibraryRecursive(const char *dirPath, CompilerState *state, C
         {
             // It's a directory, recursively import
             closedir(checkDir);
-            importStandardLibraryRecursive(fullPath, state, globalTable);
+            importStandardLibraryRecursive(fullPath, state);
         }
         else if (strstr(entry->d_name, ".cryo") && !strstr(entry->d_name, ".mod.cryo"))
         {
             // It's a .cryo file (but not a module file), import it
             logMessage(LMI, "INFO", "Parser", "Importing file: %s", fullPath);
             DTM->symbolTable->startSnapshot(DTM->symbolTable);
-            ASTNode *node = compileForASTNode(fullPath, state, globalTable);
+            ASTNode *node = compileForASTNode(fullPath, state);
             if (!node)
             {
                 logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", fullPath);
@@ -372,8 +361,7 @@ static void parseModuleChain(Lexer *lexer, struct ModuleChainEntry *moduleChain,
  * @param globalTable Global symbol table
  */
 static void parseTypeList(Lexer *lexer, const char *modulePath, const char **moduleChain, size_t chainLength,
-                          ParsingContext *context, Arena *arena, CompilerState *state,
-                          CryoGlobalSymbolTable *globalTable)
+                          ParsingContext *context, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Parsing specific exports within braces...");
@@ -425,7 +413,7 @@ static void parseTypeList(Lexer *lexer, const char *modulePath, const char **mod
     // Import specific exports from module
     if (!context->isParsingModuleFile)
     {
-        importSpecificExports(modulePath, exportArray, exportCount, state, globalTable);
+        importSpecificExports(modulePath, exportArray, exportCount, state);
     }
 
     // Cleanup
@@ -458,7 +446,7 @@ static void cleanupModuleChain(char **names, size_t length)
  * @return true if successful, false otherwise
  */
 static bool importModule(const char *primaryModule, const char **moduleChain, size_t chainLength,
-                         CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                         CompilerState *state)
 {
     __STACK_FRAME__
     // Currently only support Std as primary module
@@ -493,7 +481,7 @@ static bool importModule(const char *primaryModule, const char **moduleChain, si
         // Import the module file
         logMessage(LMI, "INFO", "Parser", "Importing module file: %s", moduleFile);
         DTM->symbolTable->startSnapshot(DTM->symbolTable);
-        ASTNode *node = compileForASTNode(moduleFile, state, globalTable);
+        ASTNode *node = compileForASTNode(moduleFile, state);
         free(moduleFile);
         DTM->symbolTable->endSnapshot(DTM->symbolTable);
         if (!node)
@@ -521,7 +509,7 @@ static bool importModule(const char *primaryModule, const char **moduleChain, si
         {
             logMessage(LMI, "INFO", "Parser", "Importing file: %s", cryoFiles[i]);
             DTM->symbolTable->startSnapshot(DTM->symbolTable);
-            ASTNode *node = compileForASTNode(cryoFiles[i], state, globalTable);
+            ASTNode *node = compileForASTNode(cryoFiles[i], state);
 
             if (!node)
             {
@@ -550,7 +538,7 @@ static bool importModule(const char *primaryModule, const char **moduleChain, si
  * @return true if successful, false otherwise
  */
 static bool importSpecificExports(const char *modulePath, const char **exports, size_t exportCount,
-                                  CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                  CompilerState *state)
 {
     __STACK_FRAME__
     logMessage(LMI, "INFO", "Parser", "Importing specific exports from module: %s", modulePath);
@@ -608,7 +596,7 @@ static bool importSpecificExports(const char *modulePath, const char **exports, 
                 logMessage(LMI, "INFO", "Parser", "Importing export %s from file: %s",
                            exportName, cryoFiles[j]);
                 DTM->symbolTable->startSnapshot(DTM->symbolTable);
-                ASTNode *node = compileForASTNode(cryoFiles[j], state, globalTable);
+                ASTNode *node = compileForASTNode(cryoFiles[j], state);
                 if (!node)
                 {
                     logMessage(LMI, "ERROR", "Parser", "Failed to compile file: %s", cryoFiles[j]);

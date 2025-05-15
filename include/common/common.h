@@ -84,7 +84,6 @@ typedef struct CompilerState
     struct ASTNode *currentNode;
     CompilerSettings *settings;
     CompilerError **errors;
-    CryoGlobalSymbolTable *globalTable;
 
     const char *fileName;
     char *filePath;
@@ -107,7 +106,6 @@ typedef struct CompilerState
 CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
 void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
-void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table);
 CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
 
 InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber);

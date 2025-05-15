@@ -14,7 +14,6 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/parser.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
@@ -28,7 +27,7 @@ The import keyword can have the following syntax:
 ```
 import "./module.cryo" // Import relative to the current file
 */
-ASTNode *handleImportParsing(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *handleImportParsing(Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     consume(__LINE__, lexer, TOKEN_KW_IMPORT, "Expected `import` keyword", "Import", arena, state, context);
 
@@ -45,7 +44,7 @@ ASTNode *handleImportParsing(Lexer *lexer, ParsingContext *context, Arena *arena
         logMessage(LMI, "INFO", "Import", "Importing module: <%s>", modulePath);
         getNextToken(lexer, arena, state); // Consume the string literal token
 
-        return handleRelativeImport(modulePath, lexer, context, arena, state, globalTable);
+        return handleRelativeImport(modulePath, lexer, context, arena, state);
     }
     default:
     {
@@ -90,7 +89,7 @@ const char *resolveRelativePath(const char *currentDir, const char *relativePath
 }
 
 ASTNode *handleRelativeImport(const char *modulePath,
-                              Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                              Lexer *lexer, ParsingContext *context, Arena *arena, CompilerState *state)
 {
     logMessage(LMI, "INFO", "Import", "Handling relative import");
     printf("Module Path: %s\n", modulePath);
@@ -122,7 +121,7 @@ ASTNode *handleRelativeImport(const char *modulePath,
     // Now that we have the resolved path, we can parse the module
     // and get the AST tree for the module.
 
-    ASTNode *moduleNode = compileForASTNode(resolvedPath, state, globalTable);
+    ASTNode *moduleNode = compileForASTNode(resolvedPath, state);
     if (!moduleNode)
     {
         logMessage(LMI, "ERROR", "Import", "Failed to compile module: %s", resolvedPath);

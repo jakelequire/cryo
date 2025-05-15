@@ -42,7 +42,6 @@ typedef struct Lexer Lexer;
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerSettings CompilerSettings;
-typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 #define INITIAL_CAPACITY 8
 #define PROGRAM_CAPACITY 512
@@ -927,8 +926,7 @@ extern "C"
 
     ASTNode *createIdentifierNode(
         char *name,
-        Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context,
-        CryoGlobalSymbolTable *globalTable);
+        Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context);
 
     /**
      * Function-Related Nodes

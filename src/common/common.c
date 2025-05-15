@@ -46,7 +46,6 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileNam
     state->errorCount = 0;
     state->settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
     state->errors = (CompilerError **)malloc(sizeof(CompilerError *));
-    state->globalTable = (CryoGlobalSymbolTable *)malloc(sizeof(CryoGlobalSymbolTable));
 
     state->isActiveBuild = false;
     state->isModuleFile = false;
@@ -58,11 +57,6 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileNam
 
     logMessage(LMI, "INFO", "CompilerState", "Compiler state initialized");
     return state;
-}
-
-void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table)
-{
-    state->globalTable = table;
 }
 
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state)

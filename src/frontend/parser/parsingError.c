@@ -14,7 +14,6 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/frontendSymbolTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
@@ -26,15 +25,13 @@ void parsingError(
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
-    const char *source,
-    CryoGlobalSymbolTable *globalTable)
+    const char *source)
 {
     __STACK_FRAME__
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
-    const char *curModule = GetNamespace(globalTable);
-
+    const char *curModule = "UNDEFINED";
     DEBUG_PRINT_FILTER({
         DTM->symbolTable->printTable(DTM->symbolTable);
         FEST->printTable(FEST);

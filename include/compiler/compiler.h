@@ -73,40 +73,30 @@ extern "C"
     typedef struct CryoLinker_t *CryoLinker;
 
     int generateIRFromAST(CompilationUnit *unit,
-                          CompilerState *state, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
+                          CompilerState *state, CryoLinker *cLinker);
 
     int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
-                          CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
+                          CryoLinker *cLinker);
 
 #ifdef __cplusplus
 }
 #endif
 
 extern int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
-                             CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
+                             CryoLinker *cLinker);
 
 // -------------------------------------------------------------
 // NEW Compiler Functions
 
-#define INIT_SUBSYSTEMS(buildDir, compilerRootPath, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state) \
-    do                                                                                                                          \
-    {                                                                                                                           \
-        globalSymbolTable = CryoGlobalSymbolTable_Create(buildDir);                                                             \
-        if (!globalSymbolTable)                                                                                                 \
-        {                                                                                                                       \
-            fprintf(stderr, "Error: Failed to create global symbol table\n");                                                   \
-            return 1;                                                                                                           \
-        }                                                                                                                       \
-        printGlobalSymbolTable(globalSymbolTable);                                                                              \
-        linker = CreateCryoLinker(buildDir, compilerRootPath);                                                                  \
-        arena = createArena(ARENA_SIZE, ALIGNMENT);                                                                             \
-        printGlobalSymbolTable(globalSymbolTable);                                                                              \
-        setPrimaryTableStatus(globalSymbolTable, true);                                                                         \
-        lexer = (Lexer){};                                                                                                      \
-        state = initCompilerState(arena, &lexer, fileName);                                                                     \
-        setGlobalSymbolTable(state, globalSymbolTable);                                                                         \
-        initLexer(&lexer, source, fileName, state);                                                                             \
-        state->settings = settings;                                                                                             \
+#define INIT_SUBSYSTEMS(buildDir, compilerRootPath, fileName, source, settings, linker, arena, lexer, state) \
+    do                                                                                                       \
+    {                                                                                                        \
+        linker = CreateCryoLinker(buildDir, compilerRootPath);                                               \
+        arena = createArena(ARENA_SIZE, ALIGNMENT);                                                          \
+        lexer = (Lexer){};                                                                                   \
+        state = initCompilerState(arena, &lexer, fileName);                                                  \
+        initLexer(&lexer, source, fileName, state);                                                          \
+        state->settings = settings;                                                                          \
     } while (0)
 
 int cryoCompile(CompilerSettings *settings);
@@ -116,13 +106,8 @@ int exe_project_build(CompilerSettings *settings);
 int exe_lsp_build(CompilerSettings *settings);
 int exe_source_build(CompilerSettings *settings);
 
-// Module Compiler
-ASTNode *compileModuleFileToProgramNode(const char *filePath, const char *outputPath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
-SymbolTable *compileToReapSymbols(const char *filePath, const char *outputPath, CompilerState *state, Arena *arena, CryoGlobalSymbolTable *globalTable);
-int processNodeToIRObject(ASTNode *node, CompilerState *state, const char *outputPath, CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable);
-
 // Import AST Nodes
-ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+ASTNode *compileForASTNode(const char *filePath, CompilerState *state);
 
 // C++ Accessable Functions
 #ifdef __cplusplus

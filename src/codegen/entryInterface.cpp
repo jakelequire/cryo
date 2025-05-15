@@ -17,8 +17,7 @@
 #include "linker/linker.hpp"
 #include "codegen/codegen.hpp"
 
-int generateIRFromAST(CompilationUnit *unit, CompilerState *state,
-                      CryoLinker *cLinker, CryoGlobalSymbolTable *globalTable)
+int generateIRFromAST(CompilationUnit *unit, CompilerState *state, CryoLinker *cLinker)
 {
     if (!unit->isVerified)
     {

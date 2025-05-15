@@ -15,14 +15,13 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
 CompilerContext *compilerCtx = NULL;
 
-CCTXPragma *initCCTXPragma(void) 
+CCTXPragma *initCCTXPragma(void)
 {
     CCTXPragma *pragma = (CCTXPragma *)malloc(sizeof(CCTXPragma));
     if (!pragma)
@@ -36,7 +35,7 @@ CCTXPragma *initCCTXPragma(void)
     return pragma;
 }
 
-CCTXFile *initCCTXFile(void) 
+CCTXFile *initCCTXFile(void)
 {
     CCTXFile *file = (CCTXFile *)malloc(sizeof(CCTXFile));
     if (!file)

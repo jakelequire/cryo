@@ -101,6 +101,8 @@ extern "C"
         CRYO_ERROR_INTEGER_OVERFLOW = 904,
         CRYO_ERROR_INVALID_MEMORY_ACCESS = 905,
         CRYO_ERROR_DEBUG_BREAKPOINT = 906,
+        CRYO_ERROR_I_UNIMPLMENTED_FUNCTION = 907,
+
     } CryoErrorCode;
 
     // Error severity levels

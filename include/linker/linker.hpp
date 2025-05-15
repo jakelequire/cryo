@@ -17,7 +17,6 @@
 #ifndef CRYO_LINKER_H
 #define CRYO_LINKER_H
 
-typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 typedef struct CompilerState CompilerState;
 
 // ================================================================ //
@@ -38,7 +37,7 @@ extern "C"
     void CryoLinker_InitCRuntime(CryoLinker *linker);
     void CryoLinker_LinkAll(CryoLinker *linker);
     void CryoLinker_InitCryoCore(CryoLinker *linker, const char *compilerRootPath, const char *buildDir,
-                                 CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                                 CompilerState *state);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Macros
@@ -329,7 +328,7 @@ namespace Cryo
          * @param globalTable Global symbol table
          */
         void initCryoCore(const char *compilerRootPath, const char *buildDir,
-                          CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                          CompilerState *state);
 
         /**
          * @brief Builds the standard library
@@ -338,7 +337,7 @@ namespace Cryo
          * @param globalTable Global symbol table
          * @return 0 if successful, non-zero otherwise
          */
-        int buildStandardLib(CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        int buildStandardLib(CompilerState *state);
 
         /**
          * @brief Compiles a single standard library item
@@ -348,7 +347,7 @@ namespace Cryo
          * @param globalTable Global symbol table
          * @return 0 if successful, non-zero otherwise
          */
-        int compileLibItem(std::string filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable);
+        int compileLibItem(std::string filePath, CompilerState *state);
 
     private:
         // Runtime initialization
@@ -358,9 +357,9 @@ namespace Cryo
 
         // Core file processing
         bool processCoreFile(const char *compilerRootPath, const char *buildDir,
-                             CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                             CompilerState *state);
         bool generateCoreIR(ASTNode *defsNode, const char *corePath, const char *buildDir,
-                            CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                            CompilerState *state);
 
         // Core library creation
         int linkCryoCoreLibrary(const char *compilerRootPath);
@@ -374,12 +373,12 @@ namespace Cryo
         std::vector<std::string> findStandardLibraryFiles(const std::string &stdDir);
         void printFoundFiles(const std::vector<std::string> &cryoFiles);
         bool compileAllStandardLibraryFiles(const std::vector<std::string> &cryoFiles,
-                                            CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                                            CompilerState *state);
 
         // Library item compilation
         int createAndLinkLibraryItem(ASTNode *programNode, const std::string &filePath,
                                      const std::string &buildDir, const std::string &compilerRootPath,
-                                     CompilerState *state, CryoGlobalSymbolTable *globalTable);
+                                     CompilerState *state);
         bool linkWithCoreLibrary(const CompilationUnitDir &dir, const std::string &compilerRootPath);
 
         // Build verification
@@ -422,10 +421,10 @@ namespace Cryo
     }
 
     inline void CryoLinker_InitCryoCore(CryoLinker *linker, const char *compilerRootPath, const char *buildDir,
-                                        CompilerState *state, CryoGlobalSymbolTable *globalTable)
+                                        CompilerState *state)
     {
         auto _linker = reinterpret_cast<Linker *>(linker);
-        _linker->initCryoCore(compilerRootPath, buildDir, state, globalTable);
+        _linker->initCryoCore(compilerRootPath, buildDir, state);
     }
 
 } // namespace Cryo
