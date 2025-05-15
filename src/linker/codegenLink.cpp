@@ -46,7 +46,6 @@ namespace Cryo
         // e.g /path/to/file/file.ll
         // Make the empty file before writing to it
         std::string trimmedFilePath = fs->removeFileFromPath(outputPath);
-        std::cout << "Trimmed File Path: " << trimmedFilePath << std::endl;
         fs->createDir(trimmedFilePath.c_str());
         fs->createNewEmptyFileWpath(outputPath);
         logMessage(LMI, "INFO", "Linker", "Starting IR Generation...");

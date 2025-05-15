@@ -205,7 +205,6 @@ namespace Cryo
             else
             {
                 logMessage(LMI, "ERROR", "Visitor", "Self allocation symbol not found");
-                context.getInstance().symbolTable->debugPrint();
                 CONDITION_FAILED;
             }
         }

@@ -1052,7 +1052,6 @@ ASTNode *parsePrimaryExpression(Lexer *lexer, ParsingContext *context, Arena *ar
                       "Integer overflow",
                       __LINE__, __FILE__, __func__)
         }
-        printf("Int Value: %d\n", intVal);
         node = createIntLiteralNode(intVal, arena, state, lexer);
         if (context->integerContextType != NULL)
         {

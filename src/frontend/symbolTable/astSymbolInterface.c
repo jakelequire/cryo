@@ -20,23 +20,25 @@
 
 void FrontendSymbol_printFrontendSymbol(FrontendSymbol *symbol)
 {
-    if (!symbol)
-    {
-        printf("(NULL SYMBOL)\n");
-        return;
-    }
+    DEBUG_PRINT_FILTER({
+        if (!symbol)
+        {
+            printf("(NULL SYMBOL)\n");
+            return;
+        }
 
-    printf("\n");
-    printf("+----------------------------------------- [ Frontend Symbol ] -----------------------------------------+\n");
-    printf("| Name: %-20s | ID: %-15s | Type: %-20s | Scope: %-14s \n",
-           symbol->name, symbol->id, symbol->type->debug->toString(symbol->type), getScopeTypeString(symbol->scopeType));
-    printf("+-------------------------------------------------------------------------------------------------------+\n");
-    printf("| Line: %-8zu | Column: %-8zu | Is Defined: %-8s |\n",
-           symbol->lineNumber, symbol->columnNumber, symbol->isDefined ? "true" : "false");
-    printf("+-------------------------------------------------------------------------------------------------------+\n");
-    symbol->node->print(symbol->node);
-    printf("+-------------------------------------------------------------------------------------------------------+\n");
-    printf("\n");
+        printf("\n");
+        printf("+----------------------------------------- [ Frontend Symbol ] -----------------------------------------+\n");
+        printf("| Name: %-20s | ID: %-15s | Type: %-20s | Scope: %-14s \n",
+               symbol->name, symbol->id, symbol->type->debug->toString(symbol->type), getScopeTypeString(symbol->scopeType));
+        printf("+-------------------------------------------------------------------------------------------------------+\n");
+        printf("| Line: %-8zu | Column: %-8zu | Is Defined: %-8s |\n",
+               symbol->lineNumber, symbol->columnNumber, symbol->isDefined ? "true" : "false");
+        printf("+-------------------------------------------------------------------------------------------------------+\n");
+        symbol->node->print(symbol->node);
+        printf("+-------------------------------------------------------------------------------------------------------+\n");
+        printf("\n");
+    });
 }
 
 FrontendSymbol *p_createSymbol(const char *name,

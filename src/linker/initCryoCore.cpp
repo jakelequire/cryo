@@ -537,7 +537,7 @@ namespace Cryo
         std::vector<std::string> cryoFiles = findStandardLibraryFiles(stdDir);
 
         // Print out the files
-        printFoundFiles(cryoFiles);
+        // printFoundFiles(cryoFiles);
 
         // Compile each file
         if (!compileAllStandardLibraryFiles(cryoFiles, state, globalTable))

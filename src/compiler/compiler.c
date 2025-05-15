@@ -129,9 +129,6 @@ int exe_single_file_build(CompilerSettings *settings)
     }
     TableFinished(globalSymbolTable); // Finish the global symbol table
 
-    printf("Printing Stack Trace...\n");
-    GDM->printStackTrace(GDM);
-
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
 
@@ -233,8 +230,10 @@ int exe_project_build(CompilerSettings *settings)
     }
     TableFinished(globalSymbolTable); // Finish the global symbol table
 
-    printf("Printing Stack Trace...\n");
-    GDM->printStackTrace(GDM);
+    DEBUG_PRINT_FILTER({
+        printf("Printing Stack Trace...\n");
+        GDM->printStackTrace(GDM);
+    });
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));

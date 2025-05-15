@@ -214,10 +214,6 @@ namespace Cryo
             return;
         }
 
-        std::cout << "=================== [ Add Type To Table ] ===================" << std::endl;
-        std::cout << "Type Name: " << typeName << std::endl;
-        std::cout << "============================================================" << std::endl;
-
         // Check if type already exists
         if (doesTypeExist(typeName))
         {

@@ -37,7 +37,6 @@ namespace Cryo
         {
             logMessage(LMI, "ERROR", "Initializer", "Variable %s not found", varName.c_str());
             // Print the symbol table for debugging
-            context.getInstance().symbolTable->debugPrint();
             return nullptr;
         }
         DataType *varDataType = varSymbol->dataType;

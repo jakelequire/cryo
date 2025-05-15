@@ -96,7 +96,6 @@ namespace Cryo
         {
             logMessage(LMI, "ERROR", "Initializer", "Parameter %s not found", paramName.c_str());
             // Print the symbol table for debugging
-            context.getInstance().symbolTable->debugPrint();
             DEBUG_BREAKPOINT;
             return nullptr;
         }

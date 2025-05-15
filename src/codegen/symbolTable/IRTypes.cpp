@@ -301,7 +301,6 @@ namespace Cryo
 
         // If we get here, the type wasn't found
         logMessage(LMI, "ERROR", "IRSymbolTable", "@getLLVMStructType Type not found: %s", structName.c_str());
-        debugPrint();
         CONDITION_FAILED;
     }
 

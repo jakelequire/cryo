@@ -34,7 +34,7 @@ namespace Cryo
 
         // Get the path to the core.ll file
         std::string coreLLPath = dirInfo->runtimeDir + "/core.ll";
-        std::cout << "Loading core library from: " << coreLLPath << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Core library path: %s", coreLLPath.c_str());
 
         // Check if the file exists
         if (!std::filesystem::exists(coreLLPath))

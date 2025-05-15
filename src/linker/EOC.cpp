@@ -317,9 +317,6 @@ namespace Cryo
         // Find all .ll files in the standard library directory
         for (const auto &entry : std::filesystem::directory_iterator(stdLibDir))
         {
-            // Debug print the file path
-            std::cout << "Found standard library file: " << entry.path().string() << std::endl;
-            std::cout << "File extension: " << entry.path().extension() << std::endl;
             if (entry.path().extension() == ".ll")
             {
                 // Convert to a .o file
@@ -343,8 +340,10 @@ namespace Cryo
             }
             else
             {
-                std::cout << "Skipping non-LLVM IR file: " << entry.path().string() << std::endl;
-                std::cout << "File extension: " << entry.path().extension() << std::endl;
+                logMessage(LMI, "WARNING", "Linker", "Non-IR file found in standard library directory: %s",
+                           entry.path().string().c_str());
+                logMessage(LMI, "WARNING", "Linker", "Ignoring file: %s",
+                           entry.path().filename().string().c_str());
             }
         }
 
@@ -392,9 +391,6 @@ namespace Cryo
     bool Linker::executeLinkCommand(const std::string &linkCommand, const std::string &outputPath)
     {
         logMessage(LMI, "INFO", "Linker", "Executing linking command: %s", linkCommand.c_str());
-        std::cout << "\n@executeLinkCommand Linking command: " << linkCommand << "\n"
-                  << std::endl;
-
         int result = system(linkCommand.c_str());
         if (result != 0)
         {

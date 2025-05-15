@@ -131,14 +131,16 @@ void setPassedAnalysis(struct SemanticAnalyzer *self, bool passed)
 void printAnalysisReport(struct SemanticAnalyzer *self)
 {
     __STACK_FRAME__
-    printf("\n");
-    printf("+------------------- Semantic Analysis Report -------------------+\n");
-    fprintf(stdout, "Nodes Analyzed: %zu\n", self->nodesAnalyzed);
-    fprintf(stdout, "Nodes Passed: %zu\n", self->nodesPassed);
-    fprintf(stdout, "Nodes Failed: %zu\n", self->nodesFailed);
-    fprintf(stdout, "Analysis Passed: %s\n", self->passedAnalysis ? "true" : "false");
-    printf("+---------------------------------------------------------------+\n");
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf("+------------------- Semantic Analysis Report -------------------+\n");
+        fprintf(stdout, "Nodes Analyzed: %zu\n", self->nodesAnalyzed);
+        fprintf(stdout, "Nodes Passed: %zu\n", self->nodesPassed);
+        fprintf(stdout, "Nodes Failed: %zu\n", self->nodesFailed);
+        fprintf(stdout, "Analysis Passed: %s\n", self->passedAnalysis ? "true" : "false");
+        printf("+---------------------------------------------------------------+\n");
+        printf("\n");
+    });
 }
 
 // ======================================================================================== //

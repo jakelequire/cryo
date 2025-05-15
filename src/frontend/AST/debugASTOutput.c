@@ -2835,7 +2835,6 @@ char *ASTNodeValueBuffer(ASTNode *node)
                 return NULL;
             }
             int intValue = node->data.literal->value.intValue;
-            printf("int value: %i\n", intValue);
             strcat(buffer, intToSafeString(intValue));
 
             char *copyBuffer = strdup(buffer);

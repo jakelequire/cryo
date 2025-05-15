@@ -103,24 +103,6 @@ namespace Cryo
         std::string moduleName = context.module->getName().str();
         logMessage(LMI, "INFO", "IRGeneration", "Finalizing IR Generation...");
 
-        // Verify the module
-        // logMessage(LMI, "INFO", "IRGeneration", "Verifying module...");
-        // if (llvm::verifyModule(*context.module, &llvm::errs()))
-        // {
-        //     logMessage(LMI, "ERROR", "IRGeneration", "Module verification failed");
-        //     return -1;
-        // }
-
-        std::cout << "\n\n";
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        std::cout << "Module: " << moduleName << "\n";
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        context.getInstance().module->print(llvm::errs(), nullptr);
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        std::cout << "\n\n";
-
-        logMessage(LMI, "INFO", "IRGeneration", "Module verified successfully.");
-
         // Clone the module to avoid modifying the original
         logMessage(LMI, "INFO", "IRGeneration", "Cloning module...");
         std::unique_ptr<llvm::Module> clonedModule = llvm::CloneModule(*context.getInstance().module);
@@ -144,7 +126,6 @@ namespace Cryo
         passManager.run(*clonedModule);
         logMessage(LMI, "INFO", "IRGeneration", "Module optimized successfully.");
 
-        logMessage(LMI, "INFO", "IRGeneration", "Cloned module successfully.");
         // Add the module to the global symbol table instance
         logMessage(LMI, "INFO", "IRGeneration", "Setting module in global symbol table instance...");
         if (globalSymbolTableInstance.setModule(moduleName, clonedModule.release()) != 0)
@@ -152,17 +133,6 @@ namespace Cryo
             logMessage(LMI, "ERROR", "IRGeneration", "Failed to set module in global symbol table instance");
             return -1;
         }
-
-        // Print the module to the console
-        llvm::errs() << "Finalized Module:\n";
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        context.module->print(llvm::errs(), nullptr);
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        std::cout << "\n\n";
-        std::cout << "Symbol Table:\n";
-        context.symbolTable->debugPrint();
-        std::cout << "--------------------------------------------------------------------------------------------\n";
-        std::cout << "\n\n";
         return 0;
     }
 
