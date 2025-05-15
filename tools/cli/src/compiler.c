@@ -69,7 +69,7 @@ int cryo_compile(char *args[], int argCount, bool useGDB)
     // Execute the command
     if (runSystemCommand(command))
     {
-        printf("[CLI] Compilation successful\n");
+        printf("Compilation successful\n");
     }
     else
     {

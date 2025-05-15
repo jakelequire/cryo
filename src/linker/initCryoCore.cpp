@@ -637,14 +637,14 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Compiling library item: %s", filePath.c_str());
 
         std::string compilerRootPath = this->dirInfo->compilerDir;
-        std::cout << "Compiler Root Path @compileLibItem: " << compilerRootPath << std::endl;
+        logMessage(LMI, "INFO", "Linker", "Compiler Root Path: %s", compilerRootPath.c_str());
         std::string buildDir = compilerRootPath + "/cryo/Std/bin/.ll/";
 
         // Compile to AST
         ASTNode *programNode = compileForASTNode(filePath.c_str(), state, globalTable);
         if (programNode == NULL)
         {
-            fprintf(stderr, "[Linker] Error: Failed to compile file: %s\n", filePath.c_str());
+            logMessage(LMI, "ERROR", "Linker", "Failed to compile %s", filePath.c_str());
             return 1;
         }
 

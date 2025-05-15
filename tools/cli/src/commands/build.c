@@ -85,7 +85,6 @@ BuildOptions *parse_build_options(int argc, char *argv[], int start_index)
     // Other arguments such as `--dev` and `-g` will still be respected.
     if (!options->single_file)
     {
-        printf("Building as project...\n");
         options->single_file = false;
         options->is_project = true;
         options->project_dir = getcwd(NULL, 0);

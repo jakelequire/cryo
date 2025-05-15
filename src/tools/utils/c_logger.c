@@ -139,7 +139,6 @@ void initLoggerCompilerSettings(CompilerSettings *settings)
 {
 
     compilerSettings = settings;
-    printf("Found compiler settings\n");
 
     if (settings->enableLogs)
         ENABLE_LOGS();

@@ -57,16 +57,17 @@ int main(int argc, char *argv[])
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);
-    if (parent)
+    if (!parent)
     {
-        logMessage(LMI, "INFO", "MAIN", "Parent directory: %s", parent);
+        logMessage(LMI, "ERROR", "MAIN", "Failed to get the parent directory of the compiler executable");
+        return 1;
     }
 
     // Initialize environment variables
     int envResult = initEnvVars(parent);
     if (envResult != 0)
     {
-        fprintf(stderr, "Error: Failed to initialize environment variables\n");
+        logMessage(LMI, "ERROR", "MAIN", "Failed to initialize environment variables");
         return 1;
     }
     free(parent); // Free the parent directory string
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
     CompilerSettings settings = getCompilerSettings(argc, argv);
     if (!&settings)
     {
-        fprintf(stderr, "Error: Failed to initialize compiler settings\n");
+        logMessage(LMI, "ERROR", "MAIN", "Failed to get compiler settings");
         return 1;
     }
 

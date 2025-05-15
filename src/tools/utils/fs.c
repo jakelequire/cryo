@@ -612,7 +612,7 @@ char *getPathFromCryoPath(void)
     }
 
     // Debug the output
-    logMessage(LMI, "DEBUG", "FS", "Command output: %s\n", path);
+    logMessage(LMI, "INFO", "FS", "Command output: %s\n", path);
 
     // Close the pipe
     int close_result = pclose(fp);

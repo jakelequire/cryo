@@ -25,7 +25,7 @@ void initFrontendSymbolTable(void)
     g_frontendSymbolTable = CreateSymbolTable();
     if (!g_frontendSymbolTable)
     {
-        fprintf(stderr, "Error: Failed to create frontend symbol table\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create FrontendSymbolTable");
         exit(EXIT_FAILURE);
     }
 }
@@ -43,13 +43,13 @@ void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
 {
     if (!self || self == NULL)
     {
-        fprintf(stderr, "Error: FrontendSymbolTable is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "SymbolTable is NULL");
         return;
     }
 
     if (!node || node == NULL)
     {
-        fprintf(stderr, "Error: ASTNode is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "ASTNode is NULL");
         return;
     }
 
@@ -59,7 +59,7 @@ void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
     FrontendSymbol *symbol = astNodeToSymbol(node);
     if (!symbol)
     {
-        fprintf(stderr, "Error: Failed to create symbol from ASTNode\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to convert ASTNode to FrontendSymbol");
         return;
     }
 
@@ -67,7 +67,7 @@ void FrontendSymbolTable_addSymbol(FrontendSymbolTable *self, ASTNode *node)
     int result = FrontendSymbolTable_addSymbolToScope(self, symbol);
     if (result != 0)
     {
-        fprintf(stderr, "Error: Failed to add symbol to scope\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to add symbol to scope");
         return;
     }
 
@@ -134,7 +134,7 @@ FrontendSymbol *FrontendSymbolTable_lookupInScope(FrontendSymbolTable *self, con
     }
     if (i == self->scopeCount)
     {
-        fprintf(stderr, "Error: Scope '%s' not found\n", scopeName);
+        logMessage(LMI, "ERROR", "SymbolTable", "Scope '%s' not found", scopeName);
         return NULL;
     }
 
@@ -146,7 +146,8 @@ FrontendSymbol *FrontendSymbolTable_lookupInScope(FrontendSymbolTable *self, con
             return scope->symbols[j];
         }
     }
-    fprintf(stderr, "Error: Symbol '%s' not found in scope '%s'\n", symbolName, scopeName);
+
+    logMessage(LMI, "INFO", "SymbolTable", "Symbol '%s' not found in scope '%s'", symbolName, scopeName);
     return NULL;
 }
 
@@ -159,7 +160,7 @@ void FrontendSymbolTable_enterNamespace(FrontendSymbolTable *self, const char *n
     self->currentNamespace = strdup(namespaceName);
     if (!self->currentNamespace)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for namespace\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for namespace name");
         return;
     }
 }
@@ -183,7 +184,7 @@ FrontendSymbolTable *CreateSymbolTable(void)
     FrontendSymbolTable *table = (FrontendSymbolTable *)malloc(sizeof(FrontendSymbolTable));
     if (!table)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for symbol table\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for FrontendSymbolTable");
         return NULL;
     }
 
@@ -198,7 +199,7 @@ FrontendSymbolTable *CreateSymbolTable(void)
     table->symbols = (FrontendSymbol **)malloc(sizeof(FrontendSymbol *) * MAX_SYMBOLS);
     if (!table->symbols)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for symbols array\n");
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for symbols array");
         free(table);
         return NULL;
     }
@@ -206,19 +207,14 @@ FrontendSymbolTable *CreateSymbolTable(void)
     table->scopes = (FrontendScope **)malloc(sizeof(FrontendScope *) * MAX_SCOPES);
     if (!table->scopes)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for scopes array\n");
-        free(table->symbols);
-        free(table);
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for scopes array");
         return NULL;
     }
 
     table->scopeStack = (FrontendScope **)malloc(sizeof(FrontendScope *) * SCOPE_STACK_SIZE);
     if (!table->scopeStack)
     {
-        fprintf(stderr, "Error: Failed to allocate memory for scope stack\n");
-        free(table->scopes);
-        free(table->symbols);
-        free(table);
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for scope stack");
         return NULL;
     }
 
@@ -263,11 +259,7 @@ FrontendSymbolTable *CreateSymbolTable(void)
     FrontendScope *globalScope = FrontendSymbolTable_createScope(table, "global", SCOPE_GLOBAL);
     if (!globalScope)
     {
-        fprintf(stderr, "Error: Failed to create global scope\n");
-        free(table->scopeStack);
-        free(table->scopes);
-        free(table->symbols);
-        free(table);
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to create global scope");
         return NULL;
     }
 

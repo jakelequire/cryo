@@ -92,12 +92,11 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->version = COMPILER_VERSION;
 
     const char *runtimePath = appendStrings(getCompilerRootPath(), "/Std/Runtime/");
-    printf("Runtime Path: %s\n", runtimePath);
+    logMessage(LMI, "INFO", "Compiler Settings", "Runtime Path: %s", runtimePath);
     settings->runtimePath = runtimePath;
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
-    printf("Getting compiler settings...\n");
     int c;
     int option_index = 0;
     char *optstring = "f:s:o:avd:L:p:h";
@@ -174,7 +173,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             char *projectDir = realpath(optarg, NULL);
             if (projectDir == NULL)
             {
-                fprintf(stderr, "Error: Invalid project directory\n");
+                logMessage(LMI, "ERROR", "Compiler Settings", "Failed to resolve project directory: %s", optarg);
                 exit(1);
             }
             settings->projectDir = projectDir;
@@ -215,7 +214,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->irDump = true;
             if (settings->verbose)
             {
-                printf("IR dump enabled\n");
+                printf("IR Dump enabled\n");
             }
             break;
         }
@@ -267,7 +266,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         exit(1);
     }
 
-    printf("Finished parsing command line arguments.. initializing compiler settings...\n");
+    logMessage(LMI, "INFO", "Compiler Settings", "Input File: %s", settings->inputFile);
 
     if (!settings->isSingleFile && settings->isProject)
     {
@@ -316,33 +315,35 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 void logCompilerSettings(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
-    const char *falseFlag = BOLD RED "false" COLOR_RESET;
-    printf("Printing compiler settings...\n");
-    printf("\n");
-    printf("# ============ Compiler Settings ============ #\n");
-    printf("  Root Directory: %s\n", settings->rootDir);
-    printf("  Project Directory: %s\n", settings->projectDir);
-    printf("  Build Directory: %s\n", settings->buildDir);
-    printf("  Runtime Path: %s\n", settings->runtimePath);
-    printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
-    printf("  Input File: %s\n", settings->inputFile);
-    printf("  File Path: %s\n", settings->inputFilePath);
-    printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
-    printf("  Custom Output Path: %s\n", settings->customOutputPath);
-    printf(" ----------------------\n");
-    printf(" Flags:\n");
-    printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
-    printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
-    printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
-    printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
-    printf("  Disable Logs: %s\n", !settings->enableLogs ? trueFlag : falseFlag);
-    printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
-    printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
-    printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
-    printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
-    printf("# =========================================== #\n");
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
+        const char *falseFlag = BOLD RED "false" COLOR_RESET;
+        printf("Printing compiler settings...\n");
+        printf("\n");
+        printf("# ============ Compiler Settings ============ #\n");
+        printf("  Root Directory: %s\n", settings->rootDir);
+        printf("  Project Directory: %s\n", settings->projectDir);
+        printf("  Build Directory: %s\n", settings->buildDir);
+        printf("  Runtime Path: %s\n", settings->runtimePath);
+        printf("  Compiler Root Path: %s\n", settings->compilerRootPath);
+        printf("  Input File: %s\n", settings->inputFile);
+        printf("  File Path: %s\n", settings->inputFilePath);
+        printf("  Debug Level: %s\n", DebugLevelToString(settings->debugLevel));
+        printf("  Custom Output Path: %s\n", settings->customOutputPath);
+        printf(" ----------------------\n");
+        printf(" Flags:\n");
+        printf("  AST Dump: %s\n", settings->astDump ? trueFlag : falseFlag);
+        printf("  IR Dump: %s\n", settings->irDump ? trueFlag : falseFlag);
+        printf("  LSP Symbols: %s\n", settings->isLSP ? trueFlag : falseFlag);
+        printf("  Enable Logs: %s\n", settings->enableLogs ? trueFlag : falseFlag);
+        printf("  Disable Logs: %s\n", !settings->enableLogs ? trueFlag : falseFlag);
+        printf("  Is Single File: %s\n", settings->isSingleFile ? trueFlag : falseFlag);
+        printf("  Is Project: %s\n", settings->isProject ? trueFlag : falseFlag);
+        printf("  Source Text: %s\n", settings->isSource ? trueFlag : falseFlag);
+        printf("  Active Build: %s\n", settings->activeBuild ? trueFlag : falseFlag);
+        printf("# =========================================== #\n");
+        printf("\n");
+    });
 }
 
 const char *DebugLevelToString(DebugLevel level)

@@ -165,9 +165,7 @@ namespace Cryo
                 paramType = funcSymbol->functionDataType->container->type.functionType->paramTypes[i];
             }
 
-            std::cout << "--------------------------------------------------------\n";
             argType->debug->printVerbosType(argType);
-            std::cout << "--------------------------------------------------------\n";
             if (paramType)
             {
                 paramType->debug->printVerbosType(paramType);
@@ -176,7 +174,6 @@ namespace Cryo
             {
                 logMessage(LMI, "ERROR", "CodeGenVisitor", "Parameter type is null");
             }
-            std::cout << "--------------------------------------------------------\n";
 
             // Check if the argument type is a struct or object type
             bool isStructOrObjectType = false;

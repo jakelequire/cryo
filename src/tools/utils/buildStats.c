@@ -148,6 +148,17 @@ void formatSize(long bytes, char *buffer)
 void printBuildStats(BuildStats *stats)
 {
     __STACK_FRAME__
+    if (!DEBUG_PRINT_ENABLED())
+    {
+        char *linux_cmd = "clear";
+        int sys_result = system(linux_cmd);
+        if (sys_result == -1)
+        {
+            fprintf(stderr, "Error: Failed to clear console\n");
+            return;
+        }
+    }
+
     DEBUG_PRINT_FILTER({
         char memory_str[32];
         formatSize(stats->peak_memory, memory_str);

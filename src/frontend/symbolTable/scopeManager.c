@@ -61,19 +61,23 @@ int FrontendSymbolTable_addSymbolToScope(FrontendSymbolTable *self, FrontendSymb
 {
     if (self->scopeStackSize < 0)
     {
-        fprintf(stderr, "Error: No active scope to add symbol to\n");
+        logMessage(LMI, "ERROR", "SymbolTable",
+                   "Cannot add symbol '%s' to NULL scope stack", symbol->name);
         return -1;
     }
 
     FrontendScope *currentScope = self->currentScope;
     if (!currentScope)
     {
-        fprintf(stderr, "Error: Current scope is NULL\n");
+        logMessage(LMI, "ERROR", "SymbolTable",
+                   "Cannot add symbol '%s' to NULL current scope", symbol->name);
         return -1;
     }
     if (currentScope->symbolCount >= MAX_SYMBOLS)
     {
-        fprintf(stderr, "Error: Maximum number of symbols reached in current scope\n");
+        logMessage(LMI, "ERROR", "SymbolTable",
+                   "Cannot add symbol '%s' to scope '%s': maximum symbol count reached",
+                   symbol->name, currentScope->name);
         return -1;
     }
 
@@ -85,7 +89,9 @@ void FrontendSymbolTable_pushScope(FrontendSymbolTable *self, FrontendScope *sco
 {
     if (self->scopeStackSize >= SCOPE_STACK_SIZE - 1)
     {
-        fprintf(stderr, "Error: Scope stack overflow\n");
+        logMessage(LMI, "ERROR", "SymbolTable",
+                   "Cannot push scope '%s': maximum scope stack size reached",
+                   scope->name);
         return;
     }
     self->scopeStack[++self->scopeStackSize] = scope;
@@ -128,8 +134,6 @@ void FrontendSymbolTable_enterScope(FrontendSymbolTable *self, const char *name,
                newScope->name,
                getScopeTypeString(newScope->type),
                newScope->depth);
-
-               
 }
 
 void FrontendSymbolTable_exitScope(FrontendSymbolTable *self)

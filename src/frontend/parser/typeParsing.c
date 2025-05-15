@@ -1353,8 +1353,6 @@ ASTNode *parseClassDeclaration(bool isStatic,
         classBodyNode->constructors,
         classBodyNode->constructorCount);
 
-    printf("Class data type: %s\n", classDataType->debug->toString(classDataType));
-
     logMessage(LMI, "INFO", "Parser", "Class methods added to class type.");
     classNode->data.classNode->type = classDataType;
 
