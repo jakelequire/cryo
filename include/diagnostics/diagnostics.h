@@ -188,7 +188,8 @@ typedef struct GlobalDiagnosticsManager
     void (*reportConditionFailed)(GlobalDiagnosticsManager *self, CryoErrorCode errorCode, CryoErrorSeverity severity,
                                   const char *message, const char *function, const char *file, int line);
     void (*reportDebugBreakpoint)(GlobalDiagnosticsManager *self,
-                                  const char *message, const char *function, const char *file, int line);
+                                  const char *message, const char *function, const char *file, int line,
+                                  ...);
 } GlobalDiagnosticsManager;
 
 // =============================================================================
@@ -236,6 +237,7 @@ const char *CryoErrorSeverityToString(CryoErrorSeverity severity);
 #define INIT_GDM() initGlobalDiagnosticsManager();
 // GDM - Global Diagnostics Manager.
 #define GDM g_diagnosticsManager
+
 // _FL_ - File, Line
 #define _FL_ __FILE__, __LINE__
 // _FFL_ - Function, File, Line
@@ -278,9 +280,23 @@ const char *CryoErrorSeverityToString(CryoErrorSeverity severity);
 #define DIAG_CONDITION_FAILED(GDM, ERR, SEV, MSG, LN, FL, FN) \
     GDM->reportConditionFailed(GDM, ERR, SEV, MSG, FN, FL, LN);
 
+// FN: Function Name (COMPILER)
+// FL: File Name (COMPILER)
+// LN: Line Number (COMPILER)
 // GDM: Global Diagnostics Manager
-#define DIAG_DEBUG_BREAKPOINT(GDM, LN, FL, FN) \
-    GDM->reportDebugBreakpoint(GDM, LN, FL, FN);
+// MSG: Error Message
+#define _P_DIAG_DEBUG_BREAKPOINT(FN, FL, LN, GDM, MSG, ...) \
+    GDM->reportDebugBreakpoint(GDM, MSG, FN, FL, LN, ##__VA_ARGS__);
+
+///
+/// @brief This is created as a function to to allow for the use of the `_FFL_` macro for shorter syntax.
+///
+/// Example usage:
+/// ```c
+///     DIAG_DEBUG_BREAKPOINT(__FFL__, GDM, "Debug Breakpoint Hit!");
+/// ```
+///
+void DIAG_DEBUG_BREAKPOINT(char *function, char *file, int line, GlobalDiagnosticsManager *self, const char *message);
 
 #endif // GLOBAL_DIAGNOSTICS_MANAGER_H
 // =============================================================================

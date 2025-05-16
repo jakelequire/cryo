@@ -1135,7 +1135,7 @@ char *CONSOLE_formatVarNameNode(ASTDebugNode *node, DebugASTOutput *output)
     // <VarName> [NAME] <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<VarName>%s %s[%s]%s %s{%s}%s%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<VarName>%s %s[%s]%s %s%s{%s}%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
             YELLOW, node->nodeName, COLOR_RESET,
             BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
@@ -1295,8 +1295,9 @@ char *CONSOLE_formatPropertyAssignmentNode(ASTDebugNode *node, DebugASTOutput *o
     // <PropertyAssignment> <L:C>
     char *buffer = MALLOC_BUFFER;
     BUFFER_FAILED_ALLOCA_CATCH
-    sprintf(buffer, "%s%s<PropertyAssignment>%s %s%s<%i:%i>%s",
+    sprintf(buffer, "%s%s<PropertyAssignment>%s %s%s{%s}%s %s%s<%i:%i>%s",
             BOLD, LIGHT_MAGENTA, COLOR_RESET,
+            BOLD, LIGHT_CYAN, DTM->debug->dataTypeToString(node->dataType), COLOR_RESET,
             DARK_GRAY, ITALIC, node->line, node->column, COLOR_RESET);
     return buffer;
 }
@@ -2363,8 +2364,9 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         logMessage(LMI, "DEBUG", "ASTDBG", "VarName");
-        char *varName = strdup(node->data.varName->varName);
-        ASTDebugNode *varNameNode = createASTDebugNode("VarName", varName, DTM->primitives->createVoid(), line, column, indentLevel, node);
+        const char *varName = strdup(node->data.varName->varName);
+        DataType *varType = node->data.varName->type;
+        ASTDebugNode *varNameNode = createASTDebugNode("VarName", varName, varType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *varNameNode;
         output->nodeCount++;
         break;
@@ -2408,9 +2410,18 @@ void createASTDebugView(ASTNode *node, DebugASTOutput *output, int indentLevel)
     {
         __LINE_AND_COLUMN__
         logMessage(LMI, "DEBUG", "ASTDBG", "PropertyReassign");
-        ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", DTM->primitives->createVoid(), line, column, indentLevel, node);
+        DataType *accessType = node->data.propertyReassignment->objectType;
+        ASTDebugNode *propertyReassignNode = createASTDebugNode("PropertyReassign", "PropertyReassign", accessType, line, column, indentLevel, node);
         output->nodes[output->nodeCount] = *propertyReassignNode;
         output->nodeCount++;
+
+        // Add the new value
+        ASTNode *newValue = node->data.propertyReassignment->value;
+        if (newValue != NULL)
+        {
+            createASTDebugView(newValue, output, indentLevel + 1);
+        }
+
         break;
     }
 

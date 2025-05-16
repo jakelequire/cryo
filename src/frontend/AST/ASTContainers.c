@@ -1242,6 +1242,8 @@ ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
+    node->object = NULL;
+    node->objectType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1269,7 +1271,8 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
 
     node->name = (char *)malloc(sizeof(char) * 1024);
     node->object = NULL;
-    node->value = NULL;
+    node->value = (ASTNode *)malloc(sizeof(ASTNode));
+    node->objectType = DTM->primitives->createUndefined();
     node->propertyIndex = 0;
 
     return node;

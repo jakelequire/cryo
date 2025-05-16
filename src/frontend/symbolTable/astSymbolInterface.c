@@ -65,6 +65,7 @@ FrontendSymbol *p_createSymbol(const char *name,
     symbol->lineNumber = lineNumber;
     symbol->columnNumber = columnNumber;
     symbol->isDefined = isDefined;
+    symbol->isPrototype = false;
 
     symbol->print = FrontendSymbol_printFrontendSymbol;
 

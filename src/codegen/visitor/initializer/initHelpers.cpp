@@ -28,7 +28,7 @@ namespace Cryo
         ASTNode **ctorArgs = node->data.structConstructor->args;
         std::vector<llvm::Type *> ctorArgTypes;
 
-        // Get argument types - CHANGE: no longer adding self pointer
+        // Get argument types
         for (int i = 0; i < cTorArgs; i++)
         {
             DataType *argType = ctorArgs[i]->data.param->type;
@@ -36,7 +36,7 @@ namespace Cryo
             ctorArgTypes.push_back(llvmArgType);
         }
 
-        // Create function type - return struct by value, no self pointer argument
+        // Create function type - return struct by value
         llvm::FunctionType *ctorFuncType = llvm::FunctionType::get(
             structType, // Return type is the struct itself
             ctorArgTypes,
@@ -48,6 +48,8 @@ namespace Cryo
             llvm::Function::ExternalLinkage,
             structName + ".ctor",
             context.getInstance().module.get());
+
+        logMessage(LMI, "INFO", "Visitor", "Constructor function created: %s", ctorFunction->getName().str().c_str());
 
         // Setup function attributes
         ctorFunction->setCallingConv(llvm::CallingConv::C);
@@ -61,37 +63,68 @@ namespace Cryo
             ctorFunction);
         context.getInstance().builder.SetInsertPoint(entryBlock);
 
-        // NEW: Allocate the struct locally in the function
-        llvm::AllocaInst *structAlloca = context.getInstance().builder.CreateAlloca(
+        // Allocate the struct locally in the function
+        llvm::Value *structAlloca = context.getInstance().builder.CreateAlloca(
             structType, nullptr, "instance");
 
         // Process arguments
         llvm::Function::arg_iterator args = ctorFunction->arg_begin();
 
-        // Store each constructor argument into the corresponding struct field
+        // Enter constructor context
+        context.getInstance().symbolTable->enterConstructorInstance();
+
+        // Create a new scope for constructor body
+        context.getInstance().symbolTable->pushScope();
+
+        // Register 'self.alloc' for constructor body access
+        IRVariableSymbol selfSymbol = IRSymbolManager::createVariableSymbol(
+            ctorFunction,
+            structAlloca,
+            structType,
+            "self.alloc",
+            AllocaType::AllocaOnly);
+        context.getInstance().symbolTable->addVariable(selfSymbol);
+
+        // Register constructor parameters as local variables
         for (int i = 0; i < cTorArgs; i++)
         {
             llvm::Value *arg = &(*args++);
-            arg->setName(ctorArgs[i]->data.param->name);
+            std::string paramName = ctorArgs[i]->data.param->name;
+            arg->setName(paramName);
 
-            DataType *argType = ctorArgs[i]->data.param->type;
-            if (argType->container->primitive == PRIM_STR)
-            {
-                // Load the string pointer
-                std::string argValName = arg->getName().str();
-                arg = context.getInstance().builder.CreateLoad(arg->getType(), arg, argValName + ".load");
-            }
+            // Create alloca for parameter
+            llvm::Value *argAlloca = context.getInstance().builder.CreateAlloca(
+                arg->getType(), nullptr, paramName + ".addr");
+            context.getInstance().builder.CreateStore(arg, argAlloca);
 
-            // Create GEP to get pointer to struct field
-            llvm::Value *fieldPtr = context.getInstance().builder.CreateStructGEP(
-                structType,
-                structAlloca, // Use our local allocation now instead of selfArg
-                i,
-                "field_ptr");
-
-            // Store argument into field
-            context.getInstance().builder.CreateStore(arg, fieldPtr);
+            // Register in symbol table
+            IRVariableSymbol paramSymbol = IRSymbolManager::createVariableSymbol(
+                ctorFunction,
+                argAlloca,
+                arg->getType(),
+                paramName,
+                AllocaType::AllocaLoadStore);
+            context.getInstance().symbolTable->addVariable(paramSymbol);
         }
+        logMessage(LMI, "INFO", "Visitor", "Constructor parameters registered.");
+
+        // Initialize struct fields with default values if needed
+        // ... (add code here if your language has default field initialization)
+
+        // Process constructor body
+        if (node->data.structConstructor->constructorBody)
+        {
+            logMessage(LMI, "INFO", "Visitor", "Generating constructor body...");
+            context.getInstance().visitor->visit(node->data.structConstructor->constructorBody);
+        }
+        else
+        {
+            logMessage(LMI, "INFO", "Visitor", "No constructor body found.");
+        }
+
+        // Exit constructor context
+        context.getInstance().symbolTable->popScope();
+        context.getInstance().symbolTable->exitConstructorInstance();
 
         // Load the entire struct to return it by value
         llvm::Value *resultStruct = context.getInstance().builder.CreateLoad(
@@ -102,6 +135,8 @@ namespace Cryo
 
         // Verify function
         llvm::verifyFunction(*ctorFunction);
+
+        logMessage(LMI, "INFO", "Visitor", "Constructor function verified.");
 
         // Add to symbol table
         IRFunctionSymbol ctorFuncSymbol = IRSymbolManager::createFunctionSymbol(

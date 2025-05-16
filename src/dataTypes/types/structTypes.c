@@ -191,6 +191,10 @@ DTStructTy *createDTStructTy(void)
     structType->addMethod = DTStructTy_addMethod;
     structType->addCtorParam = DTStructTy_addCtorParam;
 
+    structType->isProtoType = false;
+    structType->isGeneric = false;
+    structType->size = 0;
+
     // Generic Struct Methods
     structType->addGenericParam = DTStructTy_addGenericParam;
     structType->substituteGenericType = DTStructTy_substituteGenericType;

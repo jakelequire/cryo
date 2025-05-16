@@ -108,6 +108,10 @@ void DTMDebug_printDataType(DataType *type)
                     fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
                     CONDITION_FAILED;
                 }
+                if (type->container->type.structType->isProtoType)
+                {
+                    strcpy(structName, "@proto ");
+                }
                 strcpy(structName, "struct ");
                 strcat(structName, type->container->type.structType->name);
 
@@ -439,7 +443,20 @@ const char *DTMDebug_dataTypeToString(DataType *type)
         {
         case STRUCT_OBJ:
         {
-            return type->container->type.structType->name;
+            char *structName = (char *)malloc(sizeof(char) * 1024);
+            if (!structName)
+            {
+                fprintf(stderr, "[Data Type Manager] Error: Failed to allocate memory for struct name\n");
+                CONDITION_FAILED;
+            }
+            if (type->container->type.structType->isProtoType)
+            {
+                strcpy(structName, "@proto ");
+            }
+            strcpy(structName, "struct ");
+            strcat(structName, type->container->type.structType->name);
+
+            return structName;
         }
         case CLASS_OBJ:
         {

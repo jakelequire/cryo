@@ -82,6 +82,8 @@ void DTDebug_printVerbosType(struct DataType_t *type)
                DTM->debug->typeofDataTypeToString(type->container->typeOf),
                DTM->debug->primitiveDataTypeToString(type->container->primitive),
                DTM->debug->typeofObjectTypeToString(type->container->objectType));
+        printf("isPrototype: %s\n", type->isPrototype ? "true" : "false");
+        printf("isGeneric: %s\n", type->isGeneric ? "true" : "false");
         if (type->isArray)
         {
             DTDebug_printArrayTypeInfo(type);

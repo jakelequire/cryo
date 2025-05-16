@@ -1159,6 +1159,7 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
         logMessage(LMI, "INFO", "Parser", "Parsing identifier as a statement");
         ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), arena, state, lexer, context);
         getNextToken(lexer, arena, state);
+
         return node;
     }
     // Peek to see if the next token is `)` to end a function call.
@@ -1197,7 +1198,7 @@ ASTNode *parseIdentifierExpression(Lexer *lexer, ParsingContext *context, Arena 
         return parseUnaryExpression(lexer, context, arena, state);
     }
 
-    logMessage(LMI, "INFO", "Parser", "Parsing identifier expression");
+    logMessage(LMI, "INFO", "Parser", "Parsing identifier expression: %s", curToken);
     // Check to see if it exists in the symbol table as a variable or parameter
     ASTNode *node = createIdentifierNode(strndup(lexer->currentToken.start, lexer->currentToken.length), arena, state, lexer, context);
     getNextToken(lexer, arena, state);
@@ -3524,6 +3525,8 @@ ASTNode *parseAssignment(Lexer *lexer, ParsingContext *context, char *varName, A
         logMessage(LMI, "ERROR", "Parser", "Old value is not a variable declaration.");
         NEW_ERROR(GDM, CRYO_ERROR_INVALID_NODE_TYPE, CRYO_SEVERITY_FATAL,
                   "Old value is not a variable declaration.", __LINE__, __FILE__, __func__)
+        DEBUG_BREAKPOINT;
+
         return NULL;
     }
     }
@@ -3566,16 +3569,42 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
     }
 
     CryoTokenType currentToken = lexer->currentToken.type;
+    const char *typeName = context->thisContext->nodeName;
+    logMessage(LMI, "INFO", "Parser", "Current token: %s", CryoTokenToString(currentToken));
+    logMessage(LMI, "INFO", "Parser", "Type name: %s", typeName);
+    DataType *thisType = DTM->symbolTable->lookup(DTM->symbolTable, typeName);
+    if (thisType == NULL)
+    {
+        logMessage(LMI, "ERROR", "Parser", "Failed to find type for `this` context: %s", typeName);
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_TYPE, CRYO_SEVERITY_FATAL,
+                  "Failed to find type for `this` context.", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
+    thisType->debug->printVerbosType(thisType);
+
+    FrontendSymbol *thisSymbol = FEST->lookup(FEST, context->thisContext->nodeName);
+    if (thisSymbol == NULL)
+    {
+        FEST->printTable(FEST);
+
+        logMessage(LMI, "ERROR", "Parser", "Failed to find symbol for `this` context: %s", context->thisContext->nodeName);
+        NEW_ERROR(GDM, CRYO_ERROR_UNDEFINED_SYMBOL, CRYO_SEVERITY_FATAL,
+                  "Failed to find symbol for `this` context.", __LINE__, __FILE__, __func__)
+        return NULL;
+    }
 
     ASTNode *thisNode;
     if (currentToken == TOKEN_DOT)
     {
         consume(__LINE__, lexer, TOKEN_DOT, "Expected `.` for property access.", "parseThisContext", arena, state, context);
+
         thisNode = parseDotNotation(lexer, context, arena, state);
+        thisNode->print(thisNode);
     }
     else
     {
         thisNode = createThisNode(arena, state, lexer);
+        thisNode->data.thisNode->objectType = thisType;
     }
 
     // Check if we are setting a property of the `this` context with `=`
@@ -3599,12 +3628,29 @@ ASTNode *parseThisContext(Lexer *lexer, ParsingContext *context, Arena *arena, C
         }
 
         ASTNode *newValue = parseExpression(lexer, context, arena, state);
+        if (newValue == NULL)
+        {
+            logMessage(LMI, "ERROR", "Parser", "Failed to parse new value for property reassignment.");
+            NEW_ERROR(GDM, CRYO_ERROR_NULL_AST_NODE, CRYO_SEVERITY_FATAL,
+                      "Failed to parse new value for property reassignment.", __LINE__, __FILE__, __func__)
+            return NULL;
+        }
 
         if (lexer->currentToken.type == TOKEN_SEMICOLON)
             consume(__LINE__, lexer, TOKEN_SEMICOLON, "Expected a semicolon...", "parseThisContext", arena, state, context);
 
         ASTNode *propReasignment = createPropertyReassignmentNode(thisNode, propName, newValue, arena, state, lexer);
         propReasignment->data.propertyReassignment->objectTypeName = context->thisContext->nodeName;
+        propReasignment->data.propertyReassignment->objectType = thisType;
+        propReasignment->data.propertyReassignment->value = newValue;
+
+        newValue->print(newValue);
+
+        propReasignment->print(propReasignment);
+        logMessage(LMI, "INFO", "Parser", "Property reassignment node created.");
+
+        ASTNode *prop_new_val = propReasignment->data.propertyReassignment->value;
+        prop_new_val->print(prop_new_val);
         return propReasignment;
     }
 
@@ -3892,6 +3938,7 @@ ASTNode *parseDotNotationWithType(ASTNode *accessor, DataType *typeOfNode, Lexer
     }
     else
     {
+        logMessage(LMI, "ERROR", "Parser", "Type of node is not a struct or class, received: %s", CryoNodeTypeToString(accessor->metaData->type));
         NEW_ERROR(GDM, CRYO_ERROR_INVALID_TYPE, CRYO_SEVERITY_FATAL,
                   "Expected a struct or class type.", __LINE__, __FILE__, __func__)
     }

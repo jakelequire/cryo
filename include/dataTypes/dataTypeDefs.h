@@ -243,11 +243,12 @@ typedef struct DTStructTy_t
     int ctorParamCount;
     int ctorParamCapacity;
 
+    bool isProtoType;
+    bool isGeneric;
     int size;
 
     struct
     {
-        bool isGeneric;
         struct DTGenericTy_t **params;
         int paramCount;
         int paramCapacity;

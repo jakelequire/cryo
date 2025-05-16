@@ -36,13 +36,15 @@ void DTMSymbolTable_printEntry(DTMSymbolTableEntry *entry)
 }
 
 void DTMSymbolTable_addPrototype(
-    DTMSymbolTable *table, const char *scopeName, const char *name,
-    PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType)
+    DTMSymbolTable *table, DataType *protoType, const char *scopeName)
 {
-    DataType *protoType = DTM->dataTypes->createProtoType(name, primitive, typeOf, objectType);
-    DTM->symbolTable->addEntry(DTM->symbolTable, scopeName, name, protoType);
-
-    logMessage(LMI, "INFO", "DTM", "Added prototype to symbol table: %s", name);
+    logMessage(LMI, "INFO", "DTM", "Adding prototype to symbol table: %s", protoType->typeName);
+    if (!table || !protoType || !scopeName)
+    {
+        logMessage(LMI, "ERROR", "DTM", "Invalid arguments for adding prototype to symbol table");
+        return;
+    }
+    DTM->symbolTable->addEntry(table, scopeName, protoType->typeName, protoType);
 }
 
 DataType *DTMSymbolTable_getProtoType(

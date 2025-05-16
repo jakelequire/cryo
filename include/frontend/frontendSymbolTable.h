@@ -87,15 +87,15 @@ typedef enum
 
 typedef struct FrontendSymbol_t
 {
-    const char *name;    // Symbol name
-    const char *id;      // Unique symbol ID
-    ASTNode *node;       // AST node associated with the symbol
-    DataType *type;      // Data type of the symbol
-    ScopeType scopeType; // Scope type where the symbol is defined
-    size_t lineNumber;   // Line number in source code
-    size_t columnNumber; // Column number in source code
-    bool isDefined;      // Whether the symbol is defined or not
-
+    const char *name;                    // Symbol name
+    const char *id;                      // Unique symbol ID
+    ASTNode *node;                       // AST node associated with the symbol
+    DataType *type;                      // Data type of the symbol
+    ScopeType scopeType;                 // Scope type where the symbol is defined
+    size_t lineNumber;                   // Line number in source code
+    size_t columnNumber;                 // Column number in source code
+    bool isDefined;                      // Whether the symbol is defined or not
+    bool isPrototype;                    // Whether the symbol is a prototype or not
     void (*print)(FrontendSymbol *self); // Print function for debugging
 } FrontendSymbol;
 
@@ -141,10 +141,14 @@ typedef struct FrontendSymbolTable_t
 
     // Symbol management
     void (*addSymbol)(FrontendSymbolTable *self, ASTNode *node);
+    void (*addProtoType)(FrontendSymbolTable *self, const char *name, DataType *protoType);
+    void (*completePrototypeSymbol)(FrontendSymbolTable *self, const char *name, ASTNode *node, DataType *type);
+
     FrontendSymbol *(*lookup)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInGlobalScope)(FrontendSymbolTable *self, const char *name);
     FrontendSymbol *(*lookupInNamespaceScope)(FrontendSymbolTable *self, const char *name, const char *namespaceName);
     FrontendSymbol *(*lookupInScope)(FrontendSymbolTable *self, const char *scopeName, const char *symbolName);
+    FrontendSymbol *(*lookupType)(FrontendSymbolTable *self, const char *typeName);
 
     // Namespace management
     void (*enterNamespace)(FrontendSymbolTable *self, const char *namespaceName);
@@ -169,7 +173,7 @@ void FrontendSymbolTable_exitScope(FrontendSymbolTable *self);
 const char *getScopeTypeString(ScopeType type);
 // Debugging
 void FrontendSymbolTable_printTable(FrontendSymbolTable *self);
-
+void FrontendSymbol_printFrontendSymbol(FrontendSymbol *symbol);
 // ----------------------------------------------
 
 /// FEST - Frontend Symbol Table

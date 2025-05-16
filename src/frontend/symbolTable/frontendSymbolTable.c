@@ -151,6 +151,10 @@ FrontendSymbol *FrontendSymbolTable_lookupInScope(FrontendSymbolTable *self, con
     return NULL;
 }
 
+FrontendSymbol *FrontendSymbolTable_lookupType(FrontendSymbolTable *self, const char *typeName)
+{
+}
+
 void FrontendSymbolTable_enterNamespace(FrontendSymbolTable *self, const char *namespaceName)
 {
     if (self->currentNamespace)
@@ -176,6 +180,79 @@ void FrontendSymbolTable_exitNamespace(FrontendSymbolTable *self)
 const char *FrontendSymbolTable_getCurrentNamespace(FrontendSymbolTable *self)
 {
     return self->currentNamespace;
+}
+
+void FrontendSymbolTable_addProtoType(FrontendSymbolTable *self, const char *name, DataType *protoType)
+{
+    if (!self || self == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "SymbolTable is NULL");
+        return;
+    }
+
+    if (!name || name == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Name is NULL");
+        return;
+    }
+
+    FrontendSymbol *symbol = (FrontendSymbol *)malloc(sizeof(FrontendSymbol));
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for FrontendSymbol");
+        return;
+    }
+    symbol->name = strdup(name);
+    if (!symbol->name)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to allocate memory for symbol name");
+        free(symbol);
+        return;
+    }
+    symbol->id = "UNDEF";                               // Set to "UNDEF" for now
+    symbol->node = NULL;                                // Set to NULL for now
+    symbol->type = protoType;                           // Set to prototype type
+    symbol->scopeType = SCOPE_GLOBAL;                   // Set to global scope for now
+    symbol->lineNumber = 0;                             // Set to 0 for now
+    symbol->columnNumber = 0;                           // Set to 0 for now
+    symbol->isDefined = false;                          // Set to false for now
+    symbol->isPrototype = true;                         // Set to true for prototype
+    symbol->print = FrontendSymbol_printFrontendSymbol; // Set to NULL for now
+
+    // Add the symbol to the current scope
+    int result = FrontendSymbolTable_addSymbolToScope(self, symbol);
+    if (result != 0)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to add symbol to scope");
+        return;
+    }
+    logMessage(LMI, "INFO", "SymbolTable", "Added prototype symbol '%s'", name);
+    return;
+}
+
+void FrontendSymbolTable_completePrototypeSymbol(FrontendSymbolTable *self, const char *name, ASTNode *node, DataType *type)
+{
+    if (!self || self == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "SymbolTable is NULL");
+        return;
+    }
+
+    if (!name || name == NULL)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Name is NULL");
+        return;
+    }
+
+    FrontendSymbol *symbol = FrontendSymbolTable_lookup(self, name);
+    if (!symbol)
+    {
+        logMessage(LMI, "ERROR", "SymbolTable", "Failed to find symbol '%s'", name);
+        return;
+    }
+
+    symbol->node = node;
+    symbol->type = type;
 }
 
 FrontendSymbolTable *CreateSymbolTable(void)
@@ -245,11 +322,17 @@ FrontendSymbolTable *CreateSymbolTable(void)
     table->enterScope = FrontendSymbolTable_enterScope;
     table->exitScope = FrontendSymbolTable_exitScope;
     table->getCurrentScope = FrontendSymbolTable_getCurrentScope;
+
     table->addSymbol = FrontendSymbolTable_addSymbol;
+    table->addProtoType = FrontendSymbolTable_addProtoType;
+    table->completePrototypeSymbol = FrontendSymbolTable_completePrototypeSymbol;
+
     table->lookup = FrontendSymbolTable_lookup;
     table->lookupInGlobalScope = FrontendSymbolTable_lookupInGlobalScope;
     table->lookupInNamespaceScope = FrontendSymbolTable_lookupInNamespaceScope;
     table->lookupInScope = FrontendSymbolTable_lookupInScope;
+    table->lookupType = FrontendSymbolTable_lookupType;
+
     table->enterNamespace = FrontendSymbolTable_enterNamespace;
     table->exitNamespace = FrontendSymbolTable_exitNamespace;
     table->getCurrentNamespace = FrontendSymbolTable_getCurrentNamespace;

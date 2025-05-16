@@ -363,11 +363,22 @@ void GlobalDiagnosticsManager_reportConditionFailed(GlobalDiagnosticsManager *se
 }
 
 void GlobalDiagnosticsManager_reportDebugBreakpoint(GlobalDiagnosticsManager *self,
-                                                    const char *message, const char *function, const char *file, int line)
+                                                    const char *message, const char *function, const char *file, int line,
+                                                    ...)
 {
-    // TODO: Implement this function
-    // - This function is called when a debug breakpoint is hit.
-    // - It should print the current position of the program without the stack trace.
+    int MESSAGE_SIZE = 5120;
+    char formattedMessage[MESSAGE_SIZE];
+    va_list args;
+    va_start(args, line);
+    if (message == NULL)
+    {
+        snprintf(formattedMessage, MESSAGE_SIZE, "<DEBUG BREAKPOINT> Internal Compiler Breakpoint.");
+    }
+    else
+    {
+        snprintf(formattedMessage, MESSAGE_SIZE, "<DEBUG BREAKPOINT> %s", message);
+    }
+    va_end(args);
 
     DiagnosticEntry *entry = newDiagnosticEntry(CRYO_ERROR_DEBUG_BREAKPOINT, NULL, NULL);
     entry->isInternalError = true;
@@ -386,7 +397,7 @@ void GlobalDiagnosticsManager_reportDebugBreakpoint(GlobalDiagnosticsManager *se
     if (self->frontendState != NULL)
     {
         self->frontendState->printErrorScreen(self->frontendState, CRYO_ERROR_DEBUG_BREAKPOINT,
-                                              CRYO_SEVERITY_INTERNAL, message, file, function, line);
+                                              CRYO_SEVERITY_INTERNAL, formattedMessage, file, function, line);
     }
     else
     {
@@ -529,4 +540,12 @@ void initGlobalDiagnosticsManager(void)
         GDM->hasFatalErrors = GlobalDiagnosticsManager_hasFatalErrors;
         GDM->printDiagnostics = GlobalDiagnosticsManager_printDiagnostics;
     }
+}
+
+// ==========================================================================
+// ==========================================================================
+
+void DIAG_DEBUG_BREAKPOINT(char *function, char *file, int line, GlobalDiagnosticsManager *self, const char *message)
+{
+    _P_DIAG_DEBUG_BREAKPOINT(function, file, line, self, message);
 }

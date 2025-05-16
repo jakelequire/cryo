@@ -189,6 +189,7 @@ typedef struct DTMStructTypes_t
     DataType *(*createStructTemplate)(void);
     DataType *(*createCompleteStructType)(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount, bool hasConstructor, DataType **ctorArgs, int *ctorArgCount);
     DataType *(*createStructType)(const char *structName, DTPropertyTy **properties, int propertyCount, DataType **methods, int methodCount);
+    DataType *(*createStructProtoType)(const char *structName);
 } DTMStructTypes;
 
 // ------------------------ Class Data Type Interface ------------------------ //
@@ -288,7 +289,7 @@ typedef struct DTMSymbolTable_t
     DataType *(*getEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*addEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
     void (*resetEntries)(struct DTMSymbolTable_t *table);
-    void (*addProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, PrimitiveDataType primitive, TypeofDataType typeOf, TypeofObjectType objectType);
+    void (*addProtoType)(struct DTMSymbolTable_t *table, DataType *protoType, const char *scopeName);
     DataType *(*getProtoType)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*removeEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name);
     void (*updateEntry)(struct DTMSymbolTable_t *table, const char *scopeName, const char *name, DataType *type);
@@ -433,6 +434,8 @@ DTMHelpers *createDTMHelpers(void);
 DTMDataTypes *createDTMDataTypes(void);
 DTMastInterface *createDTMAstInterface(void);
 DTMTypeValidation *createDTMTypeValidation(void);
+
+DataType *DTMastInterface_getTypeofASTNode(ASTNode *node);
 
 /**
  * @brief Create a snapshot of the current symbol table state

@@ -157,6 +157,9 @@ namespace Cryo
         std::string propertyName = node->data.propertyReassignment->name;
         logMessage(LMI, "INFO", "Visitor", "Property Name: %s", propertyName.c_str());
 
+        ASTNode *valueNode = node->data.propertyReassignment->value;
+        valueNode->print(valueNode);
+
         // Get the new value
         llvm::Value *newValue = getLLVMValue(node->data.propertyReassignment->value);
         if (!newValue)

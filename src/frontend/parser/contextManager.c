@@ -172,7 +172,20 @@ void setTypePtrToContext(ParsingContext *context, DataType *type)
     __STACK_FRAME__
     if (context->thisContext)
     {
-        context->thisContext->type = type;
+        if (context->thisContext->type)
+        {
+            context->thisContext->type = NULL;
+            context->thisContext->type = type;
+        }
+        else
+        {
+            context->thisContext->type = type;
+        }
+    }
+    else
+    {
+        logMessage(LMI, "ERROR", "Parser", "This Context is NULL");
+        return;
     }
 }
 

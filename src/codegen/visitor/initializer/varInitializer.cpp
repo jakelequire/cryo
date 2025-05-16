@@ -39,7 +39,7 @@ namespace Cryo
             // Print the symbol table for debugging
             return nullptr;
         }
-        DataType *varDataType = varSymbol->dataType;
+        DataType *varDataType = node->data.varName->type;
         if (!varDataType)
         {
             logMessage(LMI, "ERROR", "Initializer", "Variable %s has no data type", varName.c_str());

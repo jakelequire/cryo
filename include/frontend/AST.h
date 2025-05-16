@@ -458,6 +458,7 @@ typedef struct ThisNode
 {
     const char *name;
     ASTNode *object;
+    DataType *objectType;
 } ThisNode;
 
 typedef struct PropertyAccessNode
@@ -476,6 +477,7 @@ typedef struct PropertyReassignmentNode
     ASTNode *object;
     ASTNode *value;
     const char *objectTypeName;
+    DataType *objectType;
     int propertyIndex;
 } PropertyReassignmentNode;
 

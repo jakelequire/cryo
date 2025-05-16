@@ -224,7 +224,6 @@ DataType *DTMTypeContainerWrappers_wrapStructType(struct DTStructTy_t *structTy)
     container->objectType = STRUCT_OBJ;
     container->primitive = PRIM_OBJECT;
     container->type.structType = structTy;
-    container->type.structType->generic.isGeneric = false;
 
     return DTMTypeContainerWrappers_wrapTypeContainer(container);
 }

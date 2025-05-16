@@ -86,30 +86,17 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
     // Setup symbol table and context for struct
     FEST->enterScope(FEST, structName, SCOPE_STRUCT);
 
+    DataType *structProtoType = DTM->structTypes->createStructProtoType(strdup(structName));
+
     // Register prototype in symbol table
     DTM->symbolTable->addProtoType(
         DTM->symbolTable,
-        parentNamespaceNameID,
-        structName,
-        PRIM_OBJECT,
-        OBJECT_TYPE,
-        STRUCT_OBJ);
+        structProtoType,
+        parentNamespaceNameID);
 
-    // Get prototype and set in context
-    DataType *protoType = DTM->symbolTable->getProtoType(
-        DTM->symbolTable,
-        parentNamespaceNameID,
-        structName);
+    FEST->addProtoType(FEST, structName, structProtoType);
 
-    if (!protoType)
-    {
-        logMessage(LMI, "ERROR", "Parser", "Failed to create prototype for struct %s", structName);
-        FEST->exitScope(FEST);
-        free(structName);
-        return NULL;
-    }
-
-    setTypePtrToContext(context, protoType);
+    setTypePtrToContext(context, structProtoType);
     setThisContext(context, structName, NODE_STRUCT_DECLARATION);
 
     // Consume the struct name token
@@ -126,10 +113,10 @@ ASTNode *parseStructDeclaration(Lexer *lexer, ParsingContext *context, Arena *ar
         result = parseStructBody(lexer, context, arena, state, structName, parentNamespaceNameID);
     }
 
+    FEST->completePrototypeSymbol(FEST, structName, result, result->data.structNode->type);
+
     // Clean up
     FEST->exitScope(FEST);
-
-    // Note: structName is now owned by the AST node and should not be freed here
 
     return result;
 }
@@ -353,7 +340,7 @@ ASTNode *parseStructField(const char *parentName, Lexer *lexer, ParsingContext *
     }
 
     // Check for generic type
-    bool isGenericType = parentDataType->container->type.structType->generic.isGeneric;
+    bool isGenericType = parentDataType->container->type.structType->isGeneric;
     if (isGenericType)
     {
         logMessage(LMI, "INFO", "Parser", "Parent data type is generic.");

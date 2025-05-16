@@ -123,6 +123,8 @@ const char *CryoErrorCodeToString(CryoErrorCode errorCode)
         return "INVALID MEMORY ACCESS";
     case CRYO_ERROR_DEBUG_BREAKPOINT:
         return "DEBUG BREAKPOINT";
+    case CRYO_ERROR_I_UNIMPLMENTED_FUNCTION:
+        return "UNIMPLEMENTED FUNCTION";
 
     default:
         return "UNKNOWN ERROR CODE";
