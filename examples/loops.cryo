@@ -1,0 +1,48 @@
+namespace Examples.Loops;
+
+
+function testWhileLoop() -> void {
+    mut i: i32 = 0;
+    const limit: i32 = 10;
+
+    while (i < limit) {
+        printf("While: %d\n", i);
+        if (i == 5) {
+            printf("Breaking out of the loop at i = %d\n", i);
+            break;
+        }
+        i++;
+    }
+    printf("While loop completed.\n");
+
+    return;
+}
+
+
+function testStandardForLoop() -> void {
+    const limit: i32 = 10;
+
+    for (mut i: i32 = 0; i < 8; i++) {
+        printf("For: %d\n", i);
+        if (i == 6) {
+            printf("Breaking out of the loop at i = %d\n", i);
+            break;
+        }
+    }
+    printf("For loop completed.\n");
+    return;
+}
+
+
+
+function main() -> i32 {
+    testWhileLoop();
+    testStandardForLoop();
+
+    // I call Sys::exit(0) to exit the program
+    // because there's an issue with the main function returning
+    // a value in the Cryo language.
+    // In the future, I will fix this issue.
+    Sys::exit(0);
+    return 0;
+}

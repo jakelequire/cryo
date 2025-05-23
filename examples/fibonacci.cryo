@@ -1,0 +1,38 @@
+namespace Examples.Fibonacci;
+
+function fibonacci(n: i32) -> i32 {
+    mut a: i32 = 0;
+    mut b: i32 = 1;
+    mut c: i32 = 0;
+
+    for (mut i: i32 = 0; i <= n; i++) {
+        c = a + b;
+        a = b;
+        b = c;
+        printf("Fibonacci(%d): %d\n", i, b);
+    }
+
+    return b;
+}
+
+
+function testFibonacci() -> void {
+    const fib_num: i32 = 10;
+    const fib_result: i32 = fibonacci(fib_num);
+
+    printf("Fibonacci(%d): %d\n", fib_num, fib_result);
+
+    return;
+}
+
+
+function main() -> i32 {
+    testFibonacci();
+
+    // I call Sys::exit(0) to exit the program
+    // because there's an issue with the main function returning
+    // a value in the Cryo language.
+    // In the future, I will fix this issue.
+    Sys::exit(0);
+    return 0;
+}

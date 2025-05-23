@@ -1,0 +1,68 @@
+namespace Examples.Strings;
+
+function testStringParams(__str__: str) -> void {
+    if (__str__ == null) {
+        printf("String Parameter: null\n");
+        return;
+    }
+    printf("String Parameter: %s\n", __str__);
+    return;
+}
+
+
+function testStringFunctions() -> void {
+    const str_test: str = "Testing String Functions";
+    const str_test_len: i32 = strlen("This is a test string");
+    const str_test_copy: str = strdup(str_test);
+    const str_test_concat: str = strcat(str_test, " - Concatenated");
+    const str_test_substr: str = substr(str_test, 0, 7);
+
+    printf("Original String: %s\n", str_test);
+    printf("String Length: %d\n", str_test_len);
+    printf("String Copy: %s\n", str_test_copy);
+    printf("String Concatenation: %s\n", str_test_concat);
+    printf("String Substring: %s\n", str_test_substr);
+
+    return;
+}
+
+
+function testStr() -> void {
+    printf("------------ [ String ] ------------\n");
+    const __str__: str = "Hello, World!";
+
+    printf("String: %s\n", __str__);    // Print a string variable
+    printf("%s\n", "Hi there!");        // Print a string literal
+
+    testStringParams("Hi again!");      // Pass a string literal to a function
+    return;
+}
+
+// The string Object is still a work in progress.
+// It is not yet fully implemented and may not work as expected.
+// The definition of the String Object is defined in the `core.cryo` file.
+// It is a wrapper around the string type and provides additional functionality.
+function testStringObject() -> void {
+    const __str_prim__: str = "Hello, World! as Object";
+    const foo_String: String = new String(__str_prim__);
+    const foo_String_prim_val: str = foo_String.val;
+
+    printf("String Value ptr: %p \n", __str_prim__);
+    printf("String Object ptr: %p \n", foo_String.val);
+    printf("String Object Value: %s \n", foo_String.val);
+
+    return;
+}
+
+function main() -> i32 {
+    testStr();
+    testStringFunctions();
+    testStringObject();
+
+    // I call Sys::exit(0) to exit the program
+    // because there's an issue with the main function returning
+    // a value in the Cryo language.
+    // In the future, I will fix this issue.
+    Sys::exit(0);
+    return 0;
+}

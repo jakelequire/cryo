@@ -1,0 +1,36 @@
+namespace Examples.BinOp;
+
+
+function testBinOp() -> void {
+    const int_a: i32 = 5;
+    const int_b: i32 = 10;
+
+    const add_result_vars: i32 = int_a + int_b;
+    const sub_result_vars: i32 = int_a - int_b;
+    const mul_result_vars: i32 = int_a * int_b;
+    const div_result_vars: i32 = int_a / int_b;
+
+    printf("(VARS) Addition: %d + %d = %d\n", int_a, int_b, add_result_vars);
+    printf("(VARS) Subtraction: %d - %d = %d\n", int_a, int_b, sub_result_vars);
+    printf("(VARS) Multiplication: %d * %d = %d\n", int_a, int_b, mul_result_vars);
+    printf("(VARS) Division: %d / %d = %d\n", int_a, int_b, div_result_vars);
+    printf("---------------------------------------\n");
+
+    const add_result_consts: i32 = 5 + 10;
+    const sub_result_consts: i32 = 5 - 10;
+    const mul_result_consts: i32 = 5 * 10;
+    const div_result_consts: i32 = 5 / 10;
+
+    printf("(CONSTS) Addition: %d + %d = %d\n", 5, 10, add_result_consts);
+    printf("(CONSTS) Subtraction: %d - %d = %d\n", 5, 10, sub_result_consts);
+    printf("(CONSTS) Multiplication: %d * %d = %d\n", 5, 10, mul_result_consts);
+    printf("(CONSTS) Division: %d / %d = %d\n", 5, 10, div_result_consts);
+
+    return;
+}
+
+
+function main() -> i32 {
+    testBinOp();
+    return 0;
+}

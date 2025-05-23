@@ -1,0 +1,33 @@
+namespace Examples.Classes;
+
+
+class Person {
+    name: str;
+    age: i32;
+
+    constructor(name: str, age: i32) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public greet() -> void {
+        printf("Hello, my name is %s and I am %d years old.\n", this.name, this.age);
+    }
+}
+
+class StaticObject {
+
+    public static logMessage(message: str) -> void {
+        printf("%s\n", message);
+    }
+}
+
+
+function main() -> i32 {
+    const person: Person = Person("Alice", 30);
+    person.greet();
+
+    StaticObject::logMessage("This is a static method call.");
+
+    return 0;
+}

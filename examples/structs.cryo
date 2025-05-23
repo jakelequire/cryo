@@ -1,0 +1,58 @@
+namespace Examples.Structs;
+
+// Structs are similar to classes, 
+// but their members are public by default.
+// A structure method may be defined within the struct itself,
+// or outside of the struct using the `implement` keyword.
+
+struct Person {
+    name: str;
+    age: i32;
+
+    constructor(name: str, age: i32) {
+        this.name = name;
+        this.age = age;
+    }
+
+    sayName() -> void {
+        printf("My name is %s\n", this.name);
+    }
+    sayAge() -> void {
+        printf("I am %d years old\n", this.age);
+    }
+}
+
+
+struct Point {
+    x: i32;
+    y: i32;
+
+    constructor(x: i32, y: i32) {
+        this.x = x;
+        this.y = y;
+    }
+
+    move(dx: i32, dy: i32) -> void;
+}
+
+
+implement struct Point {
+    move(dx: i32, dy: i32) -> void {
+        this.x += dx;
+        this.y += dy;
+    }
+}
+
+
+function main() -> i32 {
+    const person: Person = Person("Alice", 30);
+    person.sayName();
+    person.sayAge();
+
+    const point: Point = Point(10, 20);
+    printf("Point before move: (%d, %d)\n", point.x, point.y);
+    point.move(5, -10);
+    printf("Point after move: (%d, %d)\n", point.x, point.y);
+
+    return 0;
+}

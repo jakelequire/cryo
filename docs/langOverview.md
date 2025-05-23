@@ -7,11 +7,12 @@ The Cryo language is still under heavy development, and as such, this document i
 
 Cryo has a number of primitive types that are used to represent basic data types. These types include:
 
-- `int`: A 32-bit signed integer.
+- `int`: A 32-bit signed integer (type-alias for `i32`).
 - `i8`: An 8-bit signed integer.
 - `i16`: A 16-bit signed integer.
 - `i32`: A 32-bit signed integer.
 - `i64`: A 64-bit signed integer.
+- `i128`: A 128-bit signed integer.
 
 - `float`: A 32-bit floating point number.
 - `boolean`: A boolean value that can be either `true` or `false`.
@@ -25,25 +26,25 @@ Cryo has a number of primitive types that are used to represent basic data types
 Variables in Cryo are declared using the `const` keyword. Variables are required to have a type annotation, and the type of the variable cannot be changed once it has been declared. Variables can be initialized with a value at the time of declaration, or they can be declared without a value and initialized later.
 
 ```c
-const x: int = 10;
-const z: string = "Hello, world!";
+const x: i32 = 10;
+const z: str = "Hello, world!";
 ```
 
 ## Functions
 
 Functions in Cryo are declared using the `function` keyword. Functions can take zero or more arguments, and they can return a value. Functions can be declared with a return type, or they can be declared with the `void` return type if they do not return a value.
 
-A Cryo program must have a `main` function that serves as the entry point of the program. It may return void or an integer. The `main` function can *optionally* take `argc: int` and `argv: string[]` as arguments.
+A Cryo program must have a `main` function that serves as the entry point of the program. It may return void or an integer. The `main` function can *optionally* take `argc: i32` and `argv: string[]` as arguments.
 
 ```c
 namespace Main; // This is required for any cryo file.
 
-function add(x: int, y: int) -> int {
+function add(x: i32, y: i32) -> i32 {
     return x + y;
 }
 
-function main(argc: int, argv: string[]) -> int {
-    const result: int = add(10, 20);
+function main(argc: i32, argv: string[]) -> i32 {
+    const result: i32 = add(10, 20);
     return result;
 }
 ```
@@ -53,16 +54,16 @@ Functions can also have a visibility modifier, which can be `public` or `private
 ```c
 namespace Main;
 
-public function add(x: int, y: int) -> int {
+public function add(x: i32, y: i32) -> i32 {
     return x + y;
 }
 
-private function subtract(x: int, y: int) -> int {
+private function subtract(x: i32, y: i32) -> i32 {
     return x - y;
 }
 
-function main(argc: int, argv: string[]) -> int {
-    const result: int = add(10, 20);
+function main(argc: i32, argv: string[]) -> i32 {
+    const result: i32 = add(10, 20);
     return result;
 }
 ```
@@ -79,15 +80,15 @@ Cryo has a number of control structures that can be used to control the flow of 
 ```c
 namespace Main;
 
-function loop() -> int {
-    mut x: int = 0;
+function loop() -> i32 {
+    mut x: i32 = 0;
     while (x < 10) {
         x = x + 1;
     }
     return x;
 }
 
-function main(argc: int, argv: string[]) -> int {
+function main(argc: i32, argv: string[]) -> i32 {
     if (argc > 1) {
         return 1;
     } else {
@@ -107,10 +108,10 @@ Structs work similarly to C++ structs. They can have fields, methods, and constr
 namespace Main;
 
 struct Point {
-    x: int;
-    y: int;
+    x: i32;
+    y: i32;
 
-    constructor(x: int, y: int) {
+    constructor(x: i32, y: i32) {
         this.x = x;
         this.y = y;
     }
@@ -122,13 +123,13 @@ struct Point {
     }
 }
 
-function main(argc: int, argv: string[]) -> int {
+function main(argc: i32, argv: string[]) -> i32 {
     const p1: Point = new Point(1, 2);
     const p2: Point = new Point(3, 4);
     const p3: Point = p1.add(p2);
 
-    const result: int = p3.x + p3.y;
-    printInt(result);
+    const result: i32 = p3.x + p3.y;
+    printf("%d\n", result);
 
     return 0;
 }
@@ -143,10 +144,10 @@ Classes in Cryo are similar to structs, but they are not public by default. Clas
 namespace Main;
 
 class Point {
-    public x: int;
-    public y: int;
+    public x: i32;
+    public y: i32;
 
-    constructor(x: int, y: int) {
+    constructor(x: i32, y: i32) {
         this.x = x;
         this.y = y;
     }
@@ -167,11 +168,11 @@ namespace Main;
 
 class Logger {
     public static log(message: string) {
-        printString(message);
+        printf("%s\n", message);
     }
 }
 
-function main(argc: int, argv: string[]) -> int {
+function main(argc: i32, argv: string[]) -> i32 {
 
     Logger::log("Hello, world!");
     return 0;
@@ -186,24 +187,23 @@ Cryo is starting to build up a library of built-in functions that can be used to
 
 - `printInt`: Used to print an integer to the console.
 - `printString`: Used to print a string to the console.
-- `sys_exit`: Used to exit the program with a status code.
-- `intToString`: Used to convert an integer to a string.
+- 
 
 ```c
 // This is the runtime file that contains the built-in functions. (<CRYO_PATH>/cryo/runtime.cryo)
 namespace Runtime;
 
-extern function __c_printInt(i: int) -> void;
+extern function __c_printInt(i: i32) -> void;
 extern function __c_printStr(s: string) -> void;
-extern function __c_sys_exit(code: int) -> void;
-extern function __c_intToString(num: int) -> string;
+extern function __c_sys_exit(code: i32) -> void;
+extern function __c_intToString(num: i32) -> string;
 
-function sys_exit(code: int) -> void {
+function sys_exit(code: i32) -> void {
     __c_sys_exit(code);
     return;
 }
 
-function printInt(i: int) -> void {
+function printInt(i: i32) -> void {
     __c_printInt(i);
     return;
 }
@@ -213,7 +213,7 @@ function printStr(s: string) -> void {
     return;
 }
 
-function intToString(i: int) -> string {
+function intToString(i: i32) -> string {
     return __c_intToString(i);
 }
 ```
