@@ -2,14 +2,213 @@
 
 This document describes the architecture of the Cryo compiler. The Cryo compiler is designed to be modular and extensible, allowing for easy addition of new features and improvements.
 
-This is a passion project and is only maintained and developed by [me, Jake LeQuire](https://github.com/jakelequire). I am a self-taught developer and have treated this project as a learning experience and a way to improve my skills over the last year+. I have learned a lot about compiler design and implementation, and I hope to continue to improve the compiler over time.
+This is a passion project that is only maintained and developed by [me, Jake LeQuire](https://github.com/jakelequire). I am a self-taught developer and have treated this project as a learning experience and a way to improve my skills over the last year+. I have learned a lot about compiler design and implementation, and I hope to continue to improve the compiler over time.
 
 I have no intentions of making this a production-ready compiler / language, but I do hope to make it a fun and interesting project to work on.
 
 See the [release notes](./releaseNotes.md) for a list of features and improvements in each version of the compiler.
 
-## Compiler Architecture
-The Cryo compiler is designed to be modular and extensible. The compiler is divided into several components, each responsible for a specific part of the compilation process. The components are as follows:
+## Table of Contents
+- [Compiler Architecture](#compiler-architecture)
+    - [Additional Components](#additional-components)
+    - [Design Philosophy](#design-philosophy)
+        - [Minimizing Dependencies](#minimizing-dependencies)
+        - [Integrated Build System](#integrated-build-system)
+- [Compiler Flow](#compiler-flow)
+- [Build System](#build-system)
+    - [Core Build Infrastructure](#core-build-infrastructure)
+    - [User-Facing Build Interface](#user-facing-build-interface)
+    - [Development Environment](#development-environment)
+    - [Build Configuration Management](#build-configuration-management)
+- [Cryo CLI](#the-cryo-cli)
+    - [Flags and Options](#flags-and-options)
+- [Conclusion](#conclusion)
 
-- **lexer.c** - The lexer is responsible for tokenizing the input source code. The lexer reads the source code and produces a stream of tokens that are passed to the parser. The lexer is implemented in C and is designed to be extensible, allowing for easy addition of new tokens and token types.
-- **parser.c** - The parser is responsible for parsing the stream of tokens produced by the lexer. The parser reads the tokens and produces an abstract syntax tree (AST) that represents the structure of the source code. The parser is designed to be extensible, allowing for easy addition of new grammar rules and parsing techniques.
+## Compiler Architecture
+The Cryo compiler is designed to be modular and extensible. The compiler is divided into several components, each responsible for a specific part of the compilation process. The primary components are as follows:
+
+- **Lexer:** The lexer is responsible for tokenizing the input source code. The lexer reads the source code and produces a stream of tokens that are passed to the parser.
+- **Parser:** - The parser is responsible for parsing the stream of tokens produced by the lexer. The parser reads the tokens and produces an abstract syntax tree (AST) that represents the structure of the source code.
+- **AST:** - The Abstract Syntax Tree is a data structure that represents the structure of the source code. The AST is used by the compiler to perform semantic analysis and code generation.
+- **Semantic Analyzer:** - The semantic analysis component is responsible for performing semantic analysis on the AST. This includes type checking, scope resolution, and other semantic checks.
+- **Codegen:** - The code generation component is responsible for generating the final output code from the AST. This includes generating machine code, bytecode, or any other output format.
+- **Linker:** - The linker is responsible for linking the generated code with any external libraries or dependencies. The linker resolves symbols and produces the final executable or library. 
+
+
+### Additional Components
+In addition to the primary components, the Cryo compiler includes several additional components that provide additional functionality and support for the compilation process:
+
+- **Data Type Manager:** - The Data Type Manager is responsible for managing the data types used in the source code. This includes defining new data types, managing type conversions, and ensuring type safety.
+- **GDM (Global Diagnostic Manager):** - The GDM is responsible for managing diagnostics and error reporting. It collects and reports errors, warnings, and other diagnostics during the compilation process.
+- **Symbol Table:** - The Symbol Table is a data structure that stores information about the symbols (variables, functions, etc.) in the source code. It is used by the semantic analyzer and code generation components to resolve symbols and perform type checking.
+- **Compiler Settings:** - The Compiler Settings is responsible for managing the configuration of the compiler. This includes managing compiler flags, options, and other settings that affect the compilation process.
+
+### Design Philosophy
+
+The development of Cryo compiler was guided by several key principles that reflect both practical considerations and personal preferences.
+
+#### Minimizing Dependencies
+A foundational principle in building the Cryo compiler was maintaining a lean dependency profile. The compiler relies primarily on the C/C++ standard library, with LLVM serving as the only significant external dependency for code generation and optimization. This deliberate choice simplifies the build process, enhances portability across platforms, and gives me greater control over the compiler's behavior without wrestling with the complexities of multiple third-party libraries.
+
+#### Integrated Build System
+Another key design philosophy was to have the build system be a part of the compiler itself. From personal experiences (*cough* C++ *cough*), I have found that build systems can be a pain to work with, and I wanted to avoid that. The Cryo CLI is packaged with the compiler and provides a simple interface for building and running Cryo programs. This integration creates a unified experience for developers, who don't need to learn separate build tools beyond the compiler itself.
+
+## Compiler Flow
+The flow of the Cryo compiler is as follows:
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 10, 'rankSpacing': 30, 'curve': 'basis'}, 'themeVariables': { 'fontSize': '16px' }}}%%
+flowchart TD
+    %% Main flow with more compact layout
+    Start([Start Compilation]) --> DetectBuildType{Detect<br/>Build Type}
+    
+    %% Group settings branches for compactness
+    DetectBuildType -->|Single File| LoadSettingsSF[Load Settings:<br/>Single File Mode]
+    DetectBuildType -->|Project| LoadSettingsProj[Load Settings:<br/>Project Mode]
+    DetectBuildType -->|LSP| LoadSettingsLSP[Load Settings:<br/>LSP Mode]
+    DetectBuildType -->|Source| LoadSettingsSrc[Load Settings:<br/>Source Mode]
+    
+    %% Join settings paths
+    LoadSettingsSF & LoadSettingsProj & LoadSettingsLSP & LoadSettingsSrc --> InitState
+    
+    InitState[Initialize Compiler State<br/>Setup Memory and Diagnostics]
+    
+    InitState --> ReadSource[Read Source File<br/>Parse .cryo input file]
+    
+    %% Frontend Phase
+    ReadSource --> Lexer[Lexical Analysis<br/>Generate Token Stream]
+    Lexer --> TokenValidation{Valid<br/>Tokens?}
+    TokenValidation -->|No| LexError[Lexical Error]
+    TokenValidation -->|Yes| Parser[Syntax Analysis<br/>Generate AST]
+    
+    Parser --> ASTValidation{Valid<br/>Syntax?}
+    ASTValidation -->|No| ParseError[Parse Error]
+    ASTValidation -->|Yes| SemanticAnalysis[Semantic Analysis<br/>Type Checking & Scope Resolution]
+    
+    SemanticAnalysis --> SemanticValidation{Valid<br/>Semantics?}
+    SemanticValidation -->|No| SemanticError[Semantic Error]
+    SemanticValidation -->|Yes| CodeGeneration[Code Generation<br/>Generate LLVM IR]
+    
+    CodeGeneration --> IRValidation{Valid<br/>IR?}
+    IRValidation -->|No| CodegenError[Codegen Error]
+    IRValidation -->|Yes| LinkingPhase[Linking Phase<br/>Link Libraries & Resolve Symbols]
+    
+    LinkingPhase --> LinkValidation{Valid<br/>Linking?}
+    LinkValidation -->|No| LinkError[Link Error]
+    LinkValidation -->|Yes| GenerateOutput[Generate Final Executable]
+    
+    GenerateOutput --> CleanupPhase[Cleanup Resources]
+    CleanupPhase --> Success([Compilation Success])
+    
+    %% Error Handling - Horizontal alignment
+    LexError & ParseError & SemanticError & CodegenError & LinkError --> GDM[Global Diagnostic Manager]
+    GDM --> ErrorExit([Compilation Failed])
+    
+    %% Support Systems - More compact layout
+    subgraph Support["Support Systems"]
+        direction LR
+        CompilerSettings[Compiler Settings] --- MemoryManager[Memory Manager]
+        MemoryManager --- DataTypeManager[Data Type Manager] --- SymbolTable[Symbol Table]
+    end
+    
+    %% Connections
+    CompilerSettings -.-> InitState
+    MemoryManager -.-> InitState
+    DataTypeManager -.-> SemanticAnalysis
+    SymbolTable -.-> SemanticAnalysis
+```
+
+## Build System
+
+The Cryo compiler employs a multi-layered build system designed for flexibility and developer convenience. The build system consists of several key components working together:
+
+### Core Build Infrastructure
+
+- **Primary Build System**: The [`makefile`](makefile) serves as the core build system, handling the compilation of C and C++ source files, managing dependencies, and linking objects into the final executable. It supports various build targets:
+  - `make all` - Default target that builds everything
+  - `make timed-build` - Builds with timing statistics
+  - `make quick-build` - Faster build without running tests
+  - `make verbose-build` - Build with additional compiler information
+  - `make clean` - Removes build artifacts
+
+- **Build Performance Tools**: The [`scripts/build_timer.py`](scripts/build_timer.py) script provides detailed timing statistics for builds, including:
+  - Total build time measurement
+  - Component-specific timing breakdowns
+  - CPU and memory usage statistics
+  - Color-coded build summaries for better visibility
+
+### User-Facing Build Interface
+
+- **CLI Tool**: The [`tools/cli/`](tools/cli/) provides a user-friendly interface for compilation, making the build process more intuitive:
+  - `cryo build` - Build a project in the current directory
+  - `cryo build -f <file>` - Compile a single file
+  - `cryo build --dev` - Build with development logging enabled
+  - `cryo build-compiler` - Rebuild the Cryo compiler itself
+  - `cryo clean-compiler` - Clean compiler-related build artifacts
+
+### Development Environment
+
+- **Development Server**: The [`tools/dev-server/`](tools/dev-server/) monitors the codebase for changes and automatically triggers rebuilds:
+  - File watching capabilities for real-time development
+  - Automatic recompilation when source files change
+  - Status notifications for build success/failure
+  - Accessible via `cryo devserver` command
+
+### Build Configuration Management
+
+- **Compiler Settings**: The [`include/settings/compilerSettings.h`](include/settings/compilerSettings.h) provides configuration for different build types:
+  - Development builds (`BUILD_DEV`)
+  - Debug builds (`BUILD_DEBUG`) 
+  - Release builds (`BUILD_RELEASE`)
+  - Build flags for optimization levels and feature toggles
+
+- **Project Configuration**: The [`tools/cryoconfig/`](tools/cryoconfig/) handles project-specific settings:
+  - Project structure definitions
+  - Module dependencies
+  - Output customization
+
+## Cryo CLI
+The Cryo CLI is a command-line interface that provides a user-friendly way to interact with the Cryo compiler. It allows users to compile Cryo source files, manage projects, and perform various tasks related to the compilation process.
+The CLI is designed to be intuitive and easy to use, with commands that are similar to other popular build systems. The CLI is built on top of the core build infrastructure and provides a convenient way to interact with the compiler.
+The CLI is located in the `tools/cli/` directory and can be run using the `cryo` command. The CLI provides several commands, including:
+- `cryo build`: Compiles the current project or a specified file.
+- `cryo build-compiler`: Rebuilds the Cryo compiler itself.
+- `cryo clean`: Cleans the build artifacts for the current project.
+- `cryo devserver`: Starts the development server for real-time compilation and monitoring.
+The CLI also supports various options and flags to customize the build process, such as enabling development mode, specifying output directories, and more. The CLI is designed to be extensible, allowing for easy addition of new commands and features in the future.
+
+### Flags and Options
+The Cryo CLI supports various flags and options to customize the build process. Some of the common flags include:
+- `--dev`: Enables development mode, which provides additional logging and debugging information during the build process.
+- `-g | --gdb`: Generates debug symbols for GDB, allowing for easier debugging of the compiled code.
+- `-f <file>`: Specifies a single Cryo source file to compile, overriding the default behavior of compiling the entire project.
+- `--clean`: Cleans the build artifacts for the current project, removing any previously compiled files.
+
+For a complete list of available commands and options, you can run `cryo --help` in the terminal.
+
+## Conclusion
+
+The Cryo compiler represents an exploration into the art of language design and compilation techniques. Through its modular architecture, the system demonstrates how complex software can be broken down into manageable, interconnected components that work together to transform source code into executable programs.
+
+Key strengths of the Cryo compiler include:
+
+- **Modular Design**: The separation of concerns between lexer, parser, semantic analyzer, code generation, and linking stages allows for focused development and testing of each component.
+
+- **Extensible Architecture**: The compiler's structure facilitates the addition of new language features, optimizations, and target platforms without requiring complete rewrites.
+
+- **Robust Error Handling**: The Global Diagnostic Manager provides consistent, helpful error reporting across all stages of compilation, improving the developer experience.
+
+- **Developer-Friendly Tools**: From the CLI interface to the development server, the tooling ecosystem prioritizes ease of use and productive workflow integration.
+
+While Cryo began as a learning project, it has evolved into a framework that demonstrates practical compiler implementation techniques. The LLVM IR integration provides a foundation for potential future optimizations and cross-platform capabilities, while the type system and memory management components showcase important language design considerations.
+
+For developers interested in compiler construction, the Cryo compiler offers a tangible example of how theory translates into practice. The codebase serves as both documentation and implementation, helping bridge the gap between academic concepts and real-world engineering.
+
+Future development directions could include:
+- Enhanced optimization passes
+- Additional language features
+- Cross-platform compilation targets
+- Integration with modern development environments
+- Performance improvements for larger codebases
+
+As this project continues to evolve, it will remain an educational resource and a testament to the fascinating intersection of language design, compiler theory, and software engineering.
