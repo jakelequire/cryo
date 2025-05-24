@@ -190,7 +190,7 @@ Cryo is starting to build up a library of built-in functions that can be used to
 - 
 
 ```c
-// This is the runtime file that contains the built-in functions. (<CRYO_PATH>/cryo/runtime.cryo)
+// This is the runtime file that contains the built-in functions. (<CRYO_PATH>/cryo/Std/Core/core.cryo)
 namespace Runtime;
 
 extern function __c_printInt(i: i32) -> void;
