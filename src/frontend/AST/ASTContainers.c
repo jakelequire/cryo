@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -16,6 +16,7 @@
  ********************************************************************************/
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
+#include "dataTypes/dataTypeManager.h"
 
 /// ---
 /// ### Structure
@@ -161,17 +162,71 @@ CryoFunctionBlock *createCryoFunctionBlockContainer(Arena *arena, CompilerState 
 /// } CryoModule;
 ///```
 ///
+
+void CryoModule_resize(ASTNode *self)
+{
+    __STACK_FRAME__
+    if (self->data.module->statementCount >= self->data.module->statementCapacity)
+    {
+        logMessage(LMI, "INFO", "AST", "Resizing module statement array...");
+        self->data.module->statementCapacity *= 2;
+        size_t newSize = sizeof(ASTNode *) * self->data.module->statementCapacity;
+        self->data.module->statements = (ASTNode **)realloc(self->data.module->statements, newSize);
+        if (!self->data.module->statements)
+        {
+            fprintf(stderr, "[AST] Error: Failed to reallocate memory for module statements.");
+            return;
+        }
+    }
+}
+
+void CryoModule_addStatement(ASTNode *self, ASTNode *statement)
+{
+    __STACK_FRAME__
+    CryoModule_resize(self);
+    logMessage(LMI, "INFO", "AST", "Adding statement to module...");
+    self->data.module->statements[self->data.module->statementCount++] = statement;
+}
+
+void CryoModule_setModuleName(ASTNode *self, const char *name)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "AST", "Setting module name...");
+    self->data.module->moduleName = name;
+}
+
+void CryoModule_importProgramNode(ASTNode *self, ASTNode *program)
+{
+    logMessage(LMI, "INFO", "AST", "Importing program node...");
+    DEBUG_BREAKPOINT;
+}
+
 CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    CryoModule *node = (CryoModule *)ARENA_ALLOC(arena, sizeof(CryoModule));
+    CryoModule *node = (CryoModule *)malloc(sizeof(CryoModule));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate createCryoModuleContainer node.");
         return NULL;
     }
 
-    node->astTable = (ASTNode **)calloc(1, sizeof(ASTNode *));
+    node->statements = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
+    if (!node->statements)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate statements array.");
+        free(node);
+        return NULL;
+    }
+
+    node->moduleName = "defaulted";
+    node->statementCount = 0;
+    node->statementCapacity = 64;
+
+    node->addStatement = CryoModule_addStatement;
+    node->resize = CryoModule_resize;
+    node->setModuleName = CryoModule_setModuleName;
+    node->importProgramNode = CryoModule_importProgramNode;
 
     return node;
 }
@@ -193,7 +248,7 @@ CryoModule *createCryoModuleContainer(Arena *arena, CompilerState *state)
 CryoMetaData *createMetaDataContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    CryoMetaData *node = (CryoMetaData *)ARENA_ALLOC(arena, sizeof(CryoMetaData));
+    CryoMetaData *node = (CryoMetaData *)malloc(sizeof(CryoMetaData));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate CryoMetaData node.");
@@ -289,7 +344,7 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerS
     {
     case NODE_EXTERN_FUNCTION:
     {
-        node->externNode = NULL;
+        node->externNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
         break;
     }
     default:
@@ -318,18 +373,18 @@ ExternNode *createExternNodeContainer(CryoNodeType type, Arena *arena, CompilerS
 ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    ExternFunctionNode *node = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
+    ExternFunctionNode *node = (ExternFunctionNode *)malloc(sizeof(ExternFunctionNode));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ExternFunctionNode node.");
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
-    node->params = NULL;
+    node->name = (char *)malloc(sizeof(char) * 1024);
+    node->params = (ASTNode **)malloc(sizeof(ASTNode *) * PARAM_CAPACITY);
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->functionTypes->createFunctionTemplate();
 
     return node;
 }
@@ -364,8 +419,8 @@ FunctionDeclNode *createFunctionNodeContainer(Arena *arena, CompilerState *state
     node->params = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
-    node->type = wrapTypeContainer(createTypeContainer());
-    node->functionType = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->functionTypes->createFunctionTemplate();
+    node->functionType = DTM->functionTypes->createFunctionTemplate();
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
     node->paramTypes = NULL;
@@ -405,7 +460,7 @@ FunctionCallNode *createFunctionCallNodeContainer(Arena *arena, CompilerState *s
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
-    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->returnType = DTM->primitives->createVoid();
     node->isVariadic = false;
 
     return node;
@@ -437,7 +492,7 @@ LiteralNode *createLiteralNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->length = 0;
     node->value.intValue = 0;
     node->value.floatValue = 0;
@@ -556,7 +611,7 @@ CryoExpressionNode *createExpressionNodeContainer(Arena *arena, CompilerState *s
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     ;
     node->data.varNameNode = NULL;
     node->data.literalNode = NULL;
@@ -594,8 +649,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
-    ;
+    node->type = DTM->primitives->createUndefined();
     node->varNameNode = NULL;
     node->name = (char *)calloc(1, sizeof(char));
     node->isGlobal = false;
@@ -603,6 +657,7 @@ CryoVariableNode *createVariableNodeContainer(Arena *arena, CompilerState *state
     node->isReference = false;
     node->isMutable = false;
     node->isIterator = false;
+    node->noInitializer = false;
     node->initializer = NULL;
     node->hasIndexExpr = false;
     node->indexExpr = NULL;
@@ -635,7 +690,7 @@ VariableNameNode *createVariableNameNodeContainer(char *varName, Arena *arena, C
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->isRef = false;
     node->varName = strdup(varName);
     node->scopeID = (char *)calloc(1, sizeof(char));
@@ -669,14 +724,14 @@ CryoParameterNode *createParameterNodeContainer(Arena *arena, CompilerState *sta
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->functionName = (char *)calloc(1, sizeof(char));
     node->hasDefaultValue = false;
     node->isMutable = true;
     node->defaultValue = NULL;
     node->isVariadic = false;
-    node->variadicElementType = wrapTypeContainer(createTypeContainer());
+    node->variadicElementType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -766,9 +821,9 @@ CryoReturnNode *createReturnNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->returnValue = NULL;
-    node->expression = NULL;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->returnValue = (ASTNode *)malloc(sizeof(ASTNode));
+    node->expression = (ASTNode *)malloc(sizeof(ASTNode));
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -824,7 +879,10 @@ CryoUnaryOpNode *createUnaryOpNodeContainer(Arena *arena, CompilerState *state)
     node->op = TOKEN_UNKNOWN;
     node->operand = NULL;
     node->expression = (ASTNode *)malloc(sizeof(ASTNode));
-    node->resultType = wrapTypeContainer(createTypeContainer());
+    node->resultType = DTM->primitives->createUndefined();
+    node->isPostfix = false;
+    node->isPrefix = false;
+    node->isArrayIndex = false;
 
     return node;
 }
@@ -861,23 +919,39 @@ CryoArrayNode *createArrayNodeContainer(Arena *arena, CompilerState *state)
 
     node->elementCount = 0;
     node->elementCapacity = initialCapacity;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->elementTypes = (DataType **)calloc(initialCapacity, sizeof(DataType *));
 
     return node;
 }
 
-/// ---
-/// ### Structure
-///```
-/// typedef struct IndexExprNode
-/// {
-///     char *name;
-///     struct ASTNode *array;
-///     struct ASTNode *index;
-/// } IndexExprNode;
-///```
-///
+void IndexExprNode_addIndex(ASTNode *self, ASTNode *index)
+{
+    __STACK_FRAME__
+    if (self->data.indexExpr->indexCount >= self->data.indexExpr->indexCapacity)
+    {
+        self->data.indexExpr->resizeIndex(self, self->data.indexExpr->indexCount + 1);
+    }
+    self->data.indexExpr->indices[self->data.indexExpr->indexCount++] = index;
+}
+
+void IndexExprNode_resizeIndex(ASTNode *self, int newSize)
+{
+    __STACK_FRAME__
+    if (newSize > self->data.indexExpr->indexCapacity)
+    {
+        logMessage(LMI, "INFO", "AST", "Resizing index array...");
+        self->data.indexExpr->indexCapacity = newSize;
+        size_t newSizeInBytes = sizeof(ASTNode *) * newSize;
+        self->data.indexExpr->indices = (ASTNode **)realloc(self->data.indexExpr->indices, newSizeInBytes);
+        if (!self->data.indexExpr->indices)
+        {
+            fprintf(stderr, "[AST] Error: Failed to reallocate memory for index array.");
+            return;
+        }
+    }
+}
+
 IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
@@ -891,6 +965,14 @@ IndexExprNode *createIndexExprNodeContainer(Arena *arena, CompilerState *state)
     node->name = (char *)malloc(sizeof(char));
     node->array = NULL;
     node->index = NULL;
+
+    node->isMultiDimensional = false;
+    node->indexCapacity = MAX_INDEX_CAPACITY;
+    node->indexCount = 0;
+    node->indices = (ASTNode **)calloc(node->indexCapacity, sizeof(ASTNode *));
+
+    node->addIndex = IndexExprNode_addIndex;
+    node->resizeIndex = IndexExprNode_resizeIndex;
 
     return node;
 }
@@ -919,8 +1001,7 @@ VariableReassignmentNode *createVariableReassignmentNodeContainer(Arena *arena, 
 
     node->existingVarName = (char *)calloc(1, sizeof(char));
     node->existingVarNode = NULL;
-    node->existingVarType = wrapTypeContainer(createTypeContainer());
-    ;
+    node->existingVarType = DTM->primitives->createUndefined();
     node->newVarNode = NULL;
 
     logMessage(LMI, "INFO", "Containers", "Created VariableReassignmentNode");
@@ -976,7 +1057,7 @@ StructNode *createStructNodeContainer(Arena *arena, CompilerState *state)
     node->hasConstructor = false;
     node->hasDefaultValue = false;
     node->isStatic = false;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1007,7 +1088,7 @@ PropertyNode *createPropertyNodeContainer(Arena *arena, CompilerState *state)
 
     node->name = (char *)calloc(1, sizeof(char));
     node->value = NULL;
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->defaultProperty = false;
     node->parentName = (char *)calloc(1, sizeof(char));
     node->parentNodeType = NODE_UNKNOWN;
@@ -1041,6 +1122,7 @@ ScopedFunctionCallNode *createScopedFunctionCallNode(Arena *arena, CompilerState
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
+    node->type = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1068,12 +1150,12 @@ StructConstructorNode *createStructConstructorNodeContainer(Arena *arena, Compil
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = (char *)malloc(sizeof(char) * 1024);
     node->args = NULL;
     node->argCount = 0;
     node->argCapacity = ARG_CAPACITY;
-    node->metaData = createConstructorMetaDataContainer(arena, state);
     node->constructorBody = NULL;
+    node->metaData = createConstructorMetaDataContainer(arena, state);
 
     return node;
 }
@@ -1129,11 +1211,13 @@ PropertyAccessNode *createPropertyAccessNodeContainer(Arena *arena, CompilerStat
         return NULL;
     }
 
-    node->objType = wrapTypeContainer(createTypeContainer());
+    node->propertyIndex = -1;
     node->object = NULL;
-    node->propertyName = (char *)calloc(1, sizeof(char));
+    node->objectType = DTM->primitives->createUndefined();
+    node->objectTypeName = NULL;
+    node->propertyName = NULL;
+    node->objectTypeName = NULL;
     node->property = NULL;
-    node->propertyIndex = 0;
 
     return node;
 }
@@ -1158,6 +1242,8 @@ ThisNode *createThisNodeContainer(Arena *arena, CompilerState *state)
     }
 
     node->name = (char *)calloc(1, sizeof(char));
+    node->object = NULL;
+    node->objectType = DTM->primitives->createUndefined();
 
     return node;
 }
@@ -1183,9 +1269,11 @@ PropertyReassignmentNode *createPropertyReassignmentNodeContainer(Arena *arena, 
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = (char *)malloc(sizeof(char) * 1024);
     node->object = NULL;
-    node->value = NULL;
+    node->value = (ASTNode *)malloc(sizeof(ASTNode));
+    node->objectType = DTM->primitives->createUndefined();
+    node->propertyIndex = 0;
 
     return node;
 }
@@ -1216,15 +1304,15 @@ MethodNode *createMethodNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->name = (char *)calloc(1, sizeof(char));
+    node->name = NULL;
     node->params = NULL;
     node->paramCount = 0;
     node->paramCapacity = PARAM_CAPACITY;
     node->paramTypes = NULL;
     node->body = NULL;
     node->visibility = VISIBILITY_PUBLIC;
-    node->type = wrapTypeContainer(createTypeContainer());
-    node->functionType = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
+    node->functionType = DTM->primitives->createUndefined();
     node->isStatic = false;
     node->parentName = (char *)calloc(1, sizeof(char));
 
@@ -1258,8 +1346,8 @@ MethodCallNode *createMethodCallNodeContainer(Arena *arena, CompilerState *state
         return NULL;
     }
 
-    node->instanceType = wrapTypeContainer(createTypeContainer());
-    node->returnType = wrapTypeContainer(createTypeContainer());
+    node->instanceType = DTM->primitives->createUndefined();
+    node->returnType = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->instanceName = (char *)calloc(1, sizeof(char));
     node->accessorObj = NULL;
@@ -1295,7 +1383,7 @@ GenericDeclNode *createGenericDeclNodeContainer(Arena *arena, CompilerState *sta
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->properties = NULL;
     node->propertyCount = 0;
@@ -1330,15 +1418,15 @@ GenericInstNode *createGenericInstNodeContainer(Arena *arena, CompilerState *sta
     node->baseName = (char *)calloc(1, sizeof(char));
     node->typeArguments = NULL;
     node->argumentCount = 0;
-    node->resultType = wrapTypeContainer(createTypeContainer());
+    node->resultType = DTM->primitives->createUndefined();
 
     return node;
 }
 
-PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
+struct PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    PublicMembers *node = (PublicMembers *)ARENA_ALLOC(arena, sizeof(PublicMembers));
+    struct PublicMembers *node = (struct PublicMembers *)malloc(sizeof(struct PublicMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1356,10 +1444,10 @@ PublicMembers *createPublicMembersContainer(Arena *arena, CompilerState *state)
     return node;
 }
 
-PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
+struct PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    PrivateMembers *node = (PrivateMembers *)ARENA_ALLOC(arena, sizeof(PrivateMembers));
+    struct PrivateMembers *node = (struct PrivateMembers *)malloc(sizeof(struct PrivateMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1377,10 +1465,10 @@ PrivateMembers *createPrivateMembersContainer(Arena *arena, CompilerState *state
     return node;
 }
 
-ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
+struct ProtectedMembers *createProtectedMembersContainer(Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    ProtectedMembers *node = (ProtectedMembers *)ARENA_ALLOC(arena, sizeof(ProtectedMembers));
+    struct ProtectedMembers *node = (struct ProtectedMembers *)malloc(sizeof(struct ProtectedMembers));
     if (!node)
     {
         fprintf(stderr, "[AST] Error: Failed to allocate ProtectedMembers node.");
@@ -1432,16 +1520,23 @@ ClassNode *createClassNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
-    node->constructor = NULL;
+
+    node->hasConstructor = false;
+    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *) * ARG_CAPACITY);
+    node->constructorCount = 0;
+    node->constructorCapacity = ARG_CAPACITY;
+
     node->propertyCount = 0;
     node->propertyCapacity = PROPERTY_CAPACITY;
+
     node->methodCount = 0;
     node->methodCapacity = METHOD_CAPACITY;
-    node->hasConstructor = false;
+
     node->hasDefaultValue = false;
     node->isStatic = false;
+
     node->privateMembers = createPrivateMembersContainer(arena, state);
     node->publicMembers = createPublicMembersContainer(arena, state);
     node->protectedMembers = createProtectedMembersContainer(arena, state);
@@ -1479,7 +1574,7 @@ ObjectNode *createObjectNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->objType = wrapTypeContainer(createTypeContainer());
+    node->objType = DTM->primitives->createUndefined();
     node->name = (char *)calloc(1, sizeof(char));
     node->isNewInstance = false;
 
@@ -1504,7 +1599,7 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = createPrimitiveNullType();
+    node->type = DTM->primitives->createNull();
 
     return node;
 }
@@ -1519,7 +1614,7 @@ TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state)
         return NULL;
     }
 
-    node->type = wrapTypeContainer(createTypeContainer());
+    node->type = DTM->primitives->createUndefined();
     node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
 
     return node;
@@ -1560,5 +1655,118 @@ ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state)
     node->modulePath = (char *)calloc(1, sizeof(char));
     node->moduleFile = (char *)calloc(1, sizeof(char));
 
+    return node;
+}
+
+AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    AnnotationNode *node = (AnnotationNode *)ARENA_ALLOC(arena, sizeof(AnnotationNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate AnnotationNode node.");
+        return NULL;
+    }
+
+    node->name = (char *)calloc(1, sizeof(char));
+    node->value = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    TypeDecl *node = (TypeDecl *)ARENA_ALLOC(arena, sizeof(TypeDecl));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeDecl node.");
+        return NULL;
+    }
+
+    node->type = DTM->primitives->createUndefined();
+    node->name = (char *)calloc(1, sizeof(char));
+
+    return node;
+}
+
+TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    TypeCast *node = (TypeCast *)ARENA_ALLOC(arena, sizeof(TypeCast));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate TypeCast node.");
+        return NULL;
+    }
+
+    node->type = DTM->primitives->createUndefined();
+    node->expression = (ASTNode *)calloc(1, sizeof(ASTNode));
+
+    return node;
+}
+
+ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    ImplementNode *node = (ImplementNode *)malloc(sizeof(ImplementNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate Implementation node.");
+        return NULL;
+    }
+
+    node->interfaceName = NULL;
+    node->interfaceType = DTM->primitives->createUndefined();
+
+    node->properties = (ASTNode **)malloc(sizeof(ASTNode *) * PROPERTY_CAPACITY);
+    node->propertyCount = 0;
+    node->propertyCapacity = PROPERTY_CAPACITY;
+
+    node->methods = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
+    node->methodCount = 0;
+    node->methodCapacity = METHOD_CAPACITY;
+
+    node->constructors = (ASTNode **)malloc(sizeof(ASTNode *) * METHOD_CAPACITY);
+    node->constructorCount = 0;
+    node->constructorCapacity = METHOD_CAPACITY;
+
+    return node;
+}
+
+void *createDiscardNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    void *node = (void *)malloc(sizeof(void *));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate DiscardNode node.");
+        return NULL;
+    }
+
+    return node;
+}
+
+BreakNode *createBreakNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    BreakNode *node = (BreakNode *)ARENA_ALLOC(arena, sizeof(BreakNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate BreakNode node.");
+        return NULL;
+    }
+    return node;
+}
+
+ContinueNode *createContinueNodeContainer(Arena *arena, CompilerState *state)
+{
+    __STACK_FRAME__
+    ContinueNode *node = (ContinueNode *)ARENA_ALLOC(arena, sizeof(ContinueNode));
+    if (!node)
+    {
+        fprintf(stderr, "[AST] Error: Failed to allocate ContinueNode node.");
+        return NULL;
+    }
     return node;
 }

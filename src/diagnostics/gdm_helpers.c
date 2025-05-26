@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -50,7 +50,6 @@ void dyn_stackframe_push(StackFrame *frame)
     StackTrace *stackTrace = GDM->stackTrace;
     if (stackTrace->frameCount == stackTrace->frameCapacity)
     {
-        printf("Resizing stack trace\n");
         stackTrace->frameCapacity *= 2;
         stackTrace->frames = (StackFrame **)realloc(stackTrace->frames, sizeof(StackFrame *) * stackTrace->frameCapacity);
     }

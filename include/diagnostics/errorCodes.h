@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -55,11 +55,38 @@ extern "C"
         CRYO_ERROR_UNEXPECTED_TOKEN = 101,
         CRYO_ERROR_UNTERMINATED_STRING = 102,
         CRYO_ERROR_INVALID_CHARACTER = 103,
+        CRYO_ERROR_UNKNOWN_NODE_TYPE = 104,
 
         // Semantic Errors (200-299)
         CRYO_ERROR_UNDEFINED_SYMBOL = 200,
         CRYO_ERROR_TYPE_MISMATCH = 201,
         CRYO_ERROR_REDEFINITION = 202,
+        CRYO_ERROR_UNKNOWN_DATA_TYPE = 203,
+        CRYO_ERROR_NOT_A_FUNCTION = 204,
+        CRYO_ERROR_INVALID_FUNCTION_CALL = 205,
+        CRYO_ERROR_INVALID_ARGUMENT_COUNT = 206,
+        CRYO_ERROR_INVALID_RETURN_TYPE = 207,
+        CRYO_ERROR_INVALID_ACCESS = 208,
+        CRYO_ERROR_INVALID_ASSIGNMENT = 209,
+        CRYO_ERROR_INVALID_INDEX = 210,
+        CRYO_ERROR_INVALID_MEMBER_ACCESS = 211,
+        CRYO_ERROR_INVALID_CAST = 212,
+        CRYO_ERROR_INVALID_SCOPE = 213,
+        CRYO_ERROR_INVALID_NAMESPACE = 214,
+        CRYO_ERROR_NULL_DATA_TYPE = 215,
+        CRYO_ERROR_NULL_POINTER_DEREFERENCE = 216,
+        CRYO_ERROR_TOO_MANY_TYPE_ARGUMENTS = 217,
+        CRYO_ERROR_INCORRECT_TYPE_ARGUMENT_COUNT = 218,
+        CRYO_ERROR_INVALID_OPERATOR = 219,
+        CRYO_ERROR_INVALID_OPERATOR_PRECEDENCE = 220,
+        CRYO_ERROR_INVALID_THIS_CONTEXT = 221,
+        CRYO_ERROR_UNDEFINED_PROPERTY = 222,
+        CRYO_ERROR_UNDEFINED_METHOD = 223,
+        CRYO_ERROR_INVALID_NODE_TYPE = 224,
+        CRYO_ERROR_INVALID_MUTABILITY = 225,
+        CRYO_ERROR_INVALID_TYPE = 226,
+        CRYO_ERROR_UNDEFINED_TYPE = 227,
+        CRYO_ERROR_INVALID_TYPE_DECLARATION = 228,
 
         // Linker Errors (300-399)
         CRYO_ERROR_LINK_FAILED = 300,
@@ -68,7 +95,14 @@ extern "C"
 
         // Internal Errors (900-999)
         CRYO_ERROR_INTERNAL = 900,
-        CRYO_ERROR_NOT_IMPLEMENTED = 901
+        CRYO_ERROR_NOT_IMPLEMENTED = 901,
+        CRYO_ERROR_PANIC = 902,
+        CRYO_ERROR_NULL_AST_NODE = 903,
+        CRYO_ERROR_INTEGER_OVERFLOW = 904,
+        CRYO_ERROR_INVALID_MEMORY_ACCESS = 905,
+        CRYO_ERROR_DEBUG_BREAKPOINT = 906,
+        CRYO_ERROR_I_UNIMPLMENTED_FUNCTION = 907,
+
     } CryoErrorCode;
 
     // Error severity levels
@@ -77,16 +111,17 @@ extern "C"
         CRYO_SEVERITY_NOTE,
         CRYO_SEVERITY_WARNING,
         CRYO_SEVERITY_ERROR,
-        CRYO_SEVERITY_FATAL
+        CRYO_SEVERITY_FATAL,
+        CRYO_SEVERITY_INTERNAL
     } CryoErrorSeverity;
 
     typedef enum CryoErrorType
     {
-        CRYO_ERROR_TYPE_GENERAL     = 0x45,     // 'E' (General Error)
-        CRYO_ERROR_TYPE_FRONTEND    = 0x46,     // 'F' (Frontend Error)
-        CRYO_ERROR_TYPE_SEMANTIC    = 0x53,     // 'S' (Semantic Error)
-        CRYO_ERROR_TYPE_LINKER      = 0x4C,     // 'L' (Linker Error)
-        CRYO_ERROR_TYPE_INTERNAL    = 0x49      // 'I' (Internal Error)
+        CRYO_ERROR_TYPE_GENERAL = 0x45,  // 'E' (General Error)
+        CRYO_ERROR_TYPE_FRONTEND = 0x46, // 'F' (Frontend Error)
+        CRYO_ERROR_TYPE_SEMANTIC = 0x53, // 'S' (Semantic Error)
+        CRYO_ERROR_TYPE_LINKER = 0x4C,   // 'L' (Linker Error)
+        CRYO_ERROR_TYPE_INTERNAL = 0x49  // 'I' (Internal Error)
     } CryoErrorType;
 
     typedef struct CryoError

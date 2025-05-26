@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -31,6 +31,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <dirent.h>
 
 #include "tools/macros/debugMacros.h"
 #include "tools/utils/c_logger.h"
@@ -88,6 +90,12 @@ const char *cleanFilePath(char *filePath);
 const char *getFileName(const char *filePath);
 const char *getFileExt(const char *filePath);
 
+const char *getRealPath(const char *path);
+const char *trimStringQuotes(const char *str);
+
+const char *getDirectoryPath(const char *filePath);
+char **listDir(const char *dirPath);
+
 typedef struct jFS
 {
     // `readFile` reads the contents of a file into a buffer.
@@ -144,6 +152,14 @@ typedef struct jFS
     _NEW_METHOD(const char *, getFileName, const char *filePath);
     // `getFileExt` gets the file extension.
     _NEW_METHOD(const char *, getFileExt, const char *filePath);
+    // `getFullFilePath` gets the full file path.
+    _NEW_METHOD(const char *, getRealPath, const char *path);
+    // `trimStringQuotes` trims the string quotes.
+    _NEW_METHOD(const char *, trimStringQuotes, const char *str);
+    // `getDirectoryPath` gets the directory path.
+    _NEW_METHOD(const char *, getDirectoryPath, const char *filePath);
+    // `listDir` lists the files in a directory.
+    _NEW_METHOD(char **, listDir, const char *dirPath);
 } jFS;
 
 jFS *initFS(void);

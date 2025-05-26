@@ -1,0 +1,183 @@
+namespace Std.Core;
+@pragma ["core"]
+
+// core.cryo
+//
+// This is the core library of Cryo.
+// It contains the most basic types and functions.
+// It is automatically imported into every module.
+// *Do not import it manually.*
+
+
+extern "C" {
+    function printf_export   (format: str, ...) -> i32;
+    function printf          (format: str, ...) -> i32;
+    function sprintf         (buffer: str, format: str, ...) -> i32;
+    function printStr_export (value: str) -> void;
+    function scanf_export    (format: str, ...) -> i32;
+    function printI32_export (value: i32) -> i32;
+
+    function sys_exit        (status: i32) -> void;
+    function sys_read        (fd: i32, buf: void *, count: i32) -> i32;
+    function sys_write       (fd: i32, buf: void *, count: i32) -> i32;
+
+    function puts_export     (__str__: str) -> void;
+
+    function mmap_export     (addr: void *, length: i32, prot: i32, flags: i32, fd: i32, offset: i32) -> void *;
+    function munmap_export   (addr: void *, length: i32) -> i32;
+    function malloc_export   (size: i32) -> void *;
+    function free_export     (__ptr__: void *) -> i32;
+    function memcpy_export   (dest: void *, src: void *, n: i32) -> void *;
+    function memmove_export  (dest: void *, src: void *, n: i32) -> void *;
+    function memcmp_export   (ptr1: void *, ptr2: void *, n: i32) -> i32;
+    function memset_export   (__ptr__: void *, value: i32, num: i32) -> void *;
+
+    function strlen_export   (__str__: str) -> i32;
+    function strncat_export  (dest: str, src: str, n: i32) -> str;
+    function strnlen_export  (__str__: str, n: i32) -> i32;
+    function strncmp_export  (str1: str, str2: str, n: i32) -> i32;
+
+    function strdup          (___str__: str) -> str;
+    function strndup         (___str__: str, n: i32) -> str;
+    function strlen          (___str__: str) -> i32;
+    function strncat         (dest: str, src: str, n: i32) -> str;
+    function strcat          (dest: str, src: str) -> str;
+    function strncmp         (str1: str, str2: str, n: i32) -> i32;
+    function substr          (__str__: str, start: i32, length: i32) -> str;
+
+    function c_readFile_export (filePath: str) -> str;
+}
+
+
+// ======================================================== //
+//                       Core Types                         //
+// ======================================================== //
+
+// ---------------------------------------------------------------------------- 
+// These are the core types of Cryo.
+// The types below are commented out because they are defined in the compiler.
+// I only included them for reference.
+// ---------------------------------------------------------------------------- 
+
+// type char       = char;     // [Compiler Defined Type]
+// type i8         = i8;       // [Compiler Defined Type]
+// type i16        = i16;      // [Compiler Defined Type]
+// type i32        = i32;      // [Compiler Defined Type]
+// type i64        = i64;      // [Compiler Defined Type]
+// type i128       = i128;     // [Compiler Defined Type]
+// type float      = float;    // [Compiler Defined Type]
+// type boolean    = boolean;  // [Compiler Defined Type]
+// type void       = void;     // [Compiler Defined Type]
+// type null       = null;     // [Compiler Defined Type]
+// type any        = any;      // [Compiler Defined Type]
+
+struct Int {
+    // The core Int properties.
+    val: i32;
+
+    constructor(__val__: i32) {
+        this.val = __val__;
+        // this.isZero = (this.val == 0);
+        // this.isNegative = (this.val < 0);
+    }
+
+    // The core Int methods.
+}
+
+struct String {
+    val: str;
+
+    constructor(__string__: str) {
+        printf("[String::constructor]");
+        this.val = __string__;
+    }
+
+    append(__str__: str) -> String;
+    prepend(__str__: str) -> String;
+    insert(__str__: str, __index__: i32) -> String;
+    remove(__index__: i32, __length__: i32) -> String;
+    replace(__str__: str, __index__: i32, __length__: i32) -> String;
+    find(__str__: str) -> i32;
+    findLast(__str__: str) -> i32;
+    findFirst(__str__: str) -> i32;
+}
+
+implement struct String {
+
+    // The core string methods.
+    append(__str__: str) -> String {
+        // Implementation of append method
+    }
+
+    prepend(__str__: str) -> String {
+        // Implementation of prepend method
+    }
+
+    insert(__str__: str, __index__: i32) -> String {
+        // Implementation of insert method
+    }
+
+    remove(__index__: i32, __length__: i32) -> String {
+        // Implementation of remove method
+    }
+
+    replace(__str__: str, __index__: i32, __length__: i32) -> String {
+        // Implementation of replace method
+    }
+
+    find(__str__: str) -> i32 {
+        // Implementation of find method
+    }
+
+    findLast(__str__: str) -> i32 {
+        // Implementation of findLast method
+    }
+
+    findFirst(__str__: str) -> i32 {
+        // Implementation of findFirst method
+    }
+}
+
+implement type i32 {
+
+    isZero() -> boolean {
+        return false;
+    }
+}
+
+
+
+
+// ======================================================== //
+//                    Core Functions                        //
+// ======================================================== //
+
+
+function printInt (value: Int) -> void {
+    printf_export("%d\n", value.val);
+    return;
+}
+
+function printI32 (value: i32) -> void {
+    printf_export("%d\n", value);
+    return;
+}
+
+function printStr (value: str) -> void {
+    if (value == null) {
+        printf_export("null\n");
+        return;
+    }
+    printStr_export(value);
+    return;
+}
+
+function printString (value: String) -> void {
+    printf_export("%d\n", value.val);
+    return;
+}
+
+function printChar (value: char) -> void {
+    printf_export("%c\n", value);
+    return;
+}

@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -30,17 +30,18 @@
 #include "tools/arena/arena.h"
 #include "tools/utils/c_logger.h"
 #include "tools/macros/consoleColors.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "common/common.h"
 #include "tools/utils/cWrappers.h"
 
-typedef struct DataType DataType;
+typedef struct DataType_t DataType;
 typedef struct GenericType GenericType;
 typedef struct ParsingContext ParsingContext;
+typedef struct CompilerState CompilerState;
+typedef struct Lexer Lexer;
 
 typedef struct ASTNode ASTNode;
 typedef struct CompilerSettings CompilerSettings;
-typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 
 #define INITIAL_CAPACITY 8
 #define PROGRAM_CAPACITY 512
@@ -53,6 +54,9 @@ typedef struct CryoGlobalSymbolTable_t *CryoGlobalSymbolTable;
 #define ARRAY_CAPACITY 128
 #define PROPERTY_CAPACITY 32
 #define METHOD_CAPACITY 64
+#define MAX_IDENTIFIER_LENGTH 128
+#define MAX_INDEX_CAPACITY 10
+#define MAX_CHAR_ARRAY_CAPACITY 256
 
 /// ### The position struct represents the line and column number of a token in the source code.
 typedef struct Position
@@ -63,7 +67,15 @@ typedef struct Position
 
 typedef struct CryoModule
 {
-    ASTNode **astTable;
+    const char *moduleName;
+    ASTNode **statements;
+    size_t statementCount;
+    size_t statementCapacity;
+
+    void (*addStatement)(ASTNode *self, ASTNode *statement);
+    void (*resize)(ASTNode *self);
+    void (*setModuleName)(ASTNode *self, const char *name);
+    void (*importProgramNode)(ASTNode *self, ASTNode *programNode);
 } CryoModule;
 
 typedef struct CryoNamespace
@@ -79,6 +91,9 @@ typedef struct CryoProgram
     struct ASTNode **statements;
     size_t statementCount;
     size_t statementCapacity;
+
+    void (*importAST)(ASTNode *programNode, ASTNode *importedNode);
+    void (*addStatement)(ASTNode *self, ASTNode *statement);
 } CryoProgram;
 
 typedef struct CryoMetaData
@@ -87,7 +102,7 @@ typedef struct CryoMetaData
     int line;               // Line number for error reporting
     int column;             // Column number for error reporting
 
-    char *moduleName; // Current Module
+    const char *moduleName; // Current Module
     Position position;
 } CryoMetaData;
 
@@ -172,6 +187,7 @@ typedef struct LiteralNode
 {
     DataType *type;
     int length;
+    LiteralType literalType;
     union
     {
         int intValue;
@@ -243,6 +259,7 @@ typedef struct CryoVariableNode
     bool isMutable;
     bool isIterator;
     bool isNewInstance;
+    bool noInitializer;
     // Unary operators
     bool hasUnaryOp;
     ASTNode *unaryOp;
@@ -306,6 +323,9 @@ typedef struct CryoUnaryOpNode
     DataType *resultType;
     struct ASTNode *operand;
     struct ASTNode *expression;
+    bool isPostfix;
+    bool isPrefix;
+    bool isArrayIndex;
 } CryoUnaryOpNode;
 
 typedef struct CryoArrayNode
@@ -325,6 +345,15 @@ typedef struct IndexExprNode
     struct ASTNode *array;
     // Should be a literal expression node with an int value
     struct ASTNode *index;
+
+    // For multi-dimensional arrays
+    bool isMultiDimensional;
+    struct ASTNode **indices;
+    int indexCount;
+    int indexCapacity;
+
+    void (*addIndex)(ASTNode *self, ASTNode *index);
+    void (*resizeIndex)(ASTNode *self, int newSize);
 } IndexExprNode;
 
 typedef struct VariableReassignmentNode
@@ -350,7 +379,7 @@ typedef struct MethodNode
 {
     DataType *functionType;
     DataType *type;
-    char *name;
+    const char *name;
     ASTNode **params;
     int paramCount;
     int paramCapacity;
@@ -400,9 +429,10 @@ typedef struct StructNode
 
 typedef struct ScopedFunctionCallNode
 {
-    char *scopeName;       // e.g., "Math"
-    char *functionName;    // e.g., "add"
-    struct ASTNode **args; // Array of argument nodes
+    const char *scopeName;    // e.g., "Math"
+    const char *functionName; // e.g., "add"
+    struct ASTNode **args;    // Array of argument nodes
+    DataType *type;
     int argCount;
     int argCapacity;
 } ScopedFunctionCallNode;
@@ -428,12 +458,14 @@ typedef struct ThisNode
 {
     const char *name;
     ASTNode *object;
+    DataType *objectType;
 } ThisNode;
 
 typedef struct PropertyAccessNode
 {
-    DataType *objType;
     ASTNode *object;
+    DataType *objectType;
+    const char *objectTypeName;
     const char *propertyName;
     ASTNode *property;
     int propertyIndex;
@@ -444,6 +476,9 @@ typedef struct PropertyReassignmentNode
     const char *name;
     ASTNode *object;
     ASTNode *value;
+    const char *objectTypeName;
+    DataType *objectType;
+    int propertyIndex;
 } PropertyReassignmentNode;
 
 typedef struct EnumNode
@@ -513,7 +548,11 @@ typedef struct ClassNode
 {
     DataType *type;
     const char *name;
-    ASTNode *constructor;
+
+    ASTNode **constructors;
+    int constructorCount;
+    int constructorCapacity;
+
     int propertyCount;
     int propertyCapacity;
     int methodCount;
@@ -522,11 +561,11 @@ typedef struct ClassNode
     bool hasDefaultValue;
     bool isStatic;
     // For Private Members
-    PrivateMembers *privateMembers;
+    struct PrivateMembers *privateMembers;
     // For Public Members
-    PublicMembers *publicMembers;
+    struct PublicMembers *publicMembers;
     // For Protected Members
-    ProtectedMembers *protectedMembers;
+    struct ProtectedMembers *protectedMembers;
 } ClassNode;
 
 typedef struct ObjectNode
@@ -577,6 +616,53 @@ typedef struct ModuleNode
     const char *moduleFile;
 } ModuleNode;
 
+typedef struct AnnotationNode
+{
+    const char *name;
+    const char *value;
+    const char *valueArray[MAX_CHAR_ARRAY_CAPACITY];
+} AnnotationNode;
+
+typedef struct TypeDecl
+{
+    const char *name;
+    DataType *type;
+} TypeDecl;
+
+typedef struct TypeCast
+{
+    DataType *type;
+    ASTNode *expression;
+} TypeCast;
+
+typedef struct ImplementNode
+{
+    const char *interfaceName;
+    DataType *interfaceType;
+
+    ASTNode **methods;
+    int methodCount;
+    int methodCapacity;
+
+    ASTNode **properties;
+    int propertyCount;
+    int propertyCapacity;
+
+    ASTNode **constructors;
+    int constructorCount;
+    int constructorCapacity;
+} ImplementNode;
+
+typedef struct BreakNode
+{
+    // no data
+} BreakNode;
+
+typedef struct ContinueNode
+{
+    // no data
+} ContinueNode;
+
 /// #### The ASTNode struct is the primary data structure for the Abstract Syntax Tree.
 typedef struct ASTNode
 {
@@ -590,6 +676,8 @@ typedef struct ASTNode
         CryoNamespace *cryoNamespace;
         // For the main program
         CryoProgram *program;
+        // For Modules
+        CryoModule *module;
         // For Import Statements
         CryoImportNode *import;
         // For Blocks
@@ -674,9 +762,24 @@ typedef struct ASTNode
         UsingNode *usingNode;
         // For Module Declarations
         ModuleNode *moduleNode;
+        // For Annotations
+        AnnotationNode *annotation;
+        // For Type Declarations
+        TypeDecl *typeDecl;
+        // For Type Casts
+        TypeCast *typeCast;
+        // For Implementations
+        ImplementNode *implementation;
+        // For Break
+        BreakNode *breakNode;
+        // For Continue
+        ContinueNode *continueNode;
+        // Discard
+        void *discard;
     } data;
 
-    _NEW_METHOD(void, print, struct ASTNode *self);
+    void (*print)(struct ASTNode *self);
+    ASTNode *(*clone)(struct ASTNode *self);
 } ASTNode;
 
 // # ============================================================ # //
@@ -766,7 +869,7 @@ extern "C"
         ASTNode *else_branch,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
-    ASTNode *createForBlock(
+    ASTNode *createForLoopNode(
         ASTNode *initializer,
         ASTNode *condition,
         ASTNode *increment,
@@ -785,6 +888,10 @@ extern "C"
     // Basic expressions
     ASTNode *createExpressionStatement(
         ASTNode *expression,
+        Arena *arena, CompilerState *state, Lexer *lexer);
+
+    ASTNode *createVarNameNode(
+        char *name, DataType *varType,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
     ASTNode *createBinaryExpr(
@@ -813,7 +920,7 @@ extern "C"
 
     ASTNode *createStringLiteralNode(
         const char *value,
-        Arena *arena, CompilerState *state, Lexer *lexer);
+        Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context);
 
     ASTNode *createBooleanLiteralNode(
         int value,
@@ -821,8 +928,7 @@ extern "C"
 
     ASTNode *createIdentifierNode(
         char *name,
-        Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context,
-        CryoGlobalSymbolTable *globalTable);
+        Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context);
 
     /**
      * Function-Related Nodes
@@ -840,6 +946,7 @@ extern "C"
     ASTNode *createExternFuncNode(
         char *function_name,
         ASTNode **params,
+        int paramCount,
         DataType *returnType,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
@@ -900,6 +1007,7 @@ extern "C"
         bool isGlobal,
         bool isReference,
         bool isIterator,
+        bool noInitializer,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
     ASTNode *createVariableExpr(
@@ -985,6 +1093,11 @@ extern "C"
         bool isStatic,
         Arena *arena, CompilerState *state, Lexer *lexer);
 
+    ASTNode *createTypeDeclNode(const char *typeName,
+                                DataType *type, Arena *arena, CompilerState *state, Lexer *lexer);
+
+    ASTNode *createTypeCastNode(DataType *type, ASTNode *expression,
+                                Arena *arena, CompilerState *state, Lexer *lexer);
     /**
      * Generic Type Nodes
      * Nodes for generic type definitions and instantiations
@@ -1087,6 +1200,23 @@ extern "C"
     ASTNode *createModuleNode(const char *moduleName,
                               Arena *arena, CompilerState *state, Lexer *lexer);
 
+    ASTNode *createAnnotationNode(const char *annotationName, const char *annotationValue,
+                                  Arena *arena, CompilerState *state, Lexer *lexer);
+    /**
+     * Discard Node
+     */
+    ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer);
+
+    /**
+     * Type Declaration Nodes
+     */
+    ASTNode *createImplementationNode(const char *interfaceName, ASTNode **properties, int propertyCount,
+                                      ASTNode **methods, int methodCount,
+                                      Arena *arena, CompilerState *state, Lexer *lexer);
+
+    ASTNode *createBreakNode(Arena *arena, CompilerState *state, Lexer *lexer);
+    ASTNode *createContinueNode(Arena *arena, CompilerState *state, Lexer *lexer);
+
     /**
      * String Utility Functions
      */
@@ -1149,6 +1279,14 @@ NullNode *createNullNodeContainer(Arena *arena, CompilerState *state);
 TypeofNode *createTypeofNodeContainer(Arena *arena, CompilerState *state);
 UsingNode *createUsingNodeContainer(Arena *arena, CompilerState *state);
 ModuleNode *createModuleNodeContainer(Arena *arena, CompilerState *state);
+AnnotationNode *createAnnotationNodeContainer(Arena *arena, CompilerState *state);
+TypeDecl *createTypeDeclContainer(Arena *arena, CompilerState *state);
+TypeCast *createTypeCastContainer(Arena *arena, CompilerState *state);
+ExternFunctionNode *createExternFunctionNodeContainer(Arena *arena, CompilerState *state);
+ImplementNode *createImplementationNodeContainer(Arena *arena, CompilerState *state);
+void *createDiscardNodeContainer(Arena *arena, CompilerState *state);
+BreakNode *createBreakNodeContainer(Arena *arena, CompilerState *state);
+ContinueNode *createContinueNodeContainer(Arena *arena, CompilerState *state);
 
 // # ============================================================ #
 // # AST Debug Output (./src/frontend/AST/debugOutputAST.c)       #
@@ -1238,6 +1376,15 @@ char *formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatIfStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatNullLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatOperatorNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatIndexExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *formatForStatementNode(ASTDebugNode *node, DebugASTOutput *output);
 
 char *CONSOLE_formatASTNode(ASTDebugNode *node, DebugASTOutput *output, int indentLevel);
 char *CONSOLE_formatProgramNode(ASTDebugNode *node, DebugASTOutput *output);
@@ -1272,5 +1419,14 @@ char *CONSOLE_formatAccessControlNode(ASTDebugNode *node, DebugASTOutput *output
 char *CONSOLE_formatArgListNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatObjectInstNode(ASTDebugNode *node, DebugASTOutput *output);
 char *CONSOLE_formatUnaryOpNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatTypeNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatModuleNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatImplementationNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatPropertyAccessNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatIfStatementNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatNullLiteralNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatOperatorNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatIndexExprNode(ASTDebugNode *node, DebugASTOutput *output);
+char *CONSOLE_formatForStatementNode(ASTDebugNode *node, DebugASTOutput *output);
 
 #endif // AST_H

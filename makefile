@@ -1,5 +1,5 @@
 #*******************************************************************************
-#  Copyright 2024 Jacob LeQuire                                                *
+#  Copyright 2025 Jacob LeQuire                                                *
 #  SPDX-License-Identifier: Apache-2.0                                         *
 #    Licensed under the Apache License, Version 2.0 (the "License");           *
 #    you may not use this file except in compliance with the License.          *
@@ -117,8 +117,8 @@ DEBUG_BIN_DIR = $(BIN_DIR)debug/
 # ---------------------------------------------
 # Source directory
 SRC_DIR =   ./src/
-LIB_DIR =   ./libs/
-LIB_INIT = $(LIB_DIR)initLibs.sh
+TOOLS_DIR =   ./tools/
+TOOLS_INIT = $(TOOLS_DIR)initTools.sh
 MAIN_FILE = $(SRC_DIR)main.c
 
 # >>=======--------------------------------------------------=======<< #
@@ -174,13 +174,13 @@ $(MAIN_BIN): build-cryo-path build-cli build-lsp-monitor build-dev-server $(ALL_
 
 # Build the CLI library
 build-cryo-path:
-	@$(LIB_INIT) cryo_path
+	@$(TOOLS_INIT) cryo_path
 build-cli:
-	@$(LIB_INIT) cli
+	@$(TOOLS_INIT) cli
 build-lsp-monitor:
-	@$(LIB_INIT) lsp-monitor
+	@$(TOOLS_INIT) lsp-monitor
 build-dev-server:
-	@$(LIB_INIT) dev-server
+	@$(TOOLS_INIT) dev-server
 
 
 # >>=======--------------------------------------------------=======<< #
@@ -190,17 +190,40 @@ build-dev-server:
 cls:
 	@clear
 
+
+# Build timer script
+BUILD_TIMER = ./scripts/build_timer.py
+
+# Timed build target
+.PHONY: timed-build
+timed-build:
+	@python3 $(BUILD_TIMER)
+
+# Clean and timed build
+.PHONY: rebuild
+rebuild:
+	@python3 $(BUILD_TIMER) --clean
+
+# Timed build without tests
+.PHONY: quick-build
+quick-build:
+	@python3 $(BUILD_TIMER) --no-tests
+
+# Verbose timed build with compiler info
+.PHONY: verbose-build
+verbose-build:
+	@python3 $(BUILD_TIMER) --verbose
+
 .PHONY: all
 all: 
-	@$(MAKE) cls
-	@echo "Building with $(NUM_JOBS) parallel jobs"
-	$(MAKE) -j$(NUM_JOBS) build
+	@$(MAKE) timed-build
+	
 
 .PHONY: build
 build: $(MAIN_BIN)
 
 libs:
-	$(LIB_INIT) 
+	$(TOOLS_INIT) 
 
 # Define the valid clean targets
 CLEAN_TARGETS := codegen common compiler diagnostics frontend linker runtime settings symbolTable tools main
@@ -215,3 +238,63 @@ clean:
 
 .PHONY: debug clean all 
 .NOTPARALLEL: clean clean-% libs
+
+# >>=======--------------------------------------------------=======<< #
+# >>=======                  Test Suite                      =======<< #
+# >>=======--------------------------------------------------=======<< #
+
+# Test Suite Configuration
+TEST_SRC_DIR = ./tests/
+TEST_FRAMEWORK_DIR = $(TEST_SRC_DIR)framework/
+TEST_OBJ_DIR = $(OBJ_DIR)tests/
+TEST_BIN_DIR = $(BIN_DIR)tests/
+
+# Test binary names
+CRYO_TEST_SUITE = $(TEST_BIN_DIR)cryoTestSuite$(BIN_SUFFIX)
+AST_VERIFIER = $(TEST_BIN_DIR)astVerifier$(BIN_SUFFIX)
+
+# Ensure test directories exist
+$(shell mkdir -p $(TEST_OBJ_DIR)/framework $(TEST_BIN_DIR))
+
+# Define test source files - explicitly list them to avoid issues
+TEST_FRAMEWORK_SRCS = $(TEST_FRAMEWORK_DIR)test_runner.c $(TEST_FRAMEWORK_DIR)ast_verifier.c
+TEST_SRCS = $(TEST_SRC_DIR)cryoTestSuite.c
+
+# Define test object files
+TEST_FRAMEWORK_OBJS = $(patsubst $(TEST_FRAMEWORK_DIR)%.c,$(TEST_OBJ_DIR)framework/%.o,$(notdir $(TEST_FRAMEWORK_SRCS)))
+TEST_OBJS = $(patsubst $(TEST_SRC_DIR)%.c,$(TEST_OBJ_DIR)%.o,$(notdir $(TEST_SRCS)))
+
+# Combined test objects
+ALL_TEST_OBJS = $(TEST_FRAMEWORK_OBJS) $(TEST_OBJS)
+
+# Compile test framework C files (explicitly defined)
+$(TEST_OBJ_DIR)framework/test_runner.o: $(TEST_FRAMEWORK_DIR)test_runner.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(TEST_OBJ_DIR)framework/ast_verifier.o: $(TEST_FRAMEWORK_DIR)ast_verifier.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compile main test file
+$(TEST_OBJ_DIR)cryoTestSuite.o: $(TEST_SRC_DIR)cryoTestSuite.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Link test binaries - only make the main test suite for now
+$(CRYO_TEST_SUITE): $(TEST_OBJ_DIR)cryoTestSuite.o $(TEST_OBJ_DIR)framework/test_runner.o $(TEST_OBJ_DIR)framework/ast_verifier.o
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $^ $(filter-out $(OBJ_DIR)main.o, $(ALL_OBJS)) -o $@ $(LDFLAGS) $(STD_LIBS)
+
+# Let's simplify for now - we'll just build the main test suite
+tests: $(CRYO_TEST_SUITE)
+
+run-tests: tests
+	@echo "Running Cryo Test Suite..."
+	@$(CRYO_TEST_SUITE)
+
+clean-tests:
+	@echo "Cleaning test files..."
+	@$(RMDIR) $(TEST_OBJ_DIR) 2>/dev/null || true
+	@$(RMDIR) $(TEST_BIN_DIR) 2>/dev/null || true
+	

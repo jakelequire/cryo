@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -16,8 +16,20 @@
  ********************************************************************************/
 #include "common/common.h"
 
-// -------------------------------------------------------------------
-// @Compiler Errors
+void CompilerState_setFilePath(CompilerState *state, const char *filePath)
+{
+    // Check if there is an existing file path, if so, overwrite it
+    if (state->filePath != NULL)
+    {
+        state->filePath = NULL;
+    }
+    state->filePath = (char *)filePath;
+}
+
+const char *CompilerState_getFilePath(CompilerState *state)
+{
+    return state->filePath;
+}
 
 CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName)
 {
@@ -26,24 +38,25 @@ CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileNam
     state->lexer = lexer;
     state->programNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
     state->currentNode = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+
     state->fileName = fileName;
+    state->filePath = NULL;
     state->lineNumber = 0;
     state->columnNumber = 0;
     state->errorCount = 0;
     state->settings = (CompilerSettings *)malloc(sizeof(CompilerSettings));
     state->errors = (CompilerError **)malloc(sizeof(CompilerError *));
-    state->globalTable = (CryoGlobalSymbolTable *)malloc(sizeof(CryoGlobalSymbolTable));
 
     state->isActiveBuild = false;
     state->isModuleFile = false;
 
+    // =================================
+    // Functions
+    state->setFilePath = CompilerState_setFilePath;
+    state->getFilePath = CompilerState_getFilePath;
+
     logMessage(LMI, "INFO", "CompilerState", "Compiler state initialized");
     return state;
-}
-
-void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table)
-{
-    state->globalTable = table;
 }
 
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state)

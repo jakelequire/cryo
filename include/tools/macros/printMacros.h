@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -92,5 +92,5 @@
     std::cout << "<*> ==========----------- Module Successfully Verified -----------========== <*>" << std::endl; \
     std::cout << "<*> ======================================================================== <*>" << std::endl; \
     std::cout << "\n";
-    
+
 #endif // PRINT_MACROS_H

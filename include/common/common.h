@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -84,19 +84,17 @@ typedef struct CompilerState
     struct ASTNode *currentNode;
     CompilerSettings *settings;
     CompilerError **errors;
-    CryoGlobalSymbolTable *globalTable;
 
     const char *fileName;
+    char *filePath;
     int lineNumber;
     int columnNumber;
     bool isActiveBuild;
     bool isModuleFile;
     int errorCount;
 
-    // Functions for debugging
-    void (*errorReport)(struct CompilerState);
-    void (*logCompilerError)(CompilerError *);
-    void (*dumpCompilerState)(struct CompilerState);
+    void (*setFilePath)(struct CompilerState *state, const char *filePath);
+    const char *(*getFilePath)(struct CompilerState *state);
 } CompilerState;
 
 #define GET_SOURCE_INFO \
@@ -108,7 +106,6 @@ typedef struct CompilerState
 CompilerState *initCompilerState(Arena *arena, Lexer *lexer, const char *fileName);
 void updateCompilerLineNumber(Lexer *lexer, CompilerState *state);
 void updateCompilerColumnNumber(Lexer *lexer, CompilerState *state);
-void setGlobalSymbolTable(CompilerState *state, CryoGlobalSymbolTable *table);
 CompilerState addProgramNodeToState(CompilerState state, ASTNode *programNode);
 
 InternalDebug captureInternalDebug(const char *functionName, const char *fileName, int lineNumber);

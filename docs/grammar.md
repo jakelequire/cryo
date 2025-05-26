@@ -34,7 +34,7 @@
 <return-statement>    ::=  "return" [<expression>] ";"
 
 
-<type>           ::=  "int" | "float" | "boolean" | "string" | "void" | <identifier> | <type> "[]"
+<type>           ::=  "int"| "i8" | "i16" | "i32" | "i64" | "i128" | "float" | "boolean" | "str" | "void" | <identifier> | <type> "[]"
 <identifier>     ::=  <letter> { <letter> | <digit> }
 <number>         ::=  { <digit> } ["." { <digit> }]
 <string>         ::=  '"' { <any-character-except-quote> } '"'

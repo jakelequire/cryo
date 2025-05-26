@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "frontend/AST.h"
 #include "frontend/tokens.h"
 #include "tools/utils/cWrappers.h"

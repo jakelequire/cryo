@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -53,6 +53,7 @@ extern "C"
         TOKEN_TYPE_VOID,           // `void`
         TOKEN_TYPE_NULL,           // `null`
         TOKEN_TYPE_ANY,            // `any`
+        TOKEN_TYPE_CHAR,           // `char`
         TOKEN_TYPE_INT_ARRAY,      // `int[]`
         TOKEN_TYPE_FLOAT_ARRAY,    // `float[]`
         TOKEN_TYPE_STRING_ARRAY,   // `string[]`
@@ -101,6 +102,7 @@ extern "C"
         TOKEN_OP_AND_ASSIGN, // `&=` token
         TOKEN_OP_OR_ASSIGN,  // `|=` token
         TOKEN_OP_XOR_ASSIGN, // `^=` token
+        TOKEN_OP_INCREMENT,  // `++` token
 
         // Keywords
         TOKEN_KW_IF,           // `if`
@@ -117,6 +119,7 @@ extern "C"
         TOKEN_KW_PUBLIC,       // `public`
         TOKEN_KW_PRIVATE,      // `private`
         TOKEN_KW_STRUCT,       // `struct`
+        TOKEN_KW_IMPLEMENT,    // `implementation`
         TOKEN_KW_ENUM,         // `enum`
         TOKEN_KW_TRAIT,        // `trait`
         TOKEN_KW_AS,           // `as`
@@ -167,7 +170,9 @@ extern "C"
         TOKEN_KW_CONSTRUCTOR,  // `constructor`
         TOKEN_KW_THIS,         // `this`
         TOKEN_KW_USING,        // `using`
-                               // Add more keywords as needed
+        TOKEN_KW_AUTO,         // `auto`
+        TOKEN_KW_UNDEFINED,    // `undefined`
+        TOKEN_KW_PRAGMA,       // `pragma`
 
         // Operators and punctuations
         TOKEN_BANG,           // `!`
@@ -209,8 +214,6 @@ extern "C"
         TOKEN_RBRACE,         // `}`
         TOKEN_LANGLE,         // `<`
         TOKEN_RANGLE,         // `>`
-        TOKEN_LSQUARE,        // `[`
-        TOKEN_RSQUARE,        // `]`
         TOKEN_LANGLE_BRACKET, // `<<`
         TOKEN_RANGLE_BRACKET, // `>>`
         TOKEN_LCURLY_BRACKET, // `{{`
@@ -319,7 +322,13 @@ extern "C"
         NODE_TYPEOF,               // 52
         NODE_USING,                // 53
         NODE_MODULE,               // 54
-        NODE_UNKNOWN,              // 55
+        NODE_ANNOTATION,           // 55
+        NODE_TYPE_CAST,            // 56
+        NODE_DISCARD,              // 57
+        NODE_IMPLEMENTATION,       // 58
+        NODE_BREAK,                // 59
+        NODE_CONTINUE,             // 60
+        NODE_UNKNOWN,              // 59
     } CryoNodeType;
 
     typedef enum CryoVisibilityType

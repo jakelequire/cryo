@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -91,49 +91,5 @@
 #define BOX_LEFT_T "╠"
 #define BOX_RIGHT_T "╣"
 #define BOX_VERTICAL_SEP "│"
-
-/*
-    Box Drawing Characters Reference Table
-    ====================================
-
-    Basic Box Elements        Heavy/Double Elements
-    ------------------       -------------------
-    │  Single vertical      ║  Double vertical
-    ─  Single horizontal    ═  Double horizontal
-
-    Corner Pieces           Double Corners
-    -------------          --------------
-    ┌  Top left            ╔  Top left
-    ┐  Top right           ╗  Top right
-    └  Bottom left         ╚  Bottom left
-    ┘  Bottom right        ╝  Bottom right
-
-    T-Junctions            Double T-Junctions
-    ------------           -----------------
-    ├  Left T              ╠  Left T
-    ┤  Right T             ╣  Right T
-    ┬  Top T               ╦  Top T
-    ┴  Bottom T            ╩  Bottom T
-
-    Mixed Junctions        Special Junctions
-    ---------------        -----------------
-    ╞  Single-Double L     ╟  Heavy-Light L
-    ╡  Single-Double R     ╢  Heavy-Light R
-    ╥  Double-Single Up    ╫  Heavy vertical
-    ╨  Double-Single Down  ╪  Heavy horizontal
-    ╒  Single-Double TL    ╓  Heavy-Light TL
-    ╕  Single-Double TR    ╖  Heavy-Light TR
-    ╘  Single-Double BL    ╙  Heavy-Light BL
-    ╛  Single-Double BR    ╜  Heavy-Light BR
-
-    Intersections
-    ------------
-    ┼  Single cross
-    ╬  Double cross
-
-↖ ↑ ↗
-← · →
-↙ ↓ ↘
-*/
 
 #endif // CONSOLE_COLORS_H

@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -493,7 +493,8 @@ void processNode(ASTNode *node)
     {
         symbol->kind = "function";
         symbol->name = (char *)node->data.functionDecl->name;
-        symbol->signature = DataTypeToStringUnformatted(node->data.functionDecl->functionType);
+        DataType *functionType = node->data.functionDecl->functionType;
+        symbol->signature = (char *)functionType->debug->toString(functionType);
 
         processNode(node->data.functionDecl->body);
         break;
@@ -517,30 +518,44 @@ void processNode(ASTNode *node)
         break;
     }
     case NODE_VAR_DECLARATION:
+    {
         symbol->kind = "variable";
         symbol->name = node->data.varDecl->name;
-        symbol->signature = DataTypeToStringUnformatted(node->data.varDecl->type);
+        DataType *varType = node->data.varDecl->type;
+        symbol->signature = (char *)varType->debug->toString(varType);
         break;
+    }
     case NODE_VAR_NAME:
+    {
         symbol->kind = "variable";
         symbol->name = node->data.varName->varName;
-        symbol->signature = DataTypeToStringUnformatted(node->data.varName->type);
+        DataType *varNameType = node->data.varName->type;
+        symbol->signature = (char *)varNameType->debug->toString(varNameType);
         break;
+    }
     case NODE_METHOD:
+    {
         symbol->kind = "method";
-        symbol->name = node->data.method->name;
-        symbol->signature = DataTypeToStringUnformatted(node->data.method->functionType);
+        symbol->name = (char *)node->data.method->name;
+        DataType *methodType = node->data.method->functionType;
+        symbol->signature = (char *)methodType->debug->toString(methodType);
         processNode(node->data.method->body);
         break;
+    }
     case NODE_CLASS:
+    {
         symbol->kind = "class";
         symbol->name = (char *)node->data.classNode->name;
         break;
+    }
     case NODE_PROPERTY:
+    {
         symbol->kind = "property";
         symbol->name = (char *)node->data.property->name;
-        symbol->signature = DataTypeToStringUnformatted(node->data.property->type);
+        DataType *propertyType = node->data.property->type;
+        symbol->signature = (char *)propertyType->debug->toString(propertyType);
         break;
+    }
     // Skip Nodes:
     case NODE_NAMESPACE:
     case NODE_USING:

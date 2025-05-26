@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -28,6 +28,7 @@
 #include "tools/cryoconfig/cryoconfig.h"
 #include "tools/utils/buildDir.h"
 #include "tools/utils/fs.h"
+#include "dataTypes/dataTypeManager.h"
 
 #define MAX_PATH_SIZE 1024 * 10
 
@@ -37,7 +38,9 @@
     /* Initialize the global diagnostics manager */   \
     INIT_GDM();                                       \
     /* Initialize the global file system utilities */ \
-    INIT_FS();
+    INIT_FS();                                        \
+    /* Initialize the global data type manager */     \
+    INIT_DTM();
 
 #define CLEANUP_COMPILATION() \
     /* Logs Destructor */     \
@@ -54,16 +57,17 @@ int main(int argc, char *argv[])
 
     // Get the parent directory of the compiler executable
     char *parent = getCompilerRootPath(argv[0]);
-    if (parent)
+    if (!parent)
     {
-        logMessage(LMI, "INFO", "MAIN", "Parent directory: %s", parent);
+        logMessage(LMI, "ERROR", "MAIN", "Failed to get the parent directory of the compiler executable");
+        return 1;
     }
 
     // Initialize environment variables
     int envResult = initEnvVars(parent);
     if (envResult != 0)
     {
-        fprintf(stderr, "Error: Failed to initialize environment variables\n");
+        logMessage(LMI, "ERROR", "MAIN", "Failed to initialize environment variables");
         return 1;
     }
     free(parent); // Free the parent directory string
@@ -72,7 +76,7 @@ int main(int argc, char *argv[])
     CompilerSettings settings = getCompilerSettings(argc, argv);
     if (!&settings)
     {
-        fprintf(stderr, "Error: Failed to initialize compiler settings\n");
+        logMessage(LMI, "ERROR", "MAIN", "Failed to get compiler settings");
         return 1;
     }
 

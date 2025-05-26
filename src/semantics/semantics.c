@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -131,14 +131,16 @@ void setPassedAnalysis(struct SemanticAnalyzer *self, bool passed)
 void printAnalysisReport(struct SemanticAnalyzer *self)
 {
     __STACK_FRAME__
-    printf("\n");
-    printf("+------------------- Semantic Analysis Report -------------------+\n");
-    fprintf(stdout, "Nodes Analyzed: %zu\n", self->nodesAnalyzed);
-    fprintf(stdout, "Nodes Passed: %zu\n", self->nodesPassed);
-    fprintf(stdout, "Nodes Failed: %zu\n", self->nodesFailed);
-    fprintf(stdout, "Analysis Passed: %s\n", self->passedAnalysis ? "true" : "false");
-    printf("+---------------------------------------------------------------+\n");
-    printf("\n");
+    DEBUG_PRINT_FILTER({
+        printf("\n");
+        printf("+------------------- Semantic Analysis Report -------------------+\n");
+        fprintf(stdout, "Nodes Analyzed: %zu\n", self->nodesAnalyzed);
+        fprintf(stdout, "Nodes Passed: %zu\n", self->nodesPassed);
+        fprintf(stdout, "Nodes Failed: %zu\n", self->nodesFailed);
+        fprintf(stdout, "Analysis Passed: %s\n", self->passedAnalysis ? "true" : "false");
+        printf("+---------------------------------------------------------------+\n");
+        printf("\n");
+    });
 }
 
 // ======================================================================================== //
@@ -249,9 +251,17 @@ void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node
 
     logMessage(LMI, "INFO", "Semantic Analysis", "Analyzing variable declaration node...");
 
-    DataType *varType = node->data.varDecl->type;               // The declared type of the variable
-    ASTNode *varInitilizer = node->data.varDecl->initializer;   // The initializer for the variable
-    DataType *initType = getDataTypeFromASTNode(varInitilizer); // The type of the initializer
+    DataType *varType = node->data.varDecl->type;             // The declared type of the variable
+    ASTNode *varInitilizer = node->data.varDecl->initializer; // The initializer for the variable
+    bool noInitializer = node->data.varDecl->noInitializer;   // Whether the variable has an initializer
+    if (noInitializer && !varInitilizer)
+    {
+        logMessage(LMI, "ERROR", "Semantic Analysis", "Variable declaration node is missing initializer");
+        self->reportSemanticError(self, "Variable declaration node is missing initializer");
+        self->incrementNodesAnalyzed(self, NAS_FAILED);
+        return;
+    }
+    DataType *initType = DTM->astInterface->getTypeofASTNode(varInitilizer); // The type of the initializer
     if (!varType || !varInitilizer || !initType)
     {
         logMessage(LMI, "ERROR", "Semantic Analysis", "Variable declaration node is missing type or initializer");
@@ -261,7 +271,7 @@ void analyzeVariableDeclarationNode(struct SemanticAnalyzer *self, ASTNode *node
     }
 
     // Check if the initializer type matches the declared type
-    bool typesMatch = isSameType(varType, initType);
+    bool typesMatch = DTM->validation->isSameType(varType, initType);
     if (!typesMatch)
     {
         logMessage(LMI, "ERROR", "Semantic Analysis", "Variable type does not match initializer type");

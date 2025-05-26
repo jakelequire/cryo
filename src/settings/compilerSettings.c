@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -92,12 +92,11 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
     settings->version = COMPILER_VERSION;
 
     const char *runtimePath = appendStrings(getCompilerRootPath(), "/Std/Runtime/");
-    printf("Runtime Path: %s\n", runtimePath);
+    logMessage(LMI, "INFO", "Compiler Settings", "Runtime Path: %s", runtimePath);
     settings->runtimePath = runtimePath;
 
     const char *inputFilePath = (const char *)malloc(sizeof(char) * 256);
 
-    printf("Getting compiler settings...\n");
     int c;
     int option_index = 0;
     char *optstring = "f:s:o:avd:L:p:h";
@@ -174,7 +173,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             char *projectDir = realpath(optarg, NULL);
             if (projectDir == NULL)
             {
-                fprintf(stderr, "Error: Invalid project directory\n");
+                logMessage(LMI, "ERROR", "Compiler Settings", "Failed to resolve project directory: %s", optarg);
                 exit(1);
             }
             settings->projectDir = projectDir;
@@ -215,7 +214,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
             settings->irDump = true;
             if (settings->verbose)
             {
-                printf("IR dump enabled\n");
+                printf("IR Dump enabled\n");
             }
             break;
         }
@@ -267,7 +266,7 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
         exit(1);
     }
 
-    printf("Finished parsing command line arguments.. initializing compiler settings...\n");
+    logMessage(LMI, "INFO", "Compiler Settings", "Input File: %s", settings->inputFile);
 
     if (!settings->isSingleFile && settings->isProject)
     {
@@ -316,9 +315,9 @@ void parseCommandLineArguments(int argc, char **argv, CompilerSettings *settings
 void logCompilerSettings(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
-    const char *falseFlag = BOLD RED "false" COLOR_RESET;
     DEBUG_PRINT_FILTER({
+        const char *trueFlag = BOLD GREEN "true" COLOR_RESET;
+        const char *falseFlag = BOLD RED "false" COLOR_RESET;
         printf("Printing compiler settings...\n");
         printf("\n");
         printf("# ============ Compiler Settings ============ #\n");

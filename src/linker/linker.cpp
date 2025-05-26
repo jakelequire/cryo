@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -20,42 +20,6 @@
 namespace Cryo
 {
     CryoLinker *globalLinker = nullptr;
-
-    /// @brief This function will initialize the creation of the Cryo Runtime Module.
-    /// This module is compiled along with a C runtime module to create the final
-    /// runtime module that will be used in the Cryo Compiler before the main Cryo module.
-    ///
-    /// @return The Cryo Runtime Module
-    ///
-    /// @note this function is called from the C++ CodeGen API before code generation.
-    llvm::Module *Linker::initMainModule(void)
-    {
-        __STACK_FRAME__
-        std::cout << "Initializing Main Module before CodeGen..." << std::endl;
-
-        // At this step of the compilation process, this module being passed is the newly created
-        // module from the Cryo Compiler. We will add the required dependencies to this module before
-        // it is passed to the LLVM backend code generator.
-        Cryo::Linker *cLinker = GetCXXLinker();
-        if (!cLinker)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Cryo Linker is null");
-            return nullptr;
-        }
-        std::cout << "Cryo Linker is not undefined" << std::endl;
-
-        // Return the runtime module for now
-        llvm::Module *runtimeModule = cLinker->mergeRuntimeToModule();
-        if (!runtimeModule)
-        {
-            logMessage(LMI, "ERROR", "Linker", "Runtime Module is null");
-            return nullptr;
-        }
-
-        logMessage(LMI, "INFO", "Linker", "Runtime Module created successfully");
-
-        return runtimeModule;
-    }
 
     // This function will take the build directory, seek into the `runtime` folder,
     // and compile and combine all `.ll` files under this directory. The resulting
@@ -163,7 +127,7 @@ namespace Cryo
         logMessage(LMI, "INFO", "Linker", "Merging modules");
         logMessage(LMI, "INFO", "Linker", "Destination Module: %s", destModule->getName().str().c_str());
 
-        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::None;
+        llvm::Linker::Flags linkerFlags = llvm::Linker::Flags::LinkOnlyNeeded;
         bool result = llvm::Linker::linkModules(
             *destModule,
             llvm::CloneModule(*srcModule),

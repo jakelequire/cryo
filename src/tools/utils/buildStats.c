@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -17,6 +17,7 @@
 #include "tools/utils/buildStats.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "tools/macros/consoleColors.h"
 
 // Helper macro for padding calculation
 #define PRINT_PADDED(label, value, format)                                              \
@@ -147,6 +148,17 @@ void formatSize(long bytes, char *buffer)
 void printBuildStats(BuildStats *stats)
 {
     __STACK_FRAME__
+    if (!DEBUG_PRINT_ENABLED())
+    {
+        char *linux_cmd = "clear";
+        int sys_result = system(linux_cmd);
+        if (sys_result == -1)
+        {
+            fprintf(stderr, "Error: Failed to clear console\n");
+            return;
+        }
+    }
+
     DEBUG_PRINT_FILTER({
         char memory_str[32];
         formatSize(stats->peak_memory, memory_str);

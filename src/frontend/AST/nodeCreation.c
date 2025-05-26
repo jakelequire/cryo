@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -14,14 +14,35 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
+#include "frontend/frontendSymbolTable.h"
 #include "frontend/AST.h"
 #include "diagnostics/diagnostics.h"
+
+ASTNode *ASTNode_clone(ASTNode *node)
+{
+    __STACK_FRAME__
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to clone AST node: node is NULL");
+        return NULL;
+    }
+
+    ASTNode *clone = (ASTNode *)malloc(sizeof(ASTNode));
+    if (!clone)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node clone");
+        return NULL;
+    }
+
+    memcpy(clone, node, sizeof(ASTNode));
+
+    return clone;
+}
 
 ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = (ASTNode *)ARENA_ALLOC(arena, sizeof(ASTNode));
+    ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for AST node");
@@ -35,19 +56,30 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         return NULL;
     }
 
-    const char *moduleName = GetNamespace(state->globalTable);
+    const char *moduleName = FEST->currentNamespace;
     if (moduleName)
     {
         node->metaData->moduleName = (char *)moduleName;
+    }
+    else
+    {
+        node->metaData->moduleName = "NULL";
     }
     node->metaData->type = type;
     node->metaData->position = getPosition(state->lexer);
     node->metaData->line = lexer->currentToken.line;
     node->metaData->column = lexer->currentToken.column;
     node->print = logASTNode;
+    node->clone = ASTNode_clone;
 
     node->firstChild = NULL;
     node->nextSibling = NULL;
+
+    int offset = lexer->start - lexer->currentToken.start;
+    if (GDM->frontendState)
+    {
+        GDM->frontendState->incrementOffset(GDM->frontendState, offset);
+    }
 
     switch (type)
     {
@@ -56,6 +88,9 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         break;
     case NODE_PROGRAM:
         node->data.program = createCryoProgramContainer(arena, state);
+        break;
+    case NODE_MODULE:
+        node->data.module = createCryoModuleContainer(arena, state);
         break;
     case NODE_IMPORT_STATEMENT:
         node->data.import = createCryoImportNodeContainer(arena, state);
@@ -85,7 +120,7 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
         node->data.functionDecl = createFunctionNodeContainer(arena, state);
         break;
     case NODE_EXTERN_FUNCTION:
-        node->data.externNode = createExternNodeContainer(NODE_EXTERN_FUNCTION, arena, state);
+        node->data.externFunction = createExternFunctionNodeContainer(arena, state);
         break;
     case NODE_FUNCTION_CALL:
         node->data.functionCall = createFunctionCallNodeContainer(arena, state);
@@ -174,11 +209,31 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
     case NODE_USING:
         node->data.usingNode = createUsingNodeContainer(arena, state);
         break;
-    case NODE_MODULE:
-        node->data.moduleNode = createModuleNodeContainer(arena, state);
+    case NODE_ANNOTATION:
+        node->data.annotation = createAnnotationNodeContainer(arena, state);
+        break;
+    case NODE_TYPE:
+        node->data.typeDecl = createTypeDeclContainer(arena, state);
+        break;
+    case NODE_TYPE_CAST:
+        node->data.typeCast = createTypeCastContainer(arena, state);
+        break;
+    case NODE_IMPLEMENTATION:
+        node->data.implementation = createImplementationNodeContainer(arena, state);
+        break;
+    case NODE_DISCARD:
+        node->data.discard = createDiscardNodeContainer(arena, state);
+        break;
+    case NODE_BREAK:
+        node->data.breakNode = createBreakNodeContainer(arena, state);
+        break;
+    case NODE_CONTINUE:
+        node->data.continueNode = createContinueNodeContainer(arena, state);
         break;
     default:
         logMessage(LMI, "ERROR", "AST", "Unknown Node Type: %s", CryoNodeTypeToString(type));
+        NEW_ERROR(GDM, CRYO_ERROR_UNKNOWN_NODE_TYPE, CRYO_SEVERITY_FATAL,
+                  "Unknown Node Type", __LINE__, __FILE__, __func__);
         return NULL;
     }
 
@@ -190,7 +245,6 @@ ASTNode *createASTNode(CryoNodeType type, Arena *arena, CompilerState *state, Le
 void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *state)
 {
     __STACK_FRAME__
-    printf("Adding child node\n");
     if (!parent || !child)
     {
         logMessage(LMI, "ERROR", "AST", "Parent or child node is NULL");
@@ -202,7 +256,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
 
     if (!parent->firstChild)
     {
-        printf("Parent has no children\n");
+        logMessage(LMI, "INFO", "AST", "Adding first child to parent node");
         parent->firstChild = child;
     }
     else
@@ -210,7 +264,7 @@ void addChildNode(ASTNode *parent, ASTNode *child, Arena *arena, CompilerState *
         ASTNode *current = parent->firstChild;
         while (current->nextSibling)
         {
-            printf("Iterating through siblings\n");
+            logMessage(LMI, "INFO", "AST", "Traversing to next sibling");
             current = current->nextSibling;
         }
         current->nextSibling = child;

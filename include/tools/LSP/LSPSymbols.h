@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -28,7 +28,7 @@
 #include <arpa/inet.h>
 
 #include "frontend/AST.h"
-#include "frontend/dataTypes.h"
+#include "dataTypes/dataTypes.h"
 #include "tools/utils/c_logger.h"
 
 #define LSP_PORT 9000

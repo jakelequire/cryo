@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -14,7 +14,7 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
+#include "frontend/frontendSymbolTable.h"
 #include "frontend/parser.h"
 #include "tools/misc/syntaxHighlighter.h"
 #include "diagnostics/diagnostics.h"
@@ -25,16 +25,17 @@ void parsingError(
     Arena *arena,
     CompilerState *state,
     Lexer *lexer,
-    const char *source,
-    CryoGlobalSymbolTable *globalTable)
+    const char *source)
 {
     __STACK_FRAME__
     int line = lexer->currentToken.line;
     int column = lexer->currentToken.column;
 
-    const char *curModule = GetNamespace(globalTable);
-
-    printGlobalSymbolTable(globalTable);
+    const char *curModule = "UNDEFINED";
+    DEBUG_PRINT_FILTER({
+        DTM->symbolTable->printTable(DTM->symbolTable);
+        FEST->printTable(FEST);
+    });
 
     // Top border with module info
     printf("\n\n%s╔════════════════════════════════ PARSER ERROR ════════════════════════════════╗%s\n", LIGHT_RED, COLOR_RESET);

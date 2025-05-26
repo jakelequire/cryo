@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -39,6 +39,7 @@
     printf("\n<!> Line: %i, Function: %s", __LINE__, __FUNCTION__);                           \
     printf("\n<!> File: %s\n", __FILE__);                                                     \
     printf("\n#========================================================================#\n"); \
+    printf("\n");                                                                             \
     exit(2)
 
 #define __UNIMPLEMENTED_FUNCTION__(functionName)                                              \

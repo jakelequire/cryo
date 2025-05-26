@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -17,6 +17,8 @@
 #include "tools/utils/utility.h"
 #include "diagnostics/diagnostics.h"
 
+#define MAX_CHAR_SIZE 256 * 1024 // 256 KB
+
 const char *intToConstChar(int num)
 {
     __STACK_FRAME__
@@ -28,7 +30,7 @@ const char *intToConstChar(int num)
 char *intToChar(int num)
 {
     __STACK_FRAME__
-    char buffer[12];
+    char buffer[MAX_CHAR_SIZE];
     snprintf(buffer, sizeof(buffer), "%d", num);
     return buffer;
 }
@@ -60,11 +62,11 @@ char *concatStrings(const char *str1, const char *str2)
 
 char *intToSafeString(int value)
 {
-    __STACK_FRAME__
-    // Size for maximum int (-2147483648) plus null terminator
-    const size_t BUFFER_SIZE = 12;
-    char *buffer = (char *)malloc(BUFFER_SIZE);
+    // Calculate buffer size needed for an int
+    // log10(INT_MAX) + 1 for digits + 1 for sign + 1 for null terminator
+    const size_t BUFFER_SIZE = sizeof(int) * 3 + 2;
 
+    char *buffer = (char *)malloc(BUFFER_SIZE);
     if (buffer == NULL)
     {
         return NULL; // Handle allocation failure
@@ -74,8 +76,9 @@ char *intToSafeString(int value)
 
     if (written < 0 || written >= BUFFER_SIZE)
     {
-        perror("Failed to write int to string");
-        free(buffer); // Clean up on error
+        // snprintf doesn't set errno on overflow, so use fprintf to stderr instead
+        fprintf(stderr, "Failed to write int to string: buffer too small\n");
+        free(buffer);
         return NULL;
     }
 

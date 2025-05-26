@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -46,7 +46,6 @@ namespace Cryo
         // e.g /path/to/file/file.ll
         // Make the empty file before writing to it
         std::string trimmedFilePath = fs->removeFileFromPath(outputPath);
-        std::cout << "Trimmed File Path: " << trimmedFilePath << std::endl;
         fs->createDir(trimmedFilePath.c_str());
         fs->createNewEmptyFileWpath(outputPath);
         logMessage(LMI, "INFO", "Linker", "Starting IR Generation...");
@@ -81,15 +80,12 @@ namespace Cryo
             logMessage(LMI, "ERROR", "Linker", "Module is null");
             return;
         }
-        if (!unit->isVerified)
-        {
-            logMessage(LMI, "ERROR", "Linker", "CompilationUnit is not verified");
-            return;
-        }
+
         std::string outputPath = std::string(unit->dir.out_filePath) + std::string(unit->dir.out_fileExt);
         logMessage(LMI, "INFO", "Linker", "Output Path: %s", outputPath.c_str());
         generateIRFromCodegen(mod, outputPath.c_str());
         logMessage(LMI, "INFO", "Linker", "Module compiled successfully");
+
         return;
     }
 

@@ -1,0 +1,47 @@
+namespace Examples.Array;
+
+
+function testI32Array() -> void {
+    const i32_arr: i32[] = [1, 2, 3, 4, 5];
+    const i32_arr_index: i32 = i32_arr[2];
+
+    printf("i32_arr[2]: %d\n", i32_arr_index);
+    
+    return;
+}
+
+
+function testStrArray() -> void {
+    const str_arr: str[] = ["Hello", "World", "Foo", "Bar"];
+    const str_arr_index: str = str_arr[1];
+
+    printf("str_arr[1]: %s\n", str_arr_index);
+
+    return;
+}
+
+
+// Multi-dimensional arrays are still in development.
+// The syntax is not yet finalized, and the implementation is incomplete.
+// The following code is a placeholder and may not work as expected.
+// The code below will compile and produce:
+// `%0 = alloca [100 x [100 x ptr]], align 8`
+// But the array will not be initialized.
+function testMultiDimArray() -> void {
+    const multi_dim_arr: str[100][100];
+
+    return;
+}
+
+function main() -> i32 {
+    testI32Array();
+    testStrArray();
+    testMultiDimArray();
+
+    // I call Sys::exit(0) to exit the program
+    // because there's an issue with the main function returning
+    // a value in the Cryo language.
+    // In the future, I will fix this issue.
+    Sys::exit(0);
+    return 0;
+}

@@ -1,3 +1,0 @@
-namespace IO;
-
-public module IOInterface;

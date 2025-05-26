@@ -1,5 +1,5 @@
 #*******************************************************************************
-#  Copyright 2024 Jacob LeQuire                                                *
+#  Copyright 2025 Jacob LeQuire                                                *
 #  SPDX-License-Identifier: Apache-2.0                                         *
 #    Licensed under the Apache License, Version 2.0 (the "License");           *
 #    you may not use this file except in compliance with the License.          *
@@ -33,6 +33,16 @@ def recursive_file_names():
     object_files.append(file_list)
     return file_list
 
+# Function to delete all the binaries in the bin/ directory (just the executables)
+def delete_binaries():
+    folder = root_dir + "/bin"
+    try:
+        # Force delete folder and all contents
+        os.system(f"rm -rf {folder}/*")
+        print(f"Deleted binaries in {folder}")
+    except OSError as e:
+        print(f"Error deleting binaries in {folder}: {e.strerror}")
+
 def delete_folder():
     folder = root_dir + "/bin/.o"
     try:
@@ -58,5 +68,6 @@ def create_cleaned_log(list):
 if __name__ == "__main__":
     object_files = recursive_file_names()
     delete_folder()
+    delete_binaries()
     create_cleaned_log(object_files)
     print("Cleaned successfully.")

@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -45,6 +45,9 @@ const char *syntaxHighlightkeywords[] = {
 const char *syntaxHighlighttypes[] = {
     // Basic types
     "int", "string", "Int", "string", "void", "boolean",
+    "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64",
+    "str", "char", "wchar_t", "float", "double", "long",
+    "short", "byte", "size_t", "ssize_t", "float32", "float64",
     "null",
     // Extended types
     "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t",

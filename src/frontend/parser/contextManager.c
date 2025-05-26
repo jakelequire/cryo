@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -19,6 +19,71 @@
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
 
+void ParsingContext_setIntegerContextType(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->integerContextType)
+    {
+        free(context->integerContextType);
+    }
+    context->integerContextType = (DataType *)malloc(sizeof(DataType));
+    context->integerContextType = type;
+}
+
+void ParsingContext_setStringContextType(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->stringContextType)
+    {
+        free(context->stringContextType);
+    }
+    context->stringContextType = (DataType *)malloc(sizeof(DataType));
+    context->stringContextType = type;
+}
+
+void ParsingContext_clearIntegerContextType(ParsingContext *context)
+{
+    __STACK_FRAME__
+    if (context->integerContextType)
+    {
+        context->integerContextType = NULL;
+    }
+}
+
+void ParsingContext_clearStringContextType(ParsingContext *context)
+{
+    __STACK_FRAME__
+    if (context->stringContextType)
+    {
+        context->stringContextType = NULL;
+    }
+}
+
+void ParsingContext_addPragmaArg(ParsingContext *context, const char *arg)
+{
+    __STACK_FRAME__
+    if (context->pragmaArgCount >= MAX_ARGUMENTS)
+    {
+        fprintf(stderr, "Error: Too many pragma arguments\n");
+        return;
+    }
+    context->pragmaArgs[context->pragmaArgCount] = strdup(arg);
+    context->pragmaArgCount++;
+}
+
+bool ParsingContext_doesPragmaExist(ParsingContext *context, const char *arg)
+{
+    __STACK_FRAME__
+    for (int i = 0; i < context->pragmaArgCount; i++)
+    {
+        if (strcmp(context->pragmaArgs[i], arg) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 ParsingContext *createParsingContext(void)
 {
     __STACK_FRAME__
@@ -31,10 +96,45 @@ ParsingContext *createParsingContext(void)
     context->scopeLevel = 0;
     context->lastTokenCount = 0;
 
+    context->pragmaArgCount = 0;
+    context->addPragmaArg = ParsingContext_addPragmaArg;
+    context->doesPragmaExist = ParsingContext_doesPragmaExist;
+
+    context->programNodePtr = NULL;
+
     context->isParsingIfCondition = false;
     context->isParsingModuleFile = false;
+    context->inGenericContext = false;
+
+    context->integerContextType = NULL;
+    context->setIntegerContextType = ParsingContext_setIntegerContextType;
+    context->clearIntegerContextType = ParsingContext_clearIntegerContextType;
+    context->stringContextType = NULL;
+    context->setStringContextType = ParsingContext_setStringContextType;
+    context->clearStringContextType = ParsingContext_clearStringContextType;
+
+    context->currentGenericParamCapacity = 16;
+    context->currentGenericParamCount = 0;
+    context->currentGenericParams = (GenericType **)malloc(sizeof(GenericType *) * 16);
+
+    context->addGenericParam = ParsingContext_addGenericParam;
 
     return context;
+}
+
+void ParsingContext_addGenericParam(ParsingContext *context, const char *name, GenericType *param)
+{
+    __STACK_FRAME__
+    if (context->currentGenericParamCount >= context->currentGenericParamCapacity)
+    {
+        context->currentGenericParamCapacity *= 2;
+        context->currentGenericParams = (GenericType **)realloc(context->currentGenericParams, sizeof(GenericType *) * context->currentGenericParamCapacity);
+    }
+
+    context->currentGenericParams[context->currentGenericParamCount] = param;
+    context->currentGenericParamCount++;
+
+    return;
 }
 
 void setDefaultThisContext(const char *currentNamespace, ParsingContext *context)
@@ -47,6 +147,8 @@ void setDefaultThisContext(const char *currentNamespace, ParsingContext *context
     thisContext->propertyCount = 0;
     thisContext->methods = NULL;
     thisContext->methodCount = 0;
+    thisContext->isStatic = false;
+    thisContext->type = DTM->primitives->createUndefined();
     context->thisContext = thisContext;
 }
 
@@ -61,7 +163,30 @@ void setThisContext(ParsingContext *context, const char *nodeName, CryoNodeType 
     thisContext->methods = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
     thisContext->methodCount = 0;
     thisContext->isStatic = false;
+    thisContext->type = DTM->primitives->createUndefined();
     context->thisContext = thisContext;
+}
+
+void setTypePtrToContext(ParsingContext *context, DataType *type)
+{
+    __STACK_FRAME__
+    if (context->thisContext)
+    {
+        if (context->thisContext->type)
+        {
+            context->thisContext->type = NULL;
+            context->thisContext->type = type;
+        }
+        else
+        {
+            context->thisContext->type = type;
+        }
+    }
+    else
+    {
+        logMessage(LMI, "ERROR", "Parser", "This Context is NULL");
+        return;
+    }
 }
 
 void setCurrentFunction(ParsingContext *context, const char *functionName, const char *namespaceScopeID)
@@ -103,8 +228,14 @@ void resetCurrentFunction(ParsingContext *context)
 const char *getCurrentScopeID(ParsingContext *context)
 {
     __STACK_FRAME__
+    if (!context)
+    {
+        fprintf(stderr, "getCurrentScopeID: Parsing Context is NULL\n");
+        return NULL;
+    }
     if (context->scopeContext)
     {
+        logMessage(LMI, "INFO", "Parser", "Scope ID: %s", context->scopeContext->scopeID);
         return context->scopeContext->scopeID;
     }
 

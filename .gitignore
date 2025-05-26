@@ -57,6 +57,19 @@ output.o
 *.userosscache
 *.sln.docstates
 *.cache
+*.so
+*.o
+*.exe
+*.dll
+*.pdb
+*.ll
+*.bc
+*.o
+*.a
+*.log
+
+manifest.txt
+*.manifest
 
 # Test Files
 
@@ -69,13 +82,17 @@ note.txt
 
 # Ignore Lib Binaries
 
-/libs/cli/bin/*
-/libs/cli/bin/
-/libs/cryo_path/bin/*
-/libs/cryo_path/bin/
-/libs/lsp-monitor/bin/*
-/libs/lsp-monitor/bin/
-/libs/dev-server/bin/*
-/libs/dev-server/bin/
-/libs/dev-server/target/*
-/libs/dev-server/target/
+/tools/cli/bin/*
+/tools/cli/bin/
+/tools/cryo_path/bin/*
+/tools/cryo_path/bin/
+/tools/lsp-monitor/bin/*
+/tools/lsp-monitor/bin/
+/tools/dev-server/bin/*
+/tools/dev-server/bin/
+/tools/dev-server/target/*
+/tools/dev-server/target/
+
+*/bin/**
+*/bin/*.*
+

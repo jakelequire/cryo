@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -34,8 +34,6 @@ KeywordToken keywords[] = {
     {"mut", TOKEN_KW_MUT},
     {"true", TOKEN_BOOLEAN_LITERAL},
     {"false", TOKEN_BOOLEAN_LITERAL},
-    {"int", TOKEN_KW_INT},
-    {"string", TOKEN_KW_STRING},
     {"boolean", TOKEN_KW_BOOL},
     {"expression", TOKEN_KW_EXPRESSION},
     {"void", TOKEN_KW_VOID},
@@ -70,6 +68,12 @@ KeywordToken keywords[] = {
     {"i32", TOKEN_TYPE_I32},
     {"i64", TOKEN_TYPE_I64},
     {"i128", TOKEN_TYPE_I128},
+    {"float", TOKEN_TYPE_FLOAT},
+    {"auto", TOKEN_KW_AUTO},
+    {"undefined", TOKEN_KW_UNDEFINED},
+    {"pragma", TOKEN_KW_PRAGMA},
+    {"type", TOKEN_KW_TYPE},
+    {"implement", TOKEN_KW_IMPLEMENT},
     {NULL, TOKEN_UNKNOWN} // Sentinel value
 };
 
@@ -100,6 +104,9 @@ void initLexer(Lexer *lexer, const char *source, const char *fileName, CompilerS
 
     lexer->getLPos = getLPos;
     lexer->getCPos = getCPos;
+
+    GDM->initFrontendState(GDM);
+    GDM->frontendState->setLexer(GDM->frontendState, lexer);
 
     DEBUG_PRINT_FILTER({
         printf("{lexer} -------------- <Input Source Code> --------------\n\n");
@@ -176,6 +183,7 @@ char advance(Lexer *lexer, CompilerState *state)
     lexer->current++;
     lexer->column++;
     updateCompilerColumnNumber(lexer, state);
+
     return lexer->current[-1];
 }
 // </advance>
@@ -585,6 +593,10 @@ Token symbolChar(Lexer *lexer, char symbol, CompilerState *state)
         return makeToken(lexer, TOKEN_DOLLAR, state);
     case '/':
         return makeToken(lexer, TOKEN_SLASH, state);
+    case '@':
+        return makeToken(lexer, TOKEN_AT, state);
+    case '#':
+        return makeToken(lexer, TOKEN_HASH, state);
     case '.':
     {
         if (peek(lexer, state) == '.')
@@ -793,7 +805,6 @@ Token checkKeyword(Lexer *lexer, CompilerState *state)
 CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType type, CompilerState *state)
 {
     __STACK_FRAME__
-    // printf("[Lexer] Checking data type: %s\n", dataType);
     // Check if the next token is the `[` character to determine if it is an array type
     if (peek(lexer, state) == '[')
     {
@@ -828,6 +839,7 @@ CryoTokenType checkDataType(Lexer *lexer, const char *dataType, CryoTokenType ty
         }
         i++;
     }
+
     return type;
 }
 // </checkDataType>

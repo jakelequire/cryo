@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -14,10 +14,11 @@
  *    limitations under the License.                                            *
  *                                                                              *
  ********************************************************************************/
-#include "symbolTable/cInterfaceTable.h"
 #include "frontend/AST.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "dataTypes/dataTypeManager.h"
+#include "frontend/frontendSymbolTable.h"
 
 /* ====================================================================== */
 // @Global_Variables
@@ -97,6 +98,83 @@ ASTNode *createNamespaceNode(char *name, Arena *arena, CompilerState *state, Lex
     return node;
 }
 
+void ProgramNode_addStatement(ASTNode *self, ASTNode *statement)
+{
+    __STACK_FRAME__
+    if (!self || !statement)
+    {
+        logMessage(LMI, "ERROR", "AST", "ProgramNode_addStatement: Self or statement node is NULL");
+        return;
+    }
+    logMessage(LMI, "INFO", "AST", "Adding statement to program node...");
+
+    // Check if the statement array is full
+    if (self->data.program->statementCount >= self->data.program->statementCapacity)
+    {
+        // Resize the statement array
+        self->data.program->statementCapacity *= 2;
+        self->data.program->statements = (ASTNode **)realloc(self->data.program->statements, sizeof(ASTNode *) * self->data.program->statementCapacity);
+        if (!self->data.program->statements)
+        {
+            logMessage(LMI, "ERROR", "AST", "Failed to reallocate memory for program node statements");
+            return;
+        }
+    }
+
+    // Add the statement to the array
+    self->data.program->statements[self->data.program->statementCount++] = statement;
+}
+
+void ProgramNode_importAST(ASTNode *self, ASTNode *imported)
+{
+    __STACK_FRAME__
+    if (!self || !imported)
+    {
+        logMessage(LMI, "ERROR", "AST", "ProgramNode_importAST: Self or imported node is NULL");
+        return;
+    }
+
+    // This imported node needs to be added to the statements array of the program node.
+    // It should be added to the front of the array. The imported node needs to remove its
+    // program node, create a module node to be put in the beginning of the primary program node.
+    // The module node will contain the imported node.
+    ASTNode *moduleNode = (ASTNode *)malloc(sizeof(ASTNode));
+    if (!moduleNode)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to allocate memory for module node");
+        return;
+    }
+    logMessage(LMI, "INFO", "AST", "Creating module node from imported node");
+    moduleNode->data.module = createCryoModuleContainer(NULL, NULL);
+    moduleNode->metaData = createMetaDataContainer(NULL, NULL);
+    moduleNode->metaData->type = NODE_MODULE;
+    moduleNode->metaData->line = 0;
+    moduleNode->metaData->column = 0;
+    moduleNode->print = logASTNode;
+
+    logMessage(LMI, "INFO", "AST", "Module node created");
+    if (imported->metaData->type == NODE_PROGRAM)
+    {
+        logMessage(LMI, "INFO", "AST", "Imported node is a program node");
+        int statementCount = imported->data.program->statementCount;
+        for (int i = 0; i < statementCount; i++)
+        {
+            moduleNode->data.module->addStatement(moduleNode, imported->data.program->statements[i]);
+        }
+    }
+    else
+    {
+        moduleNode->data.module->addStatement(moduleNode, imported);
+    }
+
+    logMessage(LMI, "INFO", "AST", "Module node created from imported node");
+
+    // Now we add the module node to the program node's statements array.
+    // use the `addStatement` function to add the module node to the program node.
+    self->data.program->addStatement(self, moduleNode);
+    logMessage(LMI, "INFO", "AST", "Added module node to program node");
+}
+
 // Create a program node
 ASTNode *createProgramNode(Arena *arena, CompilerState *state, Lexer *lexer)
 {
@@ -104,6 +182,9 @@ ASTNode *createProgramNode(Arena *arena, CompilerState *state, Lexer *lexer)
     ASTNode *node = createASTNode(NODE_PROGRAM, arena, state, lexer);
     if (!node)
         return NULL;
+
+    node->data.program->importAST = ProgramNode_importAST;
+    node->data.program->addStatement = ProgramNode_addStatement;
 
     return node;
 }
@@ -124,7 +205,7 @@ ASTNode *createLiteralExpr(int value, Arena *arena, CompilerState *state, Lexer 
 
     logMessage(LMI, "DEBUG", "AST", "Created literal expression node with value: %d", value);
     int intCpy = value;
-    node->data.literal->type = createPrimitiveIntType();
+    node->data.literal->type = DTM->primitives->createInt();
     node->data.literal->value.intValue = value;
     // convert from int to string
     char *buffer = (char *)ARENA_ALLOC(arena, sizeof(char));
@@ -198,6 +279,21 @@ ASTNode *createBinaryExpr(ASTNode *left, ASTNode *right, CryoOperatorType op, Ar
     return node;
 }
 
+ASTNode *createVarNameNode(char *name, DataType *varType, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);
+    if (!node)
+        return NULL;
+
+    logMessage(LMI, "DEBUG", "AST", "Created variable name node with name: %s", name);
+
+    node->data.varName->varName = strdup(name);
+    node->data.varName->type = varType;
+
+    return node;
+}
+
 // Create a unary expression node
 ASTNode *createUnaryExpr(CryoTokenType op, ASTNode *operand, Arena *arena, CompilerState *state, Lexer *lexer)
 {
@@ -224,7 +320,8 @@ ASTNode *createIntLiteralNode(int value, Arena *arena, CompilerState *state, Lex
     logMessage(LMI, "INFO", "AST", "Created integer literal node with value: %d", value);
 
     node->data.literal->value.intValue = value;
-    node->data.literal->type = createPrimitiveIntType();
+    node->data.literal->type = DTM->primitives->createI32();
+    node->data.literal->literalType = LITERAL_INT;
 
     return node;
 }
@@ -238,12 +335,14 @@ ASTNode *createFloatLiteralNode(float value, Arena *arena, CompilerState *state,
 
     logMessage(LMI, "INFO", "AST", "Created float literal node with value: %f", value);
 
-    node->data.literal->type = createPrimitiveFloatType();
+    node->data.literal->type = DTM->primitives->createFloat();
     node->data.literal->value.floatValue = value;
+    node->data.literal->literalType = LITERAL_FLOAT;
+
     return node;
 }
 
-ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *parsingContext)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_LITERAL_EXPR, arena, state, lexer);
@@ -263,10 +362,21 @@ ASTNode *createStringLiteralNode(const char *value, Arena *arena, CompilerState 
         printf("Manipulated string: %s\n", strdup(trimmedString));
     });
 
+    DataType *contextType = NULL;
+    if (parsingContext->stringContextType)
+    {
+        contextType = parsingContext->stringContextType;
+    }
+    else
+    {
+        contextType = DTM->primitives->createStr();
+    }
+
     int length = getStringLength(trimmedString);
-    node->data.literal->type = createPrimitiveStringType(length);
+    node->data.literal->type = contextType;
     node->data.literal->value.stringValue = strdup(trimmedString);
     node->data.literal->length = strlen(trimmedString);
+    node->data.literal->literalType = LITERAL_STRING;
 
     return node;
 }
@@ -332,13 +442,14 @@ ASTNode *createBooleanLiteralNode(int value, Arena *arena, CompilerState *state,
 
     logMessage(LMI, "INFO", "AST", "Created boolean literal node with value: %s", value ? "true" : "false");
 
-    node->data.literal->type = createPrimitiveBooleanType(value);
+    node->data.literal->type = DTM->primitives->createPrimBoolean(value);
     node->data.literal->value.booleanValue = value;
+    node->data.literal->literalType = LITERAL_BOOLEAN;
 
     return node;
 }
 
-ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context, CryoGlobalSymbolTable *globalTable)
+ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Lexer *lexer, ParsingContext *context)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_NAME, arena, state, lexer);
@@ -351,7 +462,7 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Le
     // Replacing the old `findSymbol` from the old symbol table seems to be working fine so far.
     // Attempt to find the symbol in the symbol table (It's okay if it can't find and can just create the node)
     const char *currentScopeID = getCurrentScopeID(context);
-    VariableSymbol *varSym = GetFrontendVariableSymbol(globalTable, varName, currentScopeID);
+    FrontendSymbol *varSym = FEST->lookup(FEST, varName);
     if (varSym)
     {
         logMessage(LMI, "INFO", "AST", "Found symbol in global symbol table: %s", varSym->name);
@@ -365,7 +476,7 @@ ASTNode *createIdentifierNode(char *name, Arena *arena, CompilerState *state, Le
         logMessage(LMI, "INFO", "AST", "Symbol not found in global symbol table: %s", varName);
         node->data.varName->varName = strdup(varName);
         node->data.varName->isRef = true;
-        node->data.varName->type = createUnknownType();
+        node->data.varName->type = DTM->primitives->createUndefined();
     }
 
     return node;
@@ -404,16 +515,18 @@ ASTNode *createIfBlock(ASTNode *condition, ASTNode *then_branch, ASTNode *else_b
     return node;
 }
 
-ASTNode *createForBlock(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createForLoopNode(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_FOR_STATEMENT, arena, state, lexer);
     if (!node)
         return NULL;
+
     node->data.forStatement->initializer = initializer;
     node->data.forStatement->condition = condition;
     node->data.forStatement->increment = increment;
     node->data.forStatement->body = body;
+
     return node;
 }
 
@@ -435,12 +548,6 @@ ASTNode *createBooleanLiteralExpr(int value, Arena *arena, CompilerState *state,
     return createBooleanLiteralNode(value, arena, state, lexer);
 }
 
-ASTNode *createStringLiteralExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)
-{
-    __STACK_FRAME__
-    return createStringLiteralNode(str, arena, state, lexer);
-}
-
 ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
@@ -448,13 +555,15 @@ ASTNode *createStringExpr(char *str, Arena *arena, CompilerState *state, Lexer *
     if (!node)
         return NULL;
     int length = strlen(str);
-    node->data.literal->type = createPrimitiveStringType(length);
+    node->data.literal->type = DTM->primitives->createStr();
     node->data.literal->value.stringValue = strdup(str);
     return node;
 }
 
 /* @Node_Creation - Variables */
-ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer, bool isMutable, bool isGlobal, bool isReference, bool isIterator, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *initializer,
+                                  bool isMutable, bool isGlobal, bool isReference, bool isIterator, bool noInitializer,
+                                  Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_VAR_DECLARATION, arena, state, lexer);
@@ -479,7 +588,16 @@ ASTNode *createVarDeclarationNode(char *var_name, DataType *dataType, ASTNode *i
     node->data.varDecl->isReference = isReference;
     node->data.varDecl->isMutable = isMutable;
     node->data.varDecl->isIterator = isIterator;
-    node->data.varDecl->initializer = initializer;
+    node->data.varDecl->noInitializer = noInitializer;
+
+    if (noInitializer)
+    {
+        node->data.varDecl->initializer = NULL;
+    }
+    else
+    {
+        node->data.varDecl->initializer = initializer;
+    }
 
     logMessage(LMI, "INFO", "AST", "Created variable declaration node for %s", var_name);
     return node;
@@ -518,29 +636,17 @@ ASTNode *createFunctionNode(CryoVisibilityType visibility, char *function_name, 
     node->data.functionDecl->paramCapacity = paramCapacity;
     node->data.functionDecl->body = function_body;
     node->data.functionDecl->type = returnType;
-    node->data.functionDecl->functionType = createFunctionType(strdup(function_name), returnType, NULL, 0, arena, state);
+    node->data.functionDecl->functionType = NULL;
 
     return node;
 }
 
-ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *returnType, Arena *arena, CompilerState *state, Lexer *lexer)
+ASTNode *createExternFuncNode(char *function_name, ASTNode **params, int paramCount, DataType *functionType, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
     ASTNode *node = createASTNode(NODE_EXTERN_FUNCTION, arena, state, lexer);
     if (!node)
         return NULL;
-
-    int paramCount = 0;
-    for (int i = 0; params[i] != NULL; i++)
-    {
-        paramCount++;
-    }
-
-    node->data.externFunction = (ExternFunctionNode *)ARENA_ALLOC(arena, sizeof(ExternFunctionNode));
-    if (!node->data.externFunction)
-    {
-        return NULL;
-    }
 
     node->data.externFunction->name = strdup(function_name);
     if (!node->data.externFunction->name)
@@ -548,20 +654,9 @@ ASTNode *createExternFuncNode(char *function_name, ASTNode **params, DataType *r
         return NULL;
     }
 
-    node->data.externFunction->params = NULL;
+    node->data.externFunction->params = params;
     node->data.externFunction->paramCount = paramCount;
-
-    if (paramCount > 0 && params)
-    {
-        node->data.externFunction->params = (ASTNode **)ARENA_ALLOC(arena, paramCount * sizeof(ASTNode *));
-        if (!node->data.externFunction->params)
-        {
-            return NULL;
-        }
-        memcpy(node->data.externFunction->params, params, paramCount * sizeof(ASTNode *));
-    }
-
-    node->data.externFunction->type = returnType;
+    node->data.externFunction->type = functionType;
 
     return node;
 }
@@ -619,7 +714,7 @@ ASTNode *createParamNode(char *name, char *functionName, DataType *type, Arena *
     node->data.param->type = type;
     node->data.param->hasDefaultValue = false;
     node->data.param->isMutable = true;
-    node->data.param->functionName = functionName;
+    node->data.param->functionName = strdup(functionName);
     node->data.param->defaultValue = NULL;
     return node;
 }
@@ -653,11 +748,19 @@ ASTNode *createArgsNode(char *name, DataType *type, CryoNodeType nodeType, bool 
         case PRIM_BOOLEAN:
             node->data.literal->value.booleanValue = strcmp(name, "true") == 0 ? true : false;
             break;
+        case PRIM_I8:
+        case PRIM_I16:
+        case PRIM_I32:
+        case PRIM_I64:
+        case PRIM_I128:
+            node->data.literal->value.intValue = atoi(name);
+            break;
+        case PRIM_OBJECT:
         case PRIM_NULL:
         case PRIM_VOID:
             break;
         default:
-            logMessage(LMI, "ERROR", "AST", "Unknown data type: %s", DataTypeToString(type));
+            logMessage(LMI, "ERROR", "AST", "Unknown data type: %s", DTM->debug->dataTypeToString(type));
             CONDITION_FAILED;
         }
         break;
@@ -731,7 +834,7 @@ ASTNode *createIfStatement(ASTNode *condition, ASTNode *then_branch, ASTNode *el
 ASTNode *createForStatement(ASTNode *initializer, ASTNode *condition, ASTNode *increment, ASTNode *body, Arena *arena, CompilerState *state, Lexer *lexer)
 {
     __STACK_FRAME__
-    ASTNode *node = createForBlock(initializer, condition, increment, body, arena, state, lexer);
+    ASTNode *node = createForLoopNode(initializer, condition, increment, body, arena, state, lexer);
     if (!node)
     {
         logMessage(LMI, "ERROR", "AST", "Failed to create for statement node");
@@ -839,7 +942,8 @@ ASTNode *createStructNode(const char *structName, ASTNode **properties, int prop
     node->data.structNode->methodCount = methodCount;
     node->data.structNode->methodCapacity = 64;
     node->data.structNode->constructor = constructor;
-    node->data.structNode->ctorArgs = (ASTNode **)calloc(64, sizeof(ASTNode *));
+    node->data.structNode->ctorArgs = (ASTNode **)malloc(sizeof(ASTNode *) * 64);
+    node->data.structNode->ctorArgCount = 0;
 
     return node;
 }
@@ -888,7 +992,7 @@ ASTNode *createPropertyAccessNode(ASTNode *object, const char *property, Arena *
     }
 
     node->data.propertyAccess->object = object;
-    node->data.propertyAccess->propertyName = strdup(property);
+    node->data.propertyAccess->propertyName = property;
 
     return node;
 }
@@ -952,11 +1056,10 @@ ASTNode *createStructPropertyAccessNode(ASTNode *object, ASTNode *property, cons
         return NULL;
     }
 
-    node->data.propertyAccess->objType = type;
     node->data.propertyAccess->object = object;
     node->data.propertyAccess->property = property;
-    node->data.propertyAccess->propertyName = strdup(propertyName);
-    node->data.propertyAccess->propertyIndex = getPropertyAccessIndex(type, propertyName);
+    node->data.propertyAccess->propertyName = propertyName;
+    node->data.propertyAccess->propertyIndex = -1; // Need to find a replacement for `getPropertyAccessIndex(type, propertyName);`
 
     return node;
 }
@@ -972,7 +1075,7 @@ ASTNode *createMethodNode(DataType *type, ASTNode *body, const char *methodName,
         return NULL;
     }
 
-    node->data.method->name = strdup(methodName);
+    node->data.method->name = methodName;
     node->data.method->body = body;
     node->data.method->params = args;
     node->data.method->paramCount = argCount;
@@ -1002,7 +1105,7 @@ ASTNode *createMethodCallNode(ASTNode *accessorObj, DataType *returnType, DataTy
     node->data.methodCall->name = strdup(methodName);
     node->data.methodCall->args = args;
     node->data.methodCall->argCount = argCount;
-    node->data.methodCall->instanceName = getDataTypeName(instanceType);
+    node->data.methodCall->instanceName = DTM->debug->dataTypeToString(instanceType);
     node->data.methodCall->isStatic = isStatic;
 
     return node;
@@ -1191,6 +1294,115 @@ ASTNode *createModuleNode(const char *moduleName, Arena *arena, CompilerState *s
     }
 
     node->data.moduleNode->moduleName = strdup(moduleName);
+
+    return node;
+}
+
+ASTNode *createAnnotationNode(const char *annotationName, const char *annotationValue, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_ANNOTATION, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create annotation node");
+        return NULL;
+    }
+
+    node->data.annotation->name = strdup(annotationName);
+    node->data.annotation->value = strdup(annotationValue);
+
+    return node;
+}
+
+ASTNode *createTypeDeclNode(const char *typeName, DataType *type, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    logMessage(LMI, "INFO", "AST", "Creating type declaration node for %s", typeName);
+    ASTNode *node = createASTNode(NODE_TYPE, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create type declaration node");
+        return NULL;
+    }
+
+    node->data.typeDecl->name = strdup(typeName);
+    node->data.typeDecl->type = type;
+
+    return node;
+}
+
+ASTNode *createTypeCastNode(DataType *type, ASTNode *expression, Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_TYPE_CAST, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create type cast node");
+        return NULL;
+    }
+
+    node->data.typeCast->type = type;
+    node->data.typeCast->expression = expression;
+
+    return node;
+}
+
+ASTNode *createDiscardNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_DISCARD, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create discard node");
+        return NULL;
+    }
+
+    return node;
+}
+
+ASTNode *createImplementationNode(const char *interfaceName, ASTNode **properties, int propertyCount,
+                                  ASTNode **methods, int methodCount,
+                                  Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_IMPLEMENTATION, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create implementation node");
+        return NULL;
+    }
+
+    node->data.implementation->interfaceName = interfaceName;
+    node->data.implementation->properties = properties;
+    node->data.implementation->propertyCount = propertyCount;
+    node->data.implementation->methods = methods;
+    node->data.implementation->methodCount = methodCount;
+
+    return node;
+}
+
+ASTNode *createBreakNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_BREAK, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create break node");
+        return NULL;
+    }
+
+    return node;
+}
+
+ASTNode *createContinueNode(Arena *arena, CompilerState *state, Lexer *lexer)
+{
+    __STACK_FRAME__
+    ASTNode *node = createASTNode(NODE_CONTINUE, arena, state, lexer);
+    if (!node)
+    {
+        logMessage(LMI, "ERROR", "AST", "Failed to create continue node");
+        return NULL;
+    }
 
     return node;
 }

@@ -1,0 +1,7 @@
+@pragma "test_suite"
+namespace Testing;
+
+
+function main() -> void {
+    return;
+}

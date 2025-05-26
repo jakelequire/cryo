@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -59,6 +59,10 @@ jFS *initFS(void)
     fs->cleanFilePath = cleanFilePath;
     fs->getFileName = getFileName;
     fs->getFileExt = getFileExt;
+    fs->getRealPath = getRealPath;
+    fs->trimStringQuotes = trimStringQuotes;
+    fs->getDirectoryPath = getDirectoryPath;
+    fs->listDir = listDir;
     return fs;
 }
 
@@ -83,7 +87,7 @@ char *readFile(const char *path)
     FILE *file = fopen(path, "rb"); // Open the file in binary mode to avoid transformations
     if (file == NULL)
     {
-        fprintf(stderr, "{FS} Failed to open file: %s\n", path);
+        logMessage(LMI, "ERROR", "FS", "Failed to open file: %s\n", path);
         return NULL;
     }
 
@@ -94,7 +98,7 @@ char *readFile(const char *path)
 
     if (length == 0)
     {
-        fprintf(stderr, "{FS} File is empty: %s\n", path);
+        logMessage(LMI, "ERROR", "FS", "File is empty: %s\n", path);
         fclose(file);
         return NULL;
     }
@@ -102,7 +106,7 @@ char *readFile(const char *path)
     char *buffer = (char *)malloc(length + 1);
     if (buffer == NULL)
     {
-        fprintf(stderr, "{FS} Failed to allocate memory for file: %s\n", path);
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for file buffer");
         fclose(file);
         return NULL;
     }
@@ -110,7 +114,7 @@ char *readFile(const char *path)
     size_t bytesRead = fread(buffer, 1, length, file);
     if (bytesRead < length)
     {
-        fprintf(stderr, "{FS} Failed to read file: %s\n", path);
+        logMessage(LMI, "ERROR", "FS", "Failed to read file: %s\n", path);
         free(buffer);
         fclose(file);
         return NULL;
@@ -221,7 +225,7 @@ int createDir(const char *path)
                 // Ignore if directory already exists
                 if (errno != EEXIST)
                 {
-                    fprintf(stderr, "{FS} Failed to create directory: %s\n", temp);
+                    logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s\n", temp);
                     return -1;
                 }
             }
@@ -236,14 +240,14 @@ int createDir(const char *path)
         // Ignore if directory already exists
         if (errno != EEXIST)
         {
-            fprintf(stderr, "{FS} Failed to create directory: %s\n", temp);
+            logMessage(LMI, "ERROR", "FS", "Failed to create directory: %s\n", temp);
             return -1;
         }
-        fprintf(stderr, "{FS} Directory already exists: %s\n", temp);
+        logMessage(LMI, "INFO", "FS", "Directory already exists: %s\n", temp);
     }
     else
     {
-        fprintf(stderr, "{FS} Created directory: %s\n", temp);
+        logMessage(LMI, "INFO", "FS", "Created directory: %s\n", temp);
     }
 
     return 0;
@@ -450,7 +454,7 @@ char *getCRuntimePath(void)
     char *runtimePath = (char *)malloc(strlen(srcPath) + 32);
     sprintf(runtimePath, "%s/src/runtime/", srcPath);
 
-    printf("Runtime Path: %s\n", runtimePath);
+    logMessage(LMI, "INFO", "FS", "Found Cryo runtime path: %s", runtimePath);
 
     return runtimePath;
 }
@@ -573,7 +577,7 @@ char *getPathFromCryoPath(void)
     path = (char *)malloc(buffer_size * sizeof(char));
     if (path == NULL)
     {
-        fprintf(stderr, "Memory allocation failed\n");
+        logMessage(LMI, "ERROR", "FS", "Failed to allocate memory for path");
         return NULL;
     }
     path[0] = '\0'; // Ensure null termination
@@ -582,7 +586,7 @@ char *getPathFromCryoPath(void)
     fp = popen(command, "r");
     if (fp == NULL)
     {
-        fprintf(stderr, "Failed to run command: %s\n", command);
+        logMessage(LMI, "ERROR", "FS", "Failed to run command: %s\n", command);
         free(path);
         return NULL;
     }
@@ -601,20 +605,20 @@ char *getPathFromCryoPath(void)
     }
     else
     {
-        fprintf(stderr, "Failed to read command output\n");
+        logMessage(LMI, "ERROR", "FS", "Failed to read command output");
         free(path);
         pclose(fp);
         return NULL;
     }
 
     // Debug the output
-    printf("Command output: %s\n", path);
+    logMessage(LMI, "INFO", "FS", "Command output: %s\n", path);
 
     // Close the pipe
     int close_result = pclose(fp);
     if (close_result == -1)
     {
-        fprintf(stderr, "Failed to close command pipe\n");
+        logMessage(LMI, "ERROR", "FS", "Failed to close command pipe");
         free(path);
         return NULL;
     }
@@ -622,8 +626,7 @@ char *getPathFromCryoPath(void)
     // Check if command executed successfully
     if (WEXITSTATUS(close_result) != 0)
     {
-        fprintf(stderr, "ERROR: Command Failed!\n");
-        fprintf(stderr, "Command returned non-zero exit status: %d\n", WEXITSTATUS(close_result));
+        logMessage(LMI, "ERROR", "FS", "Command failed with exit status: %d\n", WEXITSTATUS(close_result));
         free(path);
         return NULL;
     }
@@ -631,7 +634,7 @@ char *getPathFromCryoPath(void)
     // If path is empty after all this, something went wrong
     if (strlen(path) == 0)
     {
-        fprintf(stderr, "Command returned empty path\n");
+        logMessage(LMI, "ERROR", "FS", "Command output is empty");
         free(path);
         return NULL;
     }
@@ -646,7 +649,7 @@ char *getPathFromEnvVar(void)
     const char *env_var = getenv("CRYO_COMPILER");
     if (env_var == NULL)
     {
-        fprintf(stderr, "CRYO_COMPILER environment variable not set\n");
+        logMessage(LMI, "ERROR", "FS", "CRYO_COMPILER environment variable not set");
         return NULL;
     }
 
@@ -801,7 +804,7 @@ int createNewEmptyFileWpath(const char *fileWithPath)
     // Validate input
     if (!fileWithPath || strlen(fileWithPath) == 0)
     {
-        fprintf(stderr, "ERROR: Invalid path provided\n");
+        logMessage(LMI, "ERROR", "FS", "Invalid file path");
         return -1;
     }
 
@@ -815,7 +818,7 @@ int createNewEmptyFileWpath(const char *fileWithPath)
     if (!last_slash)
     {
         // If no directory specified, use current directory
-        fprintf(stderr, "INFO: No directory specified, using current directory\n");
+        logMessage(LMI, "INFO", "FS", "No directory specified, using current directory");
         strcpy(dir_path, ".");
     }
     else
@@ -835,8 +838,8 @@ int createNewEmptyFileWpath(const char *fileWithPath)
             *p = '\0'; // Temporarily terminate
             if (mkdir(dir_path, 0755) == -1 && errno != EEXIST)
             {
-                fprintf(stderr, "ERROR: Failed to create directory %s: %s\n",
-                        dir_path, strerror(errno));
+                logMessage(LMI, "ERROR", "FS", "Failed to create directory %s: %s\n",
+                           dir_path, strerror(errno));
                 return -1;
             }
             *p = '/'; // Restore slash
@@ -849,8 +852,8 @@ int createNewEmptyFileWpath(const char *fileWithPath)
     {
         if (mkdir(dir_path, 0755) == -1 && errno != EEXIST)
         {
-            fprintf(stderr, "ERROR: Failed to create final directory %s: %s\n",
-                    dir_path, strerror(errno));
+            logMessage(LMI, "ERROR", "FS", "Failed to create directory %s: %s\n",
+                       dir_path, strerror(errno));
             return -1;
         }
     }
@@ -859,8 +862,7 @@ int createNewEmptyFileWpath(const char *fileWithPath)
     FILE *file = fopen(fileWithPath, "w");
     if (!file)
     {
-        fprintf(stderr, "ERROR: Failed to create file %s: %s\n",
-                fileWithPath, strerror(errno));
+        logMessage(LMI, "ERROR", "FS", "Failed to create file: %s\n", fileWithPath);
         return -1;
     }
 
@@ -914,3 +916,127 @@ const char *getFileExt(const char *file)
     const char *lastDot = strrchr(file, '.');
     return lastDot ? lastDot + 1 : NULL;
 }
+
+const char *getRealPath(const char *path)
+{
+    logMessage(LMI, "INFO", "FS", "Getting real path for: %s", path);
+    char *realPath = realpath(path, NULL);
+    if (!realPath)
+    {
+        switch (errno)
+        {
+        case EACCES:
+            logMessage(LMI, "ERROR", "FS", "Permission denied while getting real path for: %s", path);
+            break;
+        case EINVAL:
+            logMessage(LMI, "ERROR", "FS", "Invalid path: %s", path);
+            break;
+        case EIO:
+            logMessage(LMI, "ERROR", "FS", "I/O error occurred while getting real path for: %s", path);
+            break;
+        case ELOOP:
+            logMessage(LMI, "ERROR", "FS", "Too many symbolic links encountered while getting real path for: %s", path);
+            break;
+        case ENAMETOOLONG:
+            logMessage(LMI, "ERROR", "FS", "Path name too long: %s", path);
+            break;
+        case ENOENT:
+            logMessage(LMI, "ERROR", "FS", "Path does not exist: %s", path);
+            break;
+        case ENOMEM:
+            logMessage(LMI, "ERROR", "FS", "Out of memory while getting real path for: %s", path);
+            break;
+        case ENOTDIR:
+            logMessage(LMI, "ERROR", "FS", "A component of the path is not a directory: %s", path);
+            break;
+        default:
+            logMessage(LMI, "ERROR", "FS", "Unknown error occurred while getting real path for: %s", path);
+            break;
+        }
+        return NULL;
+    }
+
+    return realPath;
+}
+
+// Removes " from the beginning and end of a string
+const char *trimStringQuotes(const char *str)
+{
+    if (!str)
+    {
+        return NULL;
+    }
+
+    size_t len = strlen(str);
+    if (len < 2)
+    {
+        return str;
+    }
+
+    if (str[0] == '"' && str[len - 1] == '"')
+    {
+        char *trimmed = (char *)malloc(len - 1);
+        if (!trimmed)
+        {
+            return NULL;
+        }
+
+        strncpy(trimmed, str + 1, len - 2);
+        trimmed[len - 2] = '\0';
+        return trimmed;
+    }
+
+    return str;
+}
+
+const char *getDirectoryPath(const char *path)
+{
+    const char *lastSlash = strrchr(path, '/');
+    if (!lastSlash)
+    {
+        return NULL;
+    }
+
+    size_t length = (size_t)(lastSlash - path);
+    char *dirPath = (char *)malloc(length + 1);
+    if (!dirPath)
+    {
+        return NULL;
+    }
+
+    strncpy(dirPath, path, length);
+    dirPath[length] = '\0';
+
+    return dirPath;
+}
+
+// <listDir>
+char **listDir(const char *path)
+{
+    __STACK_FRAME__
+    DIR *dir;
+    struct dirent *entry;
+    char **fileList = NULL;
+    size_t count = 0;
+
+    dir = opendir(path);
+    if (!dir)
+    {
+        logMessage(LMI, "ERROR", "FS", "Failed to open directory: %s", path);
+        return NULL;
+    }
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG) // Regular file
+        {
+            fileList = (char **)realloc(fileList, sizeof(char *) * (count + 1));
+            fileList[count] = strdup(entry->d_name);
+            count++;
+        }
+    }
+
+    closedir(dir);
+    return fileList;
+}
+// </listDir>

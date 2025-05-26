@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -196,6 +196,14 @@ char *CryoNodeTypeToString(CryoNodeType node)
         return "USING";
     case NODE_MODULE:
         return "MODULE";
+    case NODE_ANNOTATION:
+        return "ANNOTATION";
+    case NODE_TYPE_CAST:
+        return "TYPE_CAST";
+    case NODE_DISCARD:
+        return "DISCARD";
+    case NODE_IMPLEMENTATION:
+        return "IMPLEMENTATION";
     case NODE_UNKNOWN:
         return "UNKNOWN";
     default:
@@ -397,6 +405,8 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_PRIVATE";
     case TOKEN_KW_STRUCT:
         return "TOKEN_KW_STRUCT";
+    case TOKEN_KW_IMPLEMENT:
+        return "TOKEN_KW_IMPLEMENT";
     case TOKEN_KW_DECLARE:
         return "TOKEN_KW_DECLARE";
     case TOKEN_KW_ENUM:
@@ -499,6 +509,12 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_KW_USING";
     case TOKEN_KW_MODULE:
         return "TOKEN_KW_MODULE";
+    case TOKEN_KW_AUTO:
+        return "TOKEN_KW_AUTO";
+    case TOKEN_KW_UNDEFINED:
+        return "TOKEN_KW_UNDEFINED";
+    case TOKEN_KW_PRAGMA:
+        return "TOKEN_KW_PRAGMA";
 
     case TOKEN_BANG:
         return "TOKEN_BANG";
@@ -572,10 +588,6 @@ char *CryoTokenToString(CryoTokenType node)
         return "TOKEN_LANGLE";
     case TOKEN_RANGLE:
         return "TOKEN_RANGLE";
-    case TOKEN_LSQUARE:
-        return "TOKEN_LSQUARE";
-    case TOKEN_RSQUARE:
-        return "TOKEN_RSQUARE";
     case TOKEN_LANGLE_BRACKET:
         return "TOKEN_LANGLE_BRACKET";
     case TOKEN_RANGLE_BRACKET:

@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -82,9 +82,17 @@ ProjectSettings *parseCryoConfig(const char *configString)
                     continue;
 
                 if (strcmp(id, "project_configPath") == 0)
+                {
                     settings->project_configPath = strdup(value->value);
+                }
                 else if (strcmp(id, "project_buildPath") == 0)
+                {
                     settings->project_buildPath = strdup(value->value);
+                }
+                else if (strcmp(id, "compiler_flags") == 0)
+                {
+                    // TODO
+                }
             }
             break;
 

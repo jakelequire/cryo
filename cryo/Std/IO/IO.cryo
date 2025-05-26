@@ -1,0 +1,10 @@
+namespace Std.IO;
+
+class IO {
+
+    public static readFile(filePath: String) -> str {
+        const content: str = "placeholder";
+        return content;
+    }
+
+}

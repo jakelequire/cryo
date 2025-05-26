@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -139,7 +139,6 @@ void initLoggerCompilerSettings(CompilerSettings *settings)
 {
 
     compilerSettings = settings;
-    printf("Found compiler settings\n");
 
     if (settings->enableLogs)
         ENABLE_LOGS();
@@ -262,14 +261,5 @@ void logMessage(
         vprintf(message, args);
         printf("\n");
         va_end(args);
-
-        // va_start(args, message);
-        // outputNewLogBuffer(line, file, func, type, module, message, args);
-        // va_end(args);
-
-        free(shortFile);
-        free(shortModule);
-        free(shortFunc);
-        free(numberFormatBuffer);
     });
 }

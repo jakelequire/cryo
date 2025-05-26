@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -15,10 +15,10 @@
  *                                                                              *
  ********************************************************************************/
 #include "linker/linker.hpp"
-#include "symbolTable/globalSymtable.hpp"
 #include "compiler/compiler.h"
 #include "tools/logger/logger_config.h"
 #include "diagnostics/diagnostics.h"
+#include "frontend/frontendSymbolTable.h"
 
 enum CryoBuildType
 {
@@ -116,20 +116,16 @@ int exe_single_file_build(CompilerSettings *settings)
     Arena *arena;
     Lexer lexer;
     CompilerState *state;
-    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+    INIT_SUBSYSTEMS(buildDir, rootDirectory, fileName, source, settings, linker, arena, lexer, state);
 
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
         CONDITION_FAILED;
         return 1;
     }
-    TableFinished(globalSymbolTable); // Finish the global symbol table
-
-    printf("Printing Stack Trace...\n");
-    GDM->printStackTrace(GDM);
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
@@ -153,7 +149,7 @@ int exe_single_file_build(CompilerSettings *settings)
         CONDITION_FAILED;
         return 1;
     }
-    if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
+    if (generateIRFromAST(unit, state, linker) != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
         CONDITION_FAILED;
@@ -162,8 +158,6 @@ int exe_single_file_build(CompilerSettings *settings)
 
     DEBUG_PRINT_FILTER({
         END_COMPILATION_MESSAGE;
-
-        printGlobalSymbolTable(globalSymbolTable);
         logASTNodeDebugView(programCopy);
     });
 
@@ -177,7 +171,7 @@ int exe_single_file_build(CompilerSettings *settings)
 int exe_project_build(CompilerSettings *settings)
 {
     __STACK_FRAME__
-    char *filePath = (char *)malloc(strlen(settings->projectDir) + 16);
+    char *filePath = (char *)malloc(strlen(settings->projectDir) + 64);
     strcpy(filePath, settings->projectDir);
     strcat(filePath, "/src/main.cryo");
     if (!filePath)
@@ -191,7 +185,7 @@ int exe_project_build(CompilerSettings *settings)
         fprintf(stderr, "Error: Failed to read file: %s\n", filePath);
         return 1;
     }
-    const char *fileName = trimFilePath(filePath);
+    const char *fileName = trimFilePath(strdup(filePath));
 
     const char *fileDirectory = settings->inputFilePath;
     const char *rootDirectory = settings->compilerRootPath;
@@ -202,25 +196,35 @@ int exe_project_build(CompilerSettings *settings)
         return 1;
     }
 
-    CryoGlobalSymbolTable *globalSymbolTable;
     CryoLinker *linker;
     Arena *arena;
     Lexer lexer;
     CompilerState *state;
-    INIT_SUBSYSTEMS(buildDir, fileName, source, settings, globalSymbolTable, linker, arena, lexer, state);
+    INIT_SUBSYSTEMS(buildDir, settings->compilerRootPath, fileName, source, settings, linker, arena, lexer, state);
+    state->setFilePath(state, strdup(filePath));
+    initFrontendSymbolTable();
 
+    logCompilerSettings(settings);
+
+    // Initialize the Type Definitions before parsing
+    DTM->initDefinitions();
+
+    CryoLinker_InitCryoCore(linker, settings->compilerRootPath, buildDir, state);
+
+    state->setFilePath(state, strdup(filePath));
     // Initialize the parser
-    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
         CONDITION_FAILED;
         return 1;
     }
-    TableFinished(globalSymbolTable); // Finish the global symbol table
 
-    printf("Printing Stack Trace...\n");
-    GDM->printStackTrace(GDM);
+    DEBUG_PRINT_FILTER({
+        printf("Printing Stack Trace...\n");
+        GDM->printStackTrace(GDM);
+    });
 
     ASTNode *programCopy = (ASTNode *)malloc(sizeof(ASTNode));
     memcpy(programCopy, programNode, sizeof(ASTNode));
@@ -235,9 +239,7 @@ int exe_project_build(CompilerSettings *settings)
     }
 
     // Outputs the SymTable into a file in the build directory.
-    initASTDebugOutput(programNode, settings);
-
-    printGlobalSymbolTable(globalSymbolTable);
+    programNode->print(programNode);
 
     // ==========================================
     // Generate code (The C++ backend process)
@@ -258,9 +260,8 @@ int exe_project_build(CompilerSettings *settings)
         CONDITION_FAILED;
         return 1;
     }
-    UNFINISHED_generateIRFromAST(unit, state, linker, globalSymbolTable);
 
-    if (generateIRFromAST(unit, state, linker, globalSymbolTable) != 0)
+    if (generateIRFromAST(unit, state, linker) != 0)
     {
         logMessage(LMI, "ERROR", "CryoCompiler", "Failed to generate IR from AST");
         CONDITION_FAILED;
@@ -270,10 +271,12 @@ int exe_project_build(CompilerSettings *settings)
     LINK_ALL_MODULES(linker);
 
     DEBUG_PRINT_FILTER({
-        END_COMPILATION_MESSAGE;
+        FEST->printTable(FEST);
+    });
 
-        printGlobalSymbolTable(globalSymbolTable);
-        logASTNodeDebugView(programCopy);
+    DEBUG_PRINT_FILTER({
+        END_COMPILATION_MESSAGE;
+        programNode->print(programNode);
     });
 
     return 0;
@@ -283,7 +286,7 @@ int exe_project_build(CompilerSettings *settings)
 //                           Compile for AST Node                                //
 // ============================================================================= //
 
-ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGlobalSymbolTable *globalTable)
+ASTNode *compileForASTNode(const char *filePath, CompilerState *state)
 {
     __STACK_FRAME__
     const char *source = readFile(filePath);
@@ -294,47 +297,23 @@ ASTNode *compileForASTNode(const char *filePath, CompilerState *state, CryoGloba
     }
     const char *fileName = trimFilePath(filePath);
 
+    GDM->frontendState->setSourceCode(GDM->frontendState, source);
+    GDM->frontendState->setCurrentFile(GDM->frontendState, strdup(fileName));
+
+    state->setFilePath(state, filePath);
+
     Lexer lexer;
     initLexer(&lexer, source, fileName, state);
 
     Arena *arena;
     arena = createArena(ARENA_SIZE, ALIGNMENT);
 
-    const char *globalBuildDir = GetBuildDir(globalTable);
-    // Initialize the global symbol table (for reaping)
-    CryoGlobalSymbolTable *globalSymbolTable = CryoGlobalSymbolTable_Create_Reaping(true, globalBuildDir);
-    if (!globalSymbolTable)
-    {
-        logMessage(LMI, "ERROR", "Compiler", "Failed to create global symbol table");
-        CONDITION_FAILED;
-    }
-    logMessage(LMI, "INFO", "Compiler", "Global Symbol Table Initialized");
-
-    setGlobalSymbolTable(state, globalSymbolTable);
-
-    ASTNode *programNode = parseProgram(&lexer, arena, state, globalSymbolTable);
+    ASTNode *programNode = parseProgram(&lexer, arena, state);
     if (programNode == NULL)
     {
         fprintf(stderr, "Error: Failed to parse program node\n");
         CONDITION_FAILED;
     }
-
-    TypesTable *reapedTypes = GetReapedTypeTable(globalSymbolTable);
-    if (!reapedTypes)
-    {
-        logMessage(LMI, "ERROR", "Compiler", "Failed to reap types");
-        CONDITION_FAILED;
-    }
-
-    TypesTable *copiedTypes = (TypesTable *)malloc(sizeof(TypesTable));
-    if (!copiedTypes)
-    {
-        logMessage(LMI, "ERROR", "Compiler", "Failed to allocate memory for copied types");
-        CONDITION_FAILED;
-    }
-    memcpy(copiedTypes, reapedTypes, sizeof(TypesTable));
-
-    ImportReapedTypesTable(globalTable, copiedTypes);
 
     return programNode;
 }
