@@ -8,7 +8,7 @@ General Purpose, Strongly Typed, OOP, Programming Language witten in C & C++.
 
 This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). The goal of this project is to create a general purpose programming language that is simple and easy to use. This project is not meant to be a serious project and is just for fun.
 
-I started this project to learn more about compilers and programming languages.
+I started this project to learn more about compilers and programming languages. If you want a more in-depth view of the architecture of the compiler, the document [Compiler Archetecture](./docs/compiler-architecture.md) gives much more documentation on the internals of the compiler.
 
 ## Development Milestones
 
@@ -84,7 +84,7 @@ This will be a basic overview of the language and its features. This will be upd
 
 | Keywords      |          |             | Primitive Types | Reserved Words |
 | --------      | -------- |------------ | --------------- | -------------- |
-| `extern`      | `struct` | `using`     | `i8...i128`     | `if`           |
+| `extern`      | `struct` | `using`     | `i8..i128`      | `if`           |
 | `function`    | `return` | `module`    | `str`           | `else`         |
 | `const`       | `true`   | `implement` | `boolean`       | `while`        |
 | `mut`         | `false`  | `extends`   | `float`         | `for`          |
