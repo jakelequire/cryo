@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright 2024 Jacob LeQuire                                                *
+ *  Copyright 2025 Jacob LeQuire                                                *
  *  SPDX-License-Identifier: Apache-2.0                                         *
  *    Licensed under the Apache License, Version 2.0 (the "License");           *
  *    you may not use this file except in compliance with the License.          *
@@ -104,7 +104,7 @@ const char *getModuleFile(const char **dirList, const char *moduleName)
     __STACK_FRAME__
     for (int i = 0; i < sizeof(dirList); i++)
     {
-        
+
         const char *fileName = dirList[i];
         if (strstr(fileName, moduleName) != NULL)
         {

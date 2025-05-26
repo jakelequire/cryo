@@ -14,9 +14,9 @@ I started this project to learn more about compilers and programming languages.
 
 - [x] Compiles to native instruction set
 
-- [ ] [Turing Complete.](https://en.wikipedia.org/wiki/Rule_110)
+- [X] [Turing Complete.](https://en.wikipedia.org/wiki/Rule_110)
 
-- [ ] Standard Library Created.
+- [X] Standard Library Created.
 
 - [ ] Optimized
 
@@ -82,27 +82,27 @@ This will be a basic overview of the language and its features. This will be upd
 
 ### <u>Keywords / Reserve Words / Data Types</u>
 
-| Keywords      |          |         | Data Types | Reserved Words |
-| --------      | -------- |-------- | ---------- | -------------- |
-| `extern`      | `struct` |`using`  | `int`      | `if`           |
-| `function`    | `return` |`module` | `string`   | `else`         |
-| `const`       | `true`   |         | `boolean`  | `while`        |
-| `mut`         | `false`  |         | `float`    | `for`          |
-| `namespace`   | `public` |         | `void`     |                |
-| `private`     | `class`  |         |            |                |
-| `constructor` | `static` |         |            |                |
-| `this`        | `new`    |         |            |                |
+| Keywords      |          |             | Primitive Types | Reserved Words |
+| --------      | -------- |------------ | --------------- | -------------- |
+| `extern`      | `struct` | `using`     | `i8...i128`     | `if`           |
+| `function`    | `return` | `module`    | `str`           | `else`         |
+| `const`       | `true`   | `implement` | `boolean`       | `while`        |
+| `mut`         | `false`  | `extends`   | `float`         | `for`          |
+| `namespace`   | `public` | `type`      | `void`          | `do`           |
+| `private`     | `class`  |             |                 |                |
+| `constructor` | `static` |             |                 |                |
+| `this`        | `new`    |             |                 |                |
 
 
 ### <u>Operators</u>
-| Arithmetic Operators | Logical Operators | Comparison Operators | Assignment Operators |
-| -------------------- | ----------------- | -------------------- | -------------------- |
-| `+`                  | `&&` - AND        | `==` - Strict EQ     | `=`                  |
-| `-`                  | `\|\|` - OR       | `!=` - NOT EQ        | `+=`                 |
-| `*`                  | `!` - NOT         | `>`  - GT            | `-=`                 |
-| `/`                  |                   | `<`  - LT            | `*=`                 |
-| `%`                  |                   | `>=` - GTE           | `/=`                 |
-|                      |                   | `<=` - LTE           | `%=`                 |
+| Arithmetic | Logical      | Comparison           | Assignment  | Unary                |
+| -----------| -------------| -------------------- | ------------| -------------------- |
+| `+`        | `&&` - AND   | `==` - Strict EQ     | `=`         | `&` - Address Of     |
+| `-`        | `\|\|` - OR  | `!=` - NOT EQ        | `+=`        | `*` - Deref (expr)   |
+| `*`        | `!` - NOT    | `>`  - GT            | `-=`        | `*` - Pointer (type) |
+| `/`        |              | `<`  - LT            | `*=`        | 
+| `%`        |              | `>=` - GTE           | `/=`        |
+|            |              | `<=` - LTE           | `%=`        |
 
 ### <u>Hello, world!</u>
 
@@ -112,10 +112,10 @@ Here is a simple hello world program in Cryo:
 namespace Main;
 
 function main() -> void {
-    printStr("Hello, world!");
+    printf("Hello, world!");
 
-    const example: string = "Hello, world!";
-    printStr(example);
+    const example: str = "Hello, world!";
+    printf("%s", example);
     
     return;
 }
@@ -138,8 +138,7 @@ function fibonacci(n: int) -> void {
         c = a + b;
         a = b;
         b = c;
-
-        printInt(a);
+        printf("%d ", c);
         n = n - 1;
     }
 
@@ -159,9 +158,6 @@ Still early in development, but this is the early implementation of structures i
 ```cpp
 namespace Structures;
 
-extern function intToStr(num: int) -> string;
-extern function printStr(str: string) -> void;
-
 struct Int {
     value: int;
 
@@ -176,7 +172,7 @@ struct Int {
 
 function main() -> void {
     const num: Int = 10;
-    printStr(num.toString());
+    printf("%s", num.toString());
     return;
 }
 ```
@@ -194,7 +190,7 @@ There is a small LSP within the project under the [`./assets/`](./assets/) direc
 
 Once again, this is just a side project that I wanted to build for fun and to learn new things. The only real goal of this project is to have a very minimalistic general purpose programming language. I have no intention on a serious roadmap and just adding things as I see fit.
 
-To view more about the language, you can view the language overview [here](./docs/langOverview.md).
+To view more about the language, you can view the language overview [here](./docs/lang-overview.md).
 
 ### License
 
