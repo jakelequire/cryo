@@ -4,7 +4,7 @@ General Purpose, Strongly Typed, OOP, Programming Language witten in C & C++.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)]
 [![GitHub stars](https://img.shields.io/github/stars/jakelequire/cryo)]
-[![Version](https://img.shields.io/badge/Version-0.0.1-blue)]
+[![Version](https://img.shields.io/badge/Version-0.0.2-blue)]
 
 This is a fun side Project maintained and developed by me, [Jake LeQuire](https://github.com/jakelequire). The goal of this project is to create a general purpose programming language that is simple and easy to use. This project is not meant to be a serious project and is just for fun.
 
